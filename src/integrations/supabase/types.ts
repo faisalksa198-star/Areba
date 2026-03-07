@@ -322,6 +322,53 @@ export type Database = {
         }
         Relationships: []
       }
+      students: {
+        Row: {
+          created_at: string
+          extra_services: string[] | null
+          hat_choice: string | null
+          id: string
+          name: string
+          order_id: string
+          scarf_choice: string | null
+          serial_number: number
+          size: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          extra_services?: string[] | null
+          hat_choice?: string | null
+          id?: string
+          name?: string
+          order_id: string
+          scarf_choice?: string | null
+          serial_number: number
+          size?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          extra_services?: string[] | null
+          hat_choice?: string | null
+          id?: string
+          name?: string
+          order_id?: string
+          scarf_choice?: string | null
+          serial_number?: number
+          size?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
