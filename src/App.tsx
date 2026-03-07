@@ -10,6 +10,7 @@ import DataCenter from "./pages/DataCenter";
 import Kits from "./pages/Kits";
 import Orders from "./pages/Orders";
 import LeaderPage from "./pages/LeaderPage";
+import OrderStatus from "./pages/OrderStatus";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,8 +29,16 @@ const App = () => (
             <Route path="/data-center" element={<DataCenter />} />
             <Route path="/kits" element={<Kits />} />
             <Route path="/orders" element={<Orders />} />
-            <Route path="/leader/:token" element={<LeaderPage />} />
+            <Route path="/order/:orderId/leader" element={<LeaderPage />} />
+            <Route path="/order/:orderId/register" element={<LeaderPage />} />
+            <Route path="/order/:orderId/status" element={<OrderStatus />} />
             <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
           </Routes>
         </AuthProvider>
       </BrowserRouter>
