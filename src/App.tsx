@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import DataCenter from "./pages/DataCenter";
 import Kits from "./pages/Kits";
 import Orders from "./pages/Orders";
+import LeaderPage from "./pages/LeaderPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
