@@ -28,6 +28,7 @@ const App = () => (
             <Route path="/data-center" element={<DataCenter />} />
             <Route path="/kits" element={<Kits />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/leader/:token" element={<LeaderPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
