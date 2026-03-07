@@ -174,25 +174,13 @@ export default function LeaderPage() {
   }, [maxStudents]);
 
   const handleSave = async () => {
-    if (!token) return;
+    if (!orderId) return;
     setSaving(true);
-    // Get order id
-    const { data: order } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('leader_link', token)
-      .single();
-
-    if (!order) {
-      toast({ title: 'خطأ', description: 'لم يتم العثور على الطلب', variant: 'destructive' });
-      setSaving(false);
-      return;
-    }
 
     const rows = students
       .filter(s => s.name.trim())
       .map(s => ({
-        order_id: order.id,
+        order_id: orderId,
         serial_number: s.serialNumber,
         name: s.name.trim(),
         size: s.size || null,
