@@ -79,7 +79,7 @@ function areSimilar(a: string, b: string): boolean {
 }
 
 export default function LeaderPage() {
-  const { token } = useParams<{ token: string }>();
+  const { orderId } = useParams<{ orderId: string }>();
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentRow[]>(() =>
     Array.from({ length: 5 }, (_, i) => createEmptyRow(i + 1))
@@ -88,13 +88,13 @@ export default function LeaderPage() {
   const [orderInfo, setOrderInfo] = useState<{ school_name: string; student_count: number } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Load order info
+  // Load order info by UUID
   useEffect(() => {
-    if (!token) return;
+    if (!orderId) return;
     supabase
       .from('orders')
       .select('school_name, student_count')
-      .eq('leader_link', token)
+      .eq('id', orderId)
       .single()
       .then(({ data }) => {
         if (data) {
@@ -102,7 +102,7 @@ export default function LeaderPage() {
           setMaxStudents(data.student_count || 30);
         }
       });
-  }, [token]);
+  }, [orderId]);
 
   const totalExtras = useMemo(
     () => students.reduce((sum, s) => sum + s.extraServices.length, 0),
@@ -174,25 +174,13 @@ export default function LeaderPage() {
   }, [maxStudents]);
 
   const handleSave = async () => {
-    if (!token) return;
+    if (!orderId) return;
     setSaving(true);
-    // Get order id
-    const { data: order } = await supabase
-      .from('orders')
-      .select('id')
-      .eq('leader_link', token)
-      .single();
-
-    if (!order) {
-      toast({ title: 'خطأ', description: 'لم يتم العثور على الطلب', variant: 'destructive' });
-      setSaving(false);
-      return;
-    }
 
     const rows = students
       .filter(s => s.name.trim())
       .map(s => ({
-        order_id: order.id,
+        order_id: orderId,
         serial_number: s.serialNumber,
         name: s.name.trim(),
         size: s.size || null,
