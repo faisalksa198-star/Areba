@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import DataCenter from "./pages/DataCenter";
 import Kits from "./pages/Kits";
 import Orders from "./pages/Orders";
+import LeaderPage from "./pages/LeaderPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/data-center" element={<DataCenter />} />
             <Route path="/kits" element={<Kits />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/leader/:token" element={<LeaderPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
