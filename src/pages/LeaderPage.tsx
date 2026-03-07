@@ -102,7 +102,7 @@ export default function LeaderPage() {
           setMaxStudents(data.student_count || 30);
         }
       });
-  }, [token]);
+  }, [orderId]);
 
   const totalExtras = useMemo(
     () => students.reduce((sum, s) => sum + s.extraServices.length, 0),
