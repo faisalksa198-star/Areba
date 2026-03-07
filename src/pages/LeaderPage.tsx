@@ -79,7 +79,7 @@ function areSimilar(a: string, b: string): boolean {
 }
 
 export default function LeaderPage() {
-  const { token } = useParams<{ token: string }>();
+  const { orderId } = useParams<{ orderId: string }>();
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentRow[]>(() =>
     Array.from({ length: 5 }, (_, i) => createEmptyRow(i + 1))
@@ -88,13 +88,13 @@ export default function LeaderPage() {
   const [orderInfo, setOrderInfo] = useState<{ school_name: string; student_count: number } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Load order info
+  // Load order info by UUID
   useEffect(() => {
-    if (!token) return;
+    if (!orderId) return;
     supabase
       .from('orders')
       .select('school_name, student_count')
-      .eq('leader_link', token)
+      .eq('id', orderId)
       .single()
       .then(({ data }) => {
         if (data) {
