@@ -621,31 +621,39 @@ export default function Orders() {
 
       {/* Links Modal */}
       <Dialog open={showLinks} onOpenChange={setShowLinks}>
-        <DialogContent className="max-w-sm" dir="rtl">
+        <DialogContent className="max-w-sm backdrop-blur-xl bg-card/95 border-border/40 shadow-2xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Link className="h-4 w-4 text-primary" />
+              </div>
               روابط الطلب
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 mt-2">
+          <div className="space-y-3 mt-1">
             {generatedLinks && (
               <>
-                <LinkRow
+                <LinkCard
                   label="رابط القائدة"
+                  description="إدارة الطلب وبيانات الطالبات"
                   url={generatedLinks.leaderLink}
+                  icon="👑"
                   copied={copiedField === 'leader'}
                   onCopy={() => copyToClipboard(generatedLinks.leaderLink, 'leader')}
                 />
-                <LinkRow
+                <LinkCard
                   label="رابط تسجيل الطالبات"
+                  description="نموذج إدخال بيانات الطالبات"
                   url={generatedLinks.registerLink}
+                  icon="📝"
                   copied={copiedField === 'register'}
                   onCopy={() => copyToClipboard(generatedLinks.registerLink, 'register')}
                 />
-                <LinkRow
+                <LinkCard
                   label="رابط متابعة الحالة"
+                  description="تتبع حالة الطلب للعميل"
                   url={generatedLinks.statusLink}
+                  icon="📦"
                   copied={copiedField === 'status'}
                   onCopy={() => copyToClipboard(generatedLinks.statusLink, 'status')}
                 />
