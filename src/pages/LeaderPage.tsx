@@ -303,12 +303,12 @@ function StudentRowComponent({
   return (
     <tr className="border-b border-border/50 hover:bg-muted/30">
       {/* Serial - sticky */}
-      <td className="sticky right-0 z-10 bg-background px-2 py-2 text-center text-muted-foreground font-medium text-xs">
+      <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center text-muted-foreground font-medium text-xs w-10">
         {student.serialNumber}
       </td>
 
       {/* Name - sticky */}
-      <td className="sticky right-8 z-10 bg-background px-2 py-2">
+      <td className="sticky right-10 z-10 bg-background px-3 py-2">
         <div className="space-y-1">
           <Input
             value={student.name}
