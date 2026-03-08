@@ -619,18 +619,18 @@ export default function Orders() {
         </DialogContent>
       </Dialog>
 
-      {/* Links Modal */}
+      {/* Links Modal - Glassmorphism */}
       <Dialog open={showLinks} onOpenChange={setShowLinks}>
-        <DialogContent className="max-w-sm backdrop-blur-xl bg-card/95 border-border/40 shadow-2xl" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <div className="p-1.5 rounded-lg bg-primary/10">
+        <DialogContent className="max-w-sm border-0 shadow-2xl bg-gradient-to-br from-card/80 via-card/90 to-card/80 backdrop-blur-2xl ring-1 ring-border/20" dir="rtl">
+          <DialogHeader className="pb-1">
+            <DialogTitle className="flex items-center gap-2.5 text-base">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10">
                 <Link className="h-4 w-4 text-primary" />
               </div>
-              روابط الطلب
+              <span>روابط الطلب</span>
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 mt-1">
+          <div className="space-y-2.5 mt-2">
             {generatedLinks && (
               <>
                 <LinkCard
@@ -638,6 +638,7 @@ export default function Orders() {
                   description="إدارة الطلب وبيانات الطالبات"
                   url={generatedLinks.leaderLink}
                   icon="👑"
+                  accentClass="from-amber-500/15 to-amber-500/5 ring-amber-500/20"
                   copied={copiedField === 'leader'}
                   onCopy={() => copyToClipboard(generatedLinks.leaderLink, 'leader')}
                 />
@@ -646,6 +647,7 @@ export default function Orders() {
                   description="نموذج إدخال بيانات الطالبات"
                   url={generatedLinks.registerLink}
                   icon="📝"
+                  accentClass="from-blue-500/15 to-blue-500/5 ring-blue-500/20"
                   copied={copiedField === 'register'}
                   onCopy={() => copyToClipboard(generatedLinks.registerLink, 'register')}
                 />
@@ -654,6 +656,7 @@ export default function Orders() {
                   description="تتبع حالة الطلب للعميل"
                   url={generatedLinks.statusLink}
                   icon="📦"
+                  accentClass="from-emerald-500/15 to-emerald-500/5 ring-emerald-500/20"
                   copied={copiedField === 'status'}
                   onCopy={() => copyToClipboard(generatedLinks.statusLink, 'status')}
                 />
