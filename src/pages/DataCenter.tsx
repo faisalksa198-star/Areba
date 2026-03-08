@@ -23,14 +23,14 @@ interface MasterItem {
 
 const CATEGORIES = [
   { key: 'abaya_designs', label: 'تصاميم العبايات', icon: Crown, hasImage: true, hasDescription: true },
-  { key: 'sleeve_styles', label: 'أطراف الكم', icon: Scissors, hasImage: true },
-  { key: 'scarf_styles', label: 'أشكال الأوشحة', icon: Wind, hasImage: true },
-  { key: 'scarf_methods', label: 'طرق الوشاح', icon: Wind, hasImage: true },
-  { key: 'embroidery_directions', label: 'اتجاه التطريز', icon: Compass, hasImage: true },
-  { key: 'fonts', label: 'الخطوط', icon: Type, hasImage: false },
-  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: false },
-  { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true },
-  { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false },
+  { key: 'sleeve_styles', label: 'أطراف الكم', icon: Scissors, hasImage: true, hasDescription: false },
+  { key: 'scarf_styles', label: 'أشكال الأوشحة', icon: Wind, hasImage: true, hasDescription: false },
+  { key: 'scarf_methods', label: 'طرق الوشاح', icon: Wind, hasImage: true, hasDescription: false },
+  { key: 'embroidery_directions', label: 'اتجاه التطريز', icon: Compass, hasImage: true, hasDescription: false },
+  { key: 'fonts', label: 'الخطوط', icon: Type, hasImage: false, hasDescription: false },
+  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: false, hasDescription: false },
+  { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true, hasDescription: false },
+  { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
 ] as const;
 
 type CategoryKey = typeof CATEGORIES[number]['key'];
