@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Copy, AlertTriangle, Save, Plus, Trash2, Users, Loader2 } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Download, Upload, FileJson } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 const SCARF_OPTIONS = ['بدون', 'شيفون', 'كريب', 'جيرسي'];
@@ -68,6 +68,7 @@ function areSimilar(a: string, b: string): boolean {
 export default function LeaderPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [students, setStudents] = useState<StudentRow[]>(() =>
     Array.from({ length: 5 }, (_, i) => createEmptyRow(i + 1))
   );
@@ -115,15 +116,6 @@ export default function LeaderPage() {
     }));
   }, []);
 
-  const copyFromAbove = useCallback((index: number, field: 'size' | 'scarfChoice' | 'hatChoice') => {
-    if (index === 0) return;
-    setStudents(prev => {
-      const newArr = [...prev];
-      newArr[index] = { ...newArr[index], [field]: prev[index - 1][field] };
-      return newArr;
-    });
-  }, []);
-
   const addRow = useCallback(() => {
     setStudents(prev => [...prev, createEmptyRow(prev.length + 1)]);
   }, []);
@@ -167,6 +159,49 @@ export default function LeaderPage() {
     setSaving(false);
   };
 
+  const handleExportJSON = async () => {
+    if (!orderId) return;
+    const [orderRes, studentsRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('id', orderId).maybeSingle(),
+      supabase.from('students').select('*').eq('order_id', orderId).order('serial_number'),
+    ]);
+    const payload = { order: orderRes.data, students: studentsRes.data || [] };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `order-${orderRes.data?.order_number || orderId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !orderId) return;
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const importedStudents: StudentRow[] = (data.students || []).map((s: any, i: number) => ({
+        id: crypto.randomUUID(),
+        serialNumber: i + 1,
+        name: s.name || '',
+        size: s.size || '',
+        scarfChoice: s.scarf_choice || '',
+        hatChoice: s.hat_choice || '',
+        extraServices: s.extra_services || [],
+        nameError: '',
+        similarWarning: '',
+      }));
+      if (importedStudents.length > 0) {
+        setStudents(importedStudents);
+        toast({ title: `تم استيراد ${importedStudents.length} طالبة بنجاح ✓` });
+      }
+    } catch {
+      toast({ title: 'خطأ في قراءة الملف', variant: 'destructive' });
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
@@ -191,7 +226,7 @@ export default function LeaderPage() {
           <h1 className="text-lg font-bold text-foreground">
             {orderInfo?.school_name || 'إدخال بيانات الطالبات'}
           </h1>
-          <div className="flex items-center gap-3 mt-2 text-sm">
+          <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <Users className="h-3 w-3" />
               {students.filter(s => s.name.trim()).length} / {maxStudents}
@@ -203,170 +238,165 @@ export default function LeaderPage() {
         </div>
       </div>
 
-      {/* Card-based list for mobile */}
-      <div className="p-3 space-y-3 pb-24">
-        {students.map((student, index) => (
-          <div key={student.id} className="rounded-xl border border-border/60 bg-card p-3 space-y-3">
-            {/* Row header */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-muted-foreground bg-muted rounded-lg px-2 py-1">
-                #{student.serialNumber}
-              </span>
-              <button
-                onClick={() => removeRow(student.id)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+      <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImportJSON} />
 
-            {/* Name */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم الطالبة</label>
-              <Input
-                value={student.name}
-                onChange={e => updateStudent(student.id, 'name', e.target.value)}
-                onBlur={e => {
-                  const trimmed = e.target.value.trim().replace(/\s+/g, ' ');
-                  updateStudent(student.id, 'name', trimmed);
-                }}
-                placeholder="أدخلي الاسم"
-                className="h-10 text-sm"
-              />
-              {student.nameError && (
-                <p className="text-[11px] text-destructive flex items-center gap-1 mt-1">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  {student.nameError}
-                </p>
-              )}
-              {student.similarWarning && (
-                <p className="text-[11px] text-warning flex items-center gap-1 mt-1">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  {student.similarWarning}
-                </p>
-              )}
-            </div>
-
-            {/* Size */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-muted-foreground">المقاس</label>
-                {index > 0 && (
-                  <button onClick={() => copyFromAbove(index, 'size')} className="text-[10px] text-primary flex items-center gap-0.5">
-                    <Copy className="h-3 w-3" /> نسخ من السابق
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {SIZES.map(size => (
+      {/* Table */}
+      <div className="overflow-x-auto pb-24">
+        <table className="w-full min-w-[700px] text-sm border-collapse">
+          <thead className="sticky top-[85px] z-20 bg-muted/95 backdrop-blur-sm">
+            <tr className="border-b border-border">
+              <th className="sticky right-0 z-10 bg-muted/95 backdrop-blur-sm text-right px-3 py-2.5 font-semibold text-muted-foreground w-8">#</th>
+              <th className="sticky right-8 z-10 bg-muted/95 backdrop-blur-sm text-right px-3 py-2.5 font-semibold text-muted-foreground min-w-[160px]">اسم الطالبة</th>
+              <th className="text-center px-2 py-2.5 font-semibold text-muted-foreground min-w-[280px]">المقاس</th>
+              <th className="text-center px-2 py-2.5 font-semibold text-muted-foreground min-w-[200px]">الوشاح</th>
+              <th className="text-center px-2 py-2.5 font-semibold text-muted-foreground min-w-[160px]">القبعة</th>
+              <th className="text-center px-2 py-2.5 font-semibold text-muted-foreground min-w-[200px]">خدمات إضافية</th>
+              <th className="text-center px-2 py-2.5 font-semibold text-muted-foreground w-10"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((student) => (
+              <tr key={student.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                {/* Serial */}
+                <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center text-xs font-bold text-muted-foreground">
+                  {student.serialNumber}
+                </td>
+                {/* Name */}
+                <td className="sticky right-8 z-10 bg-background px-2 py-2">
+                  <Input
+                    value={student.name}
+                    onChange={e => updateStudent(student.id, 'name', e.target.value)}
+                    onBlur={e => {
+                      const trimmed = e.target.value.trim().replace(/\s+/g, ' ');
+                      updateStudent(student.id, 'name', trimmed);
+                    }}
+                    placeholder="الاسم"
+                    className="h-8 text-xs border-border/50"
+                  />
+                  {student.nameError && (
+                    <p className="text-[10px] text-destructive flex items-center gap-0.5 mt-0.5">
+                      <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      {student.nameError}
+                    </p>
+                  )}
+                  {student.similarWarning && (
+                    <p className="text-[10px] text-warning flex items-center gap-0.5 mt-0.5">
+                      <AlertTriangle className="h-2.5 w-2.5 shrink-0" />
+                      {student.similarWarning}
+                    </p>
+                  )}
+                </td>
+                {/* Size */}
+                <td className="px-1 py-2">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {SIZES.map(size => (
+                      <button
+                        key={size}
+                        onClick={() => updateStudent(student.id, 'size', size)}
+                        className={`min-w-[30px] h-7 rounded-md text-xs font-medium transition-all ${
+                          student.size === size
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-muted text-muted-foreground hover:bg-accent/30'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </td>
+                {/* Scarf */}
+                <td className="px-1 py-2">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {SCARF_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => updateStudent(student.id, 'scarfChoice', opt)}
+                        className={`px-2 h-7 rounded-md text-xs font-medium transition-all ${
+                          student.scarfChoice === opt
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-muted text-muted-foreground hover:bg-accent/30'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </td>
+                {/* Hat */}
+                <td className="px-1 py-2">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {HAT_OPTIONS.map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => updateStudent(student.id, 'hatChoice', opt)}
+                        className={`px-2 h-7 rounded-md text-xs font-medium transition-all ${
+                          student.hatChoice === opt
+                            ? 'bg-primary text-primary-foreground shadow-sm'
+                            : 'bg-muted text-muted-foreground hover:bg-accent/30'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </td>
+                {/* Extra Services */}
+                <td className="px-1 py-2">
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {EXTRA_SERVICES.map(service => {
+                      const active = student.extraServices.includes(service);
+                      const disabled = !active && totalExtras >= maxStudents;
+                      return (
+                        <button
+                          key={service}
+                          onClick={() => !disabled && toggleExtra(student.id, service)}
+                          disabled={disabled}
+                          className={`px-2 h-6 rounded-md text-[11px] font-medium transition-all ${
+                            active
+                              ? 'bg-accent text-accent-foreground shadow-sm'
+                              : disabled
+                              ? 'bg-muted/50 text-muted-foreground/40 cursor-not-allowed'
+                              : 'bg-muted text-muted-foreground hover:bg-accent/30'
+                          }`}
+                        >
+                          {service}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </td>
+                {/* Delete */}
+                <td className="px-1 py-2 text-center">
                   <button
-                    key={size}
-                    onClick={() => updateStudent(student.id, 'size', size)}
-                    className={`min-w-[40px] h-9 rounded-lg text-sm font-medium transition-all ${
-                      student.size === size
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted text-muted-foreground hover:bg-accent/20'
-                    }`}
+                    onClick={() => removeRow(student.id)}
+                    className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   >
-                    {size}
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Scarf */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-muted-foreground">الوشاح</label>
-                {index > 0 && (
-                  <button onClick={() => copyFromAbove(index, 'scarfChoice')} className="text-[10px] text-primary flex items-center gap-0.5">
-                    <Copy className="h-3 w-3" /> نسخ
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {SCARF_OPTIONS.map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => updateStudent(student.id, 'scarfChoice', opt)}
-                    className={`px-3 h-9 rounded-lg text-sm font-medium transition-all ${
-                      student.scarfChoice === opt
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted text-muted-foreground hover:bg-accent/20'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Hat */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-muted-foreground">القبعة</label>
-                {index > 0 && (
-                  <button onClick={() => copyFromAbove(index, 'hatChoice')} className="text-[10px] text-primary flex items-center gap-0.5">
-                    <Copy className="h-3 w-3" /> نسخ
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {HAT_OPTIONS.map(opt => (
-                  <button
-                    key={opt}
-                    onClick={() => updateStudent(student.id, 'hatChoice', opt)}
-                    className={`px-3 h-9 rounded-lg text-sm font-medium transition-all ${
-                      student.hatChoice === opt
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'bg-muted text-muted-foreground hover:bg-accent/20'
-                    }`}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Extra Services */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">خدمات إضافية</label>
-              <div className="flex flex-wrap gap-1.5">
-                {EXTRA_SERVICES.map(service => {
-                  const active = student.extraServices.includes(service);
-                  const disabled = !active && totalExtras >= maxStudents;
-                  return (
-                    <button
-                      key={service}
-                      onClick={() => !disabled && toggleExtra(student.id, service)}
-                      disabled={disabled}
-                      className={`px-3 h-8 rounded-lg text-xs font-medium transition-all ${
-                        active
-                          ? 'bg-accent text-accent-foreground shadow-sm'
-                          : disabled
-                          ? 'bg-muted/50 text-muted-foreground/40 cursor-not-allowed'
-                          : 'bg-muted text-muted-foreground hover:bg-accent/20'
-                      }`}
-                    >
-                      {service}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-3">
-        <Button variant="outline" onClick={addRow} className="gap-1 flex-1">
-          <Plus className="h-4 w-4" />
-          إضافة صف
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2">
+        <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
+          <Plus className="h-3.5 w-3.5" />
+          صف
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleExportJSON} className="gap-1">
+          <Download className="h-3.5 w-3.5" />
+          تصدير
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-1">
+          <Upload className="h-3.5 w-3.5" />
+          استيراد
         </Button>
         <Button onClick={handleSave} disabled={saving} className="gap-1 flex-1">
-          <Save className="h-4 w-4" />
-          {saving ? 'جارٍ الحفظ...' : 'حفظ البيانات'}
+          <Save className="h-3.5 w-3.5" />
+          {saving ? 'جارٍ الحفظ...' : 'حفظ'}
         </Button>
       </div>
     </div>

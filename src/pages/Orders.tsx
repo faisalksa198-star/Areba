@@ -674,6 +674,7 @@ function LinkCard({
   description,
   url,
   icon,
+  accentClass,
   copied,
   onCopy,
 }: {
@@ -681,30 +682,31 @@ function LinkCard({
   description: string;
   url: string;
   icon: string;
+  accentClass?: string;
   copied: boolean;
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2 transition-colors hover:bg-muted/50">
+    <div className={`rounded-xl p-3.5 space-y-2.5 transition-all bg-gradient-to-br ${accentClass || 'from-muted/50 to-muted/20'} ring-1 hover:shadow-md`}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-base">{icon}</span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg">{icon}</span>
           <div>
-            <p className="text-sm font-semibold text-foreground">{label}</p>
-            <p className="text-[11px] text-muted-foreground">{description}</p>
+            <p className="text-sm font-bold text-foreground">{label}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
           </div>
         </div>
         <Button
           variant={copied ? 'default' : 'outline'}
           size="icon"
           onClick={onCopy}
-          className={`h-8 w-8 shrink-0 rounded-lg transition-all ${copied ? 'bg-success hover:bg-success' : ''}`}
+          className={`h-8 w-8 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </Button>
       </div>
-      <div className="flex items-center gap-2 rounded-lg bg-background/80 border border-border/40 px-2.5 py-1.5">
-        <p className="text-[10px] text-muted-foreground truncate flex-1" dir="ltr">{url}</p>
+      <div className="flex items-center rounded-lg bg-background/60 backdrop-blur-sm border border-border/30 px-3 py-2">
+        <p className="text-[10px] text-muted-foreground truncate flex-1 font-mono" dir="ltr">{url}</p>
       </div>
     </div>
   );
