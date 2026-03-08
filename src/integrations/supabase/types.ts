@@ -101,6 +101,57 @@ export type Database = {
         }
         Relationships: []
       }
+      date_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      embroidery_directions: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fonts: {
         Row: {
           created_at: string
@@ -124,6 +175,33 @@ export type Database = {
           is_active?: boolean
           name?: string
           preview_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hat_styles: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -232,41 +310,68 @@ export type Database = {
       }
       ready_kits: {
         Row: {
+          abaya_color: string | null
+          abaya_color_degree: string | null
           abaya_design_id: string | null
           created_at: string
+          default_scarf_design: string | null
           font_id: string | null
+          hat_color: string | null
+          hat_color_degree: string | null
+          hat_style_id: string | null
           id: string
           is_active: boolean
           name: string
           price: number | null
           scarf_color: string | null
+          scarf_color_degree: string | null
+          scarf_method_id: string | null
           scarf_style_id: string | null
+          sleeve_color: string | null
           sleeve_style_id: string | null
           updated_at: string
         }
         Insert: {
+          abaya_color?: string | null
+          abaya_color_degree?: string | null
           abaya_design_id?: string | null
           created_at?: string
+          default_scarf_design?: string | null
           font_id?: string | null
+          hat_color?: string | null
+          hat_color_degree?: string | null
+          hat_style_id?: string | null
           id?: string
           is_active?: boolean
           name: string
           price?: number | null
           scarf_color?: string | null
+          scarf_color_degree?: string | null
+          scarf_method_id?: string | null
           scarf_style_id?: string | null
+          sleeve_color?: string | null
           sleeve_style_id?: string | null
           updated_at?: string
         }
         Update: {
+          abaya_color?: string | null
+          abaya_color_degree?: string | null
           abaya_design_id?: string | null
           created_at?: string
+          default_scarf_design?: string | null
           font_id?: string | null
+          hat_color?: string | null
+          hat_color_degree?: string | null
+          hat_style_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
           price?: number | null
           scarf_color?: string | null
+          scarf_color_degree?: string | null
+          scarf_method_id?: string | null
           scarf_style_id?: string | null
+          sleeve_color?: string | null
           sleeve_style_id?: string | null
           updated_at?: string
         }
@@ -286,6 +391,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ready_kits_hat_style_id_fkey"
+            columns: ["hat_style_id"]
+            isOneToOne: false
+            referencedRelation: "hat_styles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ready_kits_scarf_method_id_fkey"
+            columns: ["scarf_method_id"]
+            isOneToOne: false
+            referencedRelation: "scarf_methods"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ready_kits_scarf_style_id_fkey"
             columns: ["scarf_style_id"]
             isOneToOne: false
@@ -300,6 +419,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scarf_methods: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       scarf_styles: {
         Row: {
