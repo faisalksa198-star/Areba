@@ -11,6 +11,7 @@ import Kits from "./pages/Kits";
 import Orders from "./pages/Orders";
 import LeaderPage from "./pages/LeaderPage";
 import OrderStatus from "./pages/OrderStatus";
+import StudentRegister from "./pages/StudentRegister";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
