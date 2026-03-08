@@ -32,7 +32,7 @@ export default function OrderStatus() {
       .from('orders')
       .select('order_number, school_name, leader_name, student_count, status, created_at, updated_at, cities(name)')
       .eq('id', orderId)
-      .single()
+      .maybeSingle()
       .then(({ data, error }) => {
         if (error || !data) setNotFound(true);
         else setOrder(data);

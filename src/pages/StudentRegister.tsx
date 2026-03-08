@@ -33,7 +33,7 @@ export default function StudentRegister() {
   useEffect(() => {
     if (!orderId) return;
     Promise.all([
-      supabase.from('orders').select('school_name, student_count').eq('id', orderId).single(),
+      supabase.from('orders').select('school_name, student_count').eq('id', orderId).maybeSingle(),
       supabase.from('students').select('*', { count: 'exact', head: true }).eq('order_id', orderId),
     ]).then(([orderRes, countRes]) => {
       if (orderRes.error || !orderRes.data) {

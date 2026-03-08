@@ -95,7 +95,7 @@ export default function LeaderPage() {
       .from('orders')
       .select('school_name, student_count')
       .eq('id', orderId)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setOrderInfo(data);
