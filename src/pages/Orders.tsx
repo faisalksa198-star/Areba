@@ -350,7 +350,7 @@ export default function Orders() {
 
       {/* Links Modal */}
       <Dialog open={showLinks} onOpenChange={setShowLinks}>
-        <DialogContent className="max-w-md" dir="rtl">
+        <DialogContent className="max-w-sm" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Link className="h-5 w-5 text-primary" />
