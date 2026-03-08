@@ -357,7 +357,7 @@ export default function Orders() {
               روابط الطلب
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
+          <div className="space-y-2 mt-2">
             {generatedLinks && (
               <>
                 <LinkRow
