@@ -350,14 +350,14 @@ export default function Orders() {
 
       {/* Links Modal */}
       <Dialog open={showLinks} onOpenChange={setShowLinks}>
-        <DialogContent className="max-w-md" dir="rtl">
+        <DialogContent className="max-w-sm" dir="rtl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Link className="h-5 w-5 text-primary" />
               روابط الطلب
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
+          <div className="space-y-2 mt-2">
             {generatedLinks && (
               <>
                 <LinkRow
@@ -404,20 +404,15 @@ function LinkRow({
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border p-3 space-y-2">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="rounded-lg border border-border p-2.5 flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-foreground">{label}</p>
+        <p className="text-[10px] text-muted-foreground truncate direction-ltr mt-0.5">{url}</p>
       </div>
-      <div className="flex items-center gap-2">
-        <code className="flex-1 text-[11px] bg-muted rounded px-2 py-1.5 text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap direction-ltr">
-          {url}
-        </code>
-        <Button variant="outline" size="sm" onClick={onCopy} className="gap-1 shrink-0">
-          {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? 'تم' : 'نسخ'}
-        </Button>
-      </div>
+      <Button variant="outline" size="sm" onClick={onCopy} className="gap-1 shrink-0 h-8 text-xs">
+        {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? 'تم' : 'نسخ'}
+      </Button>
     </div>
   );
 }

@@ -223,28 +223,28 @@ export default function LeaderPage() {
 
       {/* Table */}
       <div className="relative overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="sticky top-[88px] z-20 bg-muted border-b border-border">
-            <tr>
-              <th className="sticky right-0 z-10 bg-muted px-2 py-3 text-right font-medium text-muted-foreground w-8">
+        <table className="w-full text-sm border-collapse">
+          <thead className="sticky top-[88px] z-20">
+            <tr className="bg-muted">
+              <th className="sticky right-0 z-10 bg-muted px-3 py-3 text-right font-semibold text-foreground w-10 border-b-2 border-border">
                 #
               </th>
-              <th className="sticky right-8 z-10 bg-muted px-2 py-3 text-right font-medium text-muted-foreground min-w-[160px]">
+              <th className="sticky right-10 z-10 bg-muted px-3 py-3 text-right font-semibold text-foreground min-w-[160px] border-b-2 border-border">
                 اسم الطالبة
               </th>
-              <th className="px-2 py-3 text-center font-medium text-muted-foreground min-w-[280px]">
+              <th className="px-3 py-3 text-center font-semibold text-foreground min-w-[280px] border-b-2 border-border">
                 المقاس
               </th>
-              <th className="px-2 py-3 text-center font-medium text-muted-foreground min-w-[180px]">
+              <th className="px-3 py-3 text-center font-semibold text-foreground min-w-[180px] border-b-2 border-border">
                 الوشاح
               </th>
-              <th className="px-2 py-3 text-center font-medium text-muted-foreground min-w-[160px]">
+              <th className="px-3 py-3 text-center font-semibold text-foreground min-w-[160px] border-b-2 border-border">
                 القبعة
               </th>
-              <th className="px-2 py-3 text-center font-medium text-muted-foreground min-w-[200px]">
+              <th className="px-3 py-3 text-center font-semibold text-foreground min-w-[200px] border-b-2 border-border">
                 خدمات إضافية
               </th>
-              <th className="px-2 py-3 w-10"></th>
+              <th className="px-3 py-3 w-10 border-b-2 border-border"></th>
             </tr>
           </thead>
           <tbody>
@@ -303,12 +303,12 @@ function StudentRowComponent({
   return (
     <tr className="border-b border-border/50 hover:bg-muted/30">
       {/* Serial - sticky */}
-      <td className="sticky right-0 z-10 bg-background px-2 py-2 text-center text-muted-foreground font-medium text-xs">
+      <td className="sticky right-0 z-10 bg-background px-3 py-2 text-center text-muted-foreground font-medium text-xs w-10">
         {student.serialNumber}
       </td>
 
       {/* Name - sticky */}
-      <td className="sticky right-8 z-10 bg-background px-2 py-2">
+      <td className="sticky right-10 z-10 bg-background px-3 py-2">
         <div className="space-y-1">
           <Input
             value={student.name}
