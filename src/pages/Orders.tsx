@@ -621,31 +621,39 @@ export default function Orders() {
 
       {/* Links Modal */}
       <Dialog open={showLinks} onOpenChange={setShowLinks}>
-        <DialogContent className="max-w-sm" dir="rtl">
+        <DialogContent className="max-w-sm backdrop-blur-xl bg-card/95 border-border/40 shadow-2xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Link className="h-5 w-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <Link className="h-4 w-4 text-primary" />
+              </div>
               روابط الطلب
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 mt-2">
+          <div className="space-y-3 mt-1">
             {generatedLinks && (
               <>
-                <LinkRow
+                <LinkCard
                   label="رابط القائدة"
+                  description="إدارة الطلب وبيانات الطالبات"
                   url={generatedLinks.leaderLink}
+                  icon="👑"
                   copied={copiedField === 'leader'}
                   onCopy={() => copyToClipboard(generatedLinks.leaderLink, 'leader')}
                 />
-                <LinkRow
+                <LinkCard
                   label="رابط تسجيل الطالبات"
+                  description="نموذج إدخال بيانات الطالبات"
                   url={generatedLinks.registerLink}
+                  icon="📝"
                   copied={copiedField === 'register'}
                   onCopy={() => copyToClipboard(generatedLinks.registerLink, 'register')}
                 />
-                <LinkRow
+                <LinkCard
                   label="رابط متابعة الحالة"
+                  description="تتبع حالة الطلب للعميل"
                   url={generatedLinks.statusLink}
+                  icon="📦"
                   copied={copiedField === 'status'}
                   onCopy={() => copyToClipboard(generatedLinks.statusLink, 'status')}
                 />
@@ -658,27 +666,43 @@ export default function Orders() {
   );
 }
 
-function LinkRow({
+function LinkCard({
   label,
+  description,
   url,
+  icon,
   copied,
   onCopy,
 }: {
   label: string;
+  description: string;
   url: string;
+  icon: string;
   copied: boolean;
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border p-2.5 flex items-center gap-2">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-foreground">{label}</p>
-        <p className="text-[10px] text-muted-foreground truncate direction-ltr mt-0.5">{url}</p>
+    <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2 transition-colors hover:bg-muted/50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{icon}</span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{label}</p>
+            <p className="text-[11px] text-muted-foreground">{description}</p>
+          </div>
+        </div>
+        <Button
+          variant={copied ? 'default' : 'outline'}
+          size="icon"
+          onClick={onCopy}
+          className={`h-8 w-8 shrink-0 rounded-lg transition-all ${copied ? 'bg-success hover:bg-success' : ''}`}
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={onCopy} className="gap-1 shrink-0 h-8 text-xs">
-        {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
-        {copied ? 'تم' : 'نسخ'}
-      </Button>
+      <div className="flex items-center gap-2 rounded-lg bg-background/80 border border-border/40 px-2.5 py-1.5">
+        <p className="text-[10px] text-muted-foreground truncate flex-1" dir="ltr">{url}</p>
+      </div>
     </div>
   );
 }
