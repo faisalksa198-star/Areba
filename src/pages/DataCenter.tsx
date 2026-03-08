@@ -53,10 +53,10 @@ export default function DataCenter() {
   const loadItems = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase
-      .from(activeTab as any)
+      .from(activeTab)
       .select('*')
       .order('created_at', { ascending: false });
-    setItems((data as MasterItem[]) || []);
+    setItems((data as unknown as MasterItem[]) || []);
     setLoading(false);
   }, [activeTab]);
 
