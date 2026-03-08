@@ -666,27 +666,43 @@ export default function Orders() {
   );
 }
 
-function LinkRow({
+function LinkCard({
   label,
+  description,
   url,
+  icon,
   copied,
   onCopy,
 }: {
   label: string;
+  description: string;
   url: string;
+  icon: string;
   copied: boolean;
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-lg border border-border p-2.5 flex items-center gap-2">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-foreground">{label}</p>
-        <p className="text-[10px] text-muted-foreground truncate direction-ltr mt-0.5">{url}</p>
+    <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2 transition-colors hover:bg-muted/50">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base">{icon}</span>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{label}</p>
+            <p className="text-[11px] text-muted-foreground">{description}</p>
+          </div>
+        </div>
+        <Button
+          variant={copied ? 'default' : 'outline'}
+          size="icon"
+          onClick={onCopy}
+          className={`h-8 w-8 shrink-0 rounded-lg transition-all ${copied ? 'bg-success hover:bg-success' : ''}`}
+        >
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={onCopy} className="gap-1 shrink-0 h-8 text-xs">
-        {copied ? <Check className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
-        {copied ? 'تم' : 'نسخ'}
-      </Button>
+      <div className="flex items-center gap-2 rounded-lg bg-background/80 border border-border/40 px-2.5 py-1.5">
+        <p className="text-[10px] text-muted-foreground truncate flex-1" dir="ltr">{url}</p>
+      </div>
     </div>
   );
 }
