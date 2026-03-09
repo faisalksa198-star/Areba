@@ -515,33 +515,33 @@ export default function LeaderPage() {
       {/* Scarf Design Cards */}
       {scarfDesigns.length > 0 && (
         <div className="px-3 pt-3">
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[220px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
+              <div key={scarf.id} className="min-w-[240px] rounded-xl border border-border bg-card shadow-sm flex-shrink-0 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border bg-muted/20">
+                  <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
                 </div>
-
-                <div className="flex items-center gap-2 mb-2">
-                  {scarf.scarf_style_image && (
-                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
-                      <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
-                    </div>
-                  )}
-                  {scarf.date_type_image && (
-                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
-                      <img src={scarf.date_type_image} className="w-full h-full object-contain" alt="نوع التاريخ" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-0.5 text-[10px] text-muted-foreground">
-                  {scarf.scarf_method_name && <p>الطرف: {scarf.scarf_method_name}</p>}
-                  {scarf.embroidery_color && <p>اللون: {scarf.embroidery_color}</p>}
-                  {scarf.embroidery_direction_name && <p>الاتجاه: {scarf.embroidery_direction_name}</p>}
-                  {scarf.font_name && <p>الخط: {scarf.font_name}</p>}
-                  {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
-                  {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
+                <div className="p-3">
+                  <div className="flex gap-2 mb-3">
+                    {scarf.scarf_style_image && (
+                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
+                        <img src={scarf.scarf_style_image} alt="تصميم الوشاح" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    {scarf.date_type_image && (
+                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
+                        <img src={scarf.date_type_image} alt="نوع التاريخ" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                    {scarf.scarf_style_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التصميم:</span> {scarf.scarf_style_name}</p>}
+                    {scarf.date_type_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التاريخ:</span> {scarf.date_type_name}</p>}
+                    {scarf.scarf_method_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الطرف:</span> {scarf.scarf_method_name}</p>}
+                    {scarf.embroidery_color && <p className="text-muted-foreground"><span className="font-medium text-foreground">اللون:</span> {scarf.embroidery_color}</p>}
+                    {scarf.embroidery_direction_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الاتجاه:</span> {scarf.embroidery_direction_name}</p>}
+                    {scarf.font_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الخط:</span> {scarf.font_name}</p>}
+                  </div>
                 </div>
               </div>
             ))}
@@ -669,10 +669,11 @@ export default function LeaderPage() {
                           const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
                           if (!needsText) return null;
                           return (
-                            <Input
+                             <Input
                               value={student.hatExtraText}
                               onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
-                              placeholder="نص إضافي"
+                              placeholder="نص تطريز القبعة"
+                              maxLength={10}
                               className="h-8 text-xs w-[120px]"
                               disabled={isSubmitted}
                             />
@@ -734,115 +735,72 @@ export default function LeaderPage() {
 
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
-        <div className="max-w-2xl mx-auto">
-          <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
-            <CollapsibleTrigger asChild>
-              <button className="w-full flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <Truck className="h-4 w-4 text-primary" />
-                  بيانات الشحن
-                </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
-              </button>
-            </CollapsibleTrigger>
+        <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:bg-accent/5 transition-colors">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Truck className="h-4 w-4 text-primary" />
+                بيانات الشحن
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </CollapsibleTrigger>
 
-            <CollapsibleContent>
-              <div className="mt-2 p-4 rounded-lg border border-border bg-card space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
-                    <Input
-                      value={shipping.recipient_name}
-                      onChange={e => updateShipping('recipient_name', e.target.value)}
-                      placeholder="اسم المستلم"
-                      className="h-9 text-sm"
-                      disabled={isSubmitted}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
-                    <Input
-                      value={shipping.recipient_phone}
-                      onChange={e => updateShipping('recipient_phone', e.target.value)}
-                      placeholder="05XXXXXXXX"
-                      className="h-9 text-sm"
-                      disabled={isSubmitted}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">المدينة *</label>
-                    <Select
-                      value={shipping.shipping_city_id}
-                      onValueChange={v => updateShipping('shipping_city_id', v)}
-                      disabled={isSubmitted}
-                    >
-                      <SelectTrigger className="h-9 text-sm">
-                        <SelectValue placeholder="اختر المدينة" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {cities.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">الحي *</label>
-                    <Input
-                      value={shipping.district}
-                      onChange={e => updateShipping('district', e.target.value)}
-                      placeholder="اسم الحي"
-                      className="h-9 text-sm"
-                      disabled={isSubmitted}
-                    />
-                  </div>
+          <CollapsibleContent>
+            <div className="mt-2 p-4 rounded-xl border border-border bg-card">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
+                  <Input value={shipping.recipient_name} onChange={e => updateShipping('recipient_name', e.target.value)} placeholder="اسم المستلم" className="h-8 text-xs" disabled={isSubmitted} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
-                  <Input
-                    value={shipping.address_details}
-                    onChange={e => updateShipping('address_details', e.target.value)}
-                    placeholder="الشارع، رقم المبنى، علامة مميزة..."
-                    className="h-9 text-sm"
-                    disabled={isSubmitted}
-                  />
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
+                  <Input value={shipping.recipient_phone} onChange={e => updateShipping('recipient_phone', e.target.value)} placeholder="05XXXXXXXX" className="h-8 text-xs" disabled={isSubmitted} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
-                  <Input
-                    value={shipping.national_address}
-                    onChange={e => updateShipping('national_address', e.target.value)}
-                    placeholder="العنوان الوطني"
-                    className="h-9 text-sm"
-                    disabled={isSubmitted}
-                  />
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">المدينة *</label>
+                  <Select value={shipping.shipping_city_id} onValueChange={v => updateShipping('shipping_city_id', v)} disabled={isSubmitted}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر المدينة" /></SelectTrigger>
+                    <SelectContent>
+                      {cities.map(c => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">الحي *</label>
+                  <Input value={shipping.district} onChange={e => updateShipping('district', e.target.value)} placeholder="اسم الحي" className="h-8 text-xs" disabled={isSubmitted} />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
+                  <Input value={shipping.address_details} onChange={e => updateShipping('address_details', e.target.value)} placeholder="الشارع، رقم المبنى..." className="h-8 text-xs" disabled={isSubmitted} />
+                </div>
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
+                  <Input value={shipping.national_address} onChange={e => updateShipping('national_address', e.target.value)} placeholder="العنوان الوطني" className="h-8 text-xs" disabled={isSubmitted} />
                 </div>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2 items-center">
-        {!isSubmitted && (
-          <>
-            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1">
-              <Save className="h-3.5 w-3.5" />
-              {saving ? 'جارٍ الحفظ...' : 'حفظ'}
-            </Button>
-            <Button size="sm" onClick={handleFinalSubmit} disabled={submitting} className="gap-1 bg-success hover:bg-success/90">
-              <Send className="h-3.5 w-3.5" />
-              {submitting ? 'جارٍ الإرسال...' : 'إرسال الطلب'}
-            </Button>
-          </>
-        )}
-        {isSubmitted && (
-          <div className="flex-1 text-center text-sm text-muted-foreground">
-            تم إرسال البيانات - لا يمكن التعديل
-          </div>
-        )}
-      </div>
+      {!isSubmitted ? (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex justify-center gap-3">
+          <Button variant="outline" size="default" onClick={handleSave} disabled={saving} className="gap-1.5">
+            <Save className="h-4 w-4" />
+            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
+          </Button>
+          <Button size="default" onClick={handleFinalSubmit} disabled={submitting} className="gap-1.5 bg-success hover:bg-success/90">
+            <Send className="h-4 w-4" />
+            {submitting ? 'جارٍ الإرسال...' : 'إرسال الطلب'}
+          </Button>
+        </div>
+      ) : (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3">
+          <p className="text-center text-sm text-muted-foreground">تم إرسال البيانات - لا يمكن التعديل</p>
+        </div>
+      )}
     </div>
   );
 }

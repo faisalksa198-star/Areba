@@ -250,35 +250,33 @@ export default function StudentRegister() {
 
         {/* Scarf Design Cards */}
         {scarfDesigns.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[200px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
+              <div key={scarf.id} className="min-w-[220px] rounded-xl border border-border bg-card shadow-sm flex-shrink-0 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border bg-muted/20">
+                  <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
                 </div>
-
-                {/* Images row */}
-                <div className="flex items-center gap-2 mb-2">
-                  {scarf.scarf_style_image && (
-                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
-                      <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
-                    </div>
-                  )}
-                  {scarf.date_type_image && (
-                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
-                      <img src={scarf.date_type_image} className="w-full h-full object-contain" alt="نوع التاريخ" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Text details */}
-                <div className="space-y-0.5 text-[10px] text-muted-foreground">
-                  {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
-                  {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
-                  {scarf.scarf_method_name && <p>الطرف: {scarf.scarf_method_name}</p>}
-                  {scarf.embroidery_direction_name && <p>الاتجاه: {scarf.embroidery_direction_name}</p>}
-                  {scarf.font_name && <p>الخط: {scarf.font_name}</p>}
-                  {scarf.embroidery_color && <p>اللون: {scarf.embroidery_color}</p>}
+                <div className="p-3">
+                  <div className="flex gap-2 mb-3">
+                    {scarf.scarf_style_image && (
+                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
+                        <img src={scarf.scarf_style_image} alt="تصميم الوشاح" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    {scarf.date_type_image && (
+                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
+                        <img src={scarf.date_type_image} alt="نوع التاريخ" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                    {scarf.scarf_style_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التصميم:</span> {scarf.scarf_style_name}</p>}
+                    {scarf.date_type_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التاريخ:</span> {scarf.date_type_name}</p>}
+                    {scarf.scarf_method_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الطرف:</span> {scarf.scarf_method_name}</p>}
+                    {scarf.embroidery_color && <p className="text-muted-foreground"><span className="font-medium text-foreground">اللون:</span> {scarf.embroidery_color}</p>}
+                    {scarf.embroidery_direction_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الاتجاه:</span> {scarf.embroidery_direction_name}</p>}
+                    {scarf.font_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الخط:</span> {scarf.font_name}</p>}
+                  </div>
                 </div>
               </div>
             ))}
@@ -361,11 +359,12 @@ export default function StudentRegister() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {!isHatNone && selectedHat?.has_extra_text && (
+                   {!isHatNone && selectedHat?.has_extra_text && (
                     <Input
                       value={hatExtraText}
                       onChange={e => setHatExtraText(e.target.value)}
-                      placeholder="النص الإضافي للقبعة"
+                      placeholder="نص تطريز القبعة"
+                      maxLength={10}
                       className="bg-background"
                     />
                   )}
