@@ -41,6 +41,23 @@ interface OrderInfo {
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
   data_submitted: boolean;
+  order_type: string;
+  kit_name: string;
+  abaya_design_name: string;
+  sleeve_style_name: string;
+  sleeve_color: string;
+  custom_abaya_color: string;
+  custom_abaya_color_degree: string;
+  custom_scarf_color: string;
+  custom_scarf_color_degree: string;
+  custom_hat_color: string;
+  custom_hat_color_degree: string;
+  kit_abaya_color: string;
+  kit_abaya_color_degree: string;
+  kit_scarf_color: string;
+  kit_scarf_color_degree: string;
+  kit_hat_color: string;
+  kit_hat_color_degree: string;
 }
 
 interface ShippingInfo {
