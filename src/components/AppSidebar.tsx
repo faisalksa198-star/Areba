@@ -1,7 +1,9 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Sidebar,
   SidebarContent,
@@ -25,7 +27,24 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setIsAdmin(data?.role === 'owner' || data?.role === 'manager');
+      });
+  }, [user]);
+
+  const allItems = isAdmin
+    ? [...menuItems, { title: 'إدارة الموظفين', url: '/employees', icon: Users }]
+    : menuItems;
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0 border-r border-sidebar-border">
@@ -46,7 +65,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {allItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
