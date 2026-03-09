@@ -521,6 +521,24 @@ export default function LeaderPage() {
     );
   }
 
+  // Lock page when status is not pending_data
+  const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+  if (isLocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <Send className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
+            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const showLogo = orderInfo?.logo_embroidery_enabled;
   const showBack = orderInfo?.back_embroidery_enabled;
   const showHat = orderInfo?.hat_embroidery_enabled;
