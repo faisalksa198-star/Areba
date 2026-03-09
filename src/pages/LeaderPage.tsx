@@ -90,6 +90,7 @@ interface StudentRow {
   hatExtraText: string;
   hasLogoEmbroidery: boolean;
   backEmbroideryText: string;
+  hasPurplePackage: boolean;
   nameError: string;
   similarWarning: string;
 }
