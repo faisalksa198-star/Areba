@@ -194,6 +194,8 @@ export default function LeaderPage() {
     const kit = o.ready_kits;
     const isKit = o.order_type === 'ready_kit';
     const info: OrderInfo = {
+      leader_name: o.leader_name || '',
+      order_number: o.order_number || '',
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
       logo_embroidery_count: o.logo_embroidery_count || 0,
