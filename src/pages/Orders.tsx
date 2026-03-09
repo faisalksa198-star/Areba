@@ -47,6 +47,8 @@ import {
   Clock,
   Users,
   Package,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 
