@@ -192,11 +192,11 @@ export default function LeaderPage() {
         .from('order_scarf_designs')
         .select(`
           id, sort_order, embroidery_color,
-          scarf_styles!scarf_style_id(name, image_url),
-          date_types!date_type_id(name, image_url),
-          scarf_methods!scarf_method_id(name),
-          embroidery_directions!embroidery_direction_id(name),
-          fonts!font_id(name)
+          scarf_styles(name),
+          date_types(name),
+          scarf_methods(name),
+          embroidery_directions(name),
+          fonts(name)
         `)
         .eq('order_id', orderId!)
         .order('sort_order'),
