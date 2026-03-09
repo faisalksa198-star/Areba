@@ -249,8 +249,9 @@ export default function LeaderPage() {
         similarWarning: '',
       })));
     } else {
-      // Initialize rows
-      setStudents(Array.from({ length: 5 }, (_, i) => {
+      // Initialize rows based on student_count: show min(student_count, 5)
+      const initialCount = Math.min(info.student_count, 5);
+      setStudents(Array.from({ length: initialCount }, (_, i) => {
         const row = createEmptyRow(i + 1, defaultScarfId, noneId);
         if (logoIsAll) row.hasLogoEmbroidery = true;
         return row;
