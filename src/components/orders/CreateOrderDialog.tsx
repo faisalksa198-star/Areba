@@ -121,7 +121,57 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setEmbroideryDirections(embR.data || []);
       setFonts(fontR.data || []);
     });
-  }, [open]);
+
+    // Load existing order data for edit mode
+    if (editOrderId) {
+      loadEditData(editOrderId);
+    }
+  }, [open, editOrderId]);
+
+  const loadEditData = async (orderId: string) => {
+    const [orderRes, scarfsRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('id', orderId).single(),
+      supabase.from('order_scarf_designs').select('*').eq('order_id', orderId).order('sort_order'),
+    ]);
+
+    if (!orderRes.data) return;
+    const o = orderRes.data as any;
+
+    setLeaderName(o.leader_name || '');
+    setLeaderPhone(o.leader_phone || '');
+    setStudentCount(String(o.student_count || ''));
+    setOrderType(o.order_type === 'custom' ? 'custom' : 'ready_kit');
+    setSelectedKit(o.kit_id || '');
+    setCustomAbayaColor(o.custom_abaya_color || '');
+    setCustomAbayaColorDegree(o.custom_abaya_color_degree || '');
+    setCustomScarfColor(o.custom_scarf_color || '');
+    setCustomScarfColorDegree(o.custom_scarf_color_degree || '');
+    setCustomHatColor(o.custom_hat_color || '');
+    setCustomHatColorDegree(o.custom_hat_color_degree || '');
+    setAbayaDesignId(o.abaya_design_id || '');
+    setSleeveStyleId(o.sleeve_style_id || '');
+    setSleeveColor(o.sleeve_color || '');
+    setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
+    setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
+    setBackEmbroideryEnabled(o.back_embroidery_enabled || false);
+    setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
+    setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
+    setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
+    if (o.color_image_url) setColorImagePreview(o.color_image_url);
+
+    const scarfs = (scarfsRes.data as any[]) || [];
+    if (scarfs.length > 0) {
+      setScarfDesigns(scarfs.map((s: any) => ({
+        localId: s.id,
+        scarf_style_id: s.scarf_style_id || '',
+        date_type_id: s.date_type_id || '',
+        scarf_method_id: s.scarf_method_id || '',
+        embroidery_direction_id: s.embroidery_direction_id || '',
+        font_id: s.font_id || '',
+        embroidery_color: s.embroidery_color || '',
+      })));
+    }
+  };
 
   const resetForm = () => {
     setLeaderName('');
