@@ -52,9 +52,10 @@ interface Props {
   editOrderId?: string | null;
 }
 
-export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated }: Props) {
+export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated, editOrderId }: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const isEditMode = !!editOrderId;
 
   // Basic fields
   const [leaderName, setLeaderName] = useState('');
