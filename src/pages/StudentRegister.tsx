@@ -7,8 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Loader2, School } from 'lucide-react';
+import { Save, Loader2, School, ChevronDown } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
