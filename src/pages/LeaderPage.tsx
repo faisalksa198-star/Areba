@@ -43,6 +43,8 @@ interface OrderInfo {
   back_embroidery_count: number;
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
+  purple_package_enabled: boolean;
+  purple_package_count: number;
   data_submitted: boolean;
   order_type: string;
   kit_name: string;
@@ -61,6 +63,7 @@ interface OrderInfo {
   kit_scarf_color_degree: string;
   kit_hat_color: string;
   kit_hat_color_degree: string;
+  school_name: string;
 }
 
 interface ShippingInfo {
