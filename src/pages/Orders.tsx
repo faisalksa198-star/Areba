@@ -79,7 +79,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-export default function Orders() {
+export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -119,7 +119,7 @@ export default function Orders() {
 
   useEffect(() => {
     if (userRole !== null) loadOrders();
-  }, [userRole]);
+  }, [userRole, myOrdersOnly]);
 
   const loadUserRole = async () => {
     if (!user) return;
@@ -139,9 +139,9 @@ export default function Orders() {
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    // Staff (customer_service) only sees their own orders
-    if (!isAdmin && user) {
-      query = query.eq('employee_id', user.id);
+    // "My Orders" mode or Staff always filter by employee_id
+    if (myOrdersOnly || (!isAdmin && user)) {
+      if (user) query = query.eq('employee_id', user.id);
     }
     const { data } = await query;
     setOrders((data as OrderRow[]) || []);
