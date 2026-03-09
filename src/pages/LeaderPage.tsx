@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown } from 'lucide-react';
 import ScarfCard from '@/components/orders/ScarfCard';
 import OrderInfoHeader from '@/components/orders/OrderInfoHeader';
+import { mapOrderScarfDesign } from '@/lib/order-scarf-binding';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
@@ -147,8 +148,21 @@ export default function LeaderPage() {
 
   useEffect(() => {
     if (!orderId) return;
+    setLoading(true);
+    setNotFound(false);
+    loadCities();
     loadData();
   }, [orderId]);
+
+  const loadCities = async () => {
+    const { data } = await supabase
+      .from('cities')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name');
+
+    setCities((data as City[]) || []);
+  };
 
   const loadData = async () => {
     // Load order info with shipping + leader_phone
@@ -188,9 +202,8 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load cities + hat embroideries + scarf designs + existing students
-    const [citiesRes, hatsRes, scarfsRes, studentsRes] = await Promise.all([
-      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
+    // Load hat embroideries + scarf designs + existing students
+    const [hatsRes, scarfsRes, studentsRes] = await Promise.all([
       supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
       supabase
         .from('order_scarf_designs')
@@ -207,8 +220,6 @@ export default function LeaderPage() {
       supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
     ]);
 
-    setCities((citiesRes.data as any) || []);
-
     const hatsSorted = ((hatsRes.data as any[]) || [])
       .sort((a, b) => {
         if (a.name === 'بدون تطريز') return -1;
@@ -219,19 +230,7 @@ export default function LeaderPage() {
     const noneId = hatsSorted.find(h => h.name === 'بدون تطريز')?.id || '';
     setNoEmbroideryId(noneId);
 
-    const scarfs = (scarfsRes.data as any[]) || [];
-    const parsedScarfs: ScarfDesign[] = scarfs.map((s: any) => ({
-      id: s.id,
-      sort_order: s.sort_order,
-      scarf_style_name: s.scarf_styles?.name,
-      scarf_style_image: s.scarf_styles?.image_url,
-      date_type_name: s.date_types?.name,
-      date_type_image: s.date_types?.image_url,
-      scarf_method_name: s.scarf_methods?.name,
-      embroidery_direction_name: s.embroidery_directions?.name,
-      font_name: s.fonts?.name,
-      embroidery_color: s.embroidery_color,
-    }));
+    const parsedScarfs: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
     setScarfDesigns(parsedScarfs);
 
     const defaultScarfId = parsedScarfs[0]?.id || '';
