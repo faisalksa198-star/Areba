@@ -467,6 +467,7 @@ export default function LeaderPage() {
 
   const showLogo = orderInfo?.logo_embroidery_enabled;
   const showBack = orderInfo?.back_embroidery_enabled;
+  const showHat = orderInfo?.hat_embroidery_enabled;
   const isSubmitted = orderInfo?.data_submitted;
 
   return (
