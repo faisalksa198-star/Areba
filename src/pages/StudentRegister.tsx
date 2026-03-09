@@ -21,8 +21,6 @@ interface ScarfDesign {
   embroidery_direction_name?: string;
   font_name?: string;
   embroidery_color?: string;
-  scarf_style_image?: string | null;
-  date_type_image?: string | null;
 }
 
 interface HatEmbroideryOption {
