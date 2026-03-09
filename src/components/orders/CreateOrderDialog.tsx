@@ -279,6 +279,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
         hat_embroidery_enabled: hatEmbroideryEnabled,
         hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
+        purple_package_enabled: purplePackageEnabled,
+        purple_package_count: purplePackageEnabled ? Math.min(parseInt(purplePackageCount) || 0, parseInt(studentCount) || 0) : 0,
       };
 
       let finalOrderId: string;
