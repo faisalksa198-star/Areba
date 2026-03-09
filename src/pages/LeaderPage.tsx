@@ -645,6 +645,7 @@ export default function LeaderPage() {
                               <span className="text-xs text-muted-foreground">—</span>
                             )}
                           </td>
+                          {showHat && (
                           <td className="px-2 py-2.5">
                             <div className="flex items-center justify-center gap-1">
                               <Select
@@ -654,13 +655,8 @@ export default function LeaderPage() {
                                   const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
 
                                   if (!isNone) {
-                                    if (!orderInfo?.hat_embroidery_enabled) {
-                                      toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
-                                      return;
-                                    }
-
                                     const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
-                                    if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
+                                    if (orderInfo!.hat_embroidery_count > 0 && currentChosen >= orderInfo!.hat_embroidery_count) {
                                       toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
                                       return;
                                     }
@@ -669,7 +665,7 @@ export default function LeaderPage() {
                                   updateStudent(student.id, 'hatEmbroideryId', v);
                                   if (isNone) updateStudent(student.id, 'hatExtraText', '');
                                 }}
-                                disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
+                                disabled={isSubmitted}
                               >
                                 <SelectTrigger className="h-8 text-xs w-[120px]">
                                   <SelectValue placeholder="بدون تطريز" />
@@ -698,6 +694,7 @@ export default function LeaderPage() {
                               })()}
                             </div>
                           </td>
+                          )}
                           {showLogo && (
                             <td className="px-2 py-2.5 text-center">
                               <Checkbox
