@@ -211,6 +211,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setBackEmbroideryCount('');
     setHatEmbroideryEnabled(false);
     setHatEmbroideryCount('');
+    setPurplePackageEnabled(false);
+    setPurplePackageCount('');
   };
 
   const handleColorImage = (e: React.ChangeEvent<HTMLInputElement>) => {
