@@ -176,9 +176,10 @@ export default function LeaderPage() {
     const { data: order } = await supabase
       .from('orders')
       .select(`
-        leader_name, order_number, status,
+        leader_name, order_number, status, school_name,
         student_count, logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
+        purple_package_enabled, purple_package_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
         abaya_design_id, sleeve_style_id,
