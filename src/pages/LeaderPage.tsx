@@ -174,7 +174,8 @@ export default function LeaderPage() {
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
         custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
         custom_hat_color, custom_hat_color_degree,
-        abaya_designs(name), sleeve_styles(name), ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree)
+        abaya_designs(name), sleeve_styles(name),
+        ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, abaya_designs(name), sleeve_styles(name))
       `)
       .eq('id', orderId!)
       .maybeSingle();
