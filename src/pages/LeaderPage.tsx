@@ -716,10 +716,10 @@ export default function LeaderPage() {
       )}
 
       {/* Shipping Section */}
-      <div className="px-3 pt-4 pb-28">
+      <div className="pt-4 pb-28 w-[90%] mx-auto">
         <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
           <CollapsibleTrigger asChild>
-            <button className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card hover:bg-accent/5 transition-colors">
+            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
               <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                 <Truck className="h-4 w-4 text-primary" />
                 بيانات الشحن
@@ -729,36 +729,38 @@ export default function LeaderPage() {
           </CollapsibleTrigger>
 
           <CollapsibleContent>
-            <div className="mt-2 p-4 rounded-xl border border-border bg-card">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
-                  <Input value={shipping.recipient_name} onChange={e => updateShipping('recipient_name', e.target.value)} placeholder="اسم المستلم" className="h-8 text-xs" disabled={isSubmitted} />
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
-                  <Input value={shipping.recipient_phone} onChange={e => updateShipping('recipient_phone', e.target.value)} placeholder="05XXXXXXXX" className="h-8 text-xs" disabled={isSubmitted} />
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">المدينة *</label>
-                  <Select value={shipping.shipping_city_id} onValueChange={v => updateShipping('shipping_city_id', v)} disabled={isSubmitted}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر المدينة" /></SelectTrigger>
-                    <SelectContent>
-                      {cities.map(c => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">الحي *</label>
-                  <Input value={shipping.district} onChange={e => updateShipping('district', e.target.value)} placeholder="اسم الحي" className="h-8 text-xs" disabled={isSubmitted} />
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
-                  <Input value={shipping.address_details} onChange={e => updateShipping('address_details', e.target.value)} placeholder="الشارع، رقم المبنى..." className="h-8 text-xs" disabled={isSubmitted} />
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
-                  <Input value={shipping.national_address} onChange={e => updateShipping('national_address', e.target.value)} placeholder="العنوان الوطني" className="h-8 text-xs" disabled={isSubmitted} />
+            <div className="mt-2 p-5 rounded-xl border border-border bg-card shadow-sm">
+              <div className="w-[75%] mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">اسم المستلم *</label>
+                    <Input value={shipping.recipient_name} onChange={e => updateShipping('recipient_name', e.target.value)} placeholder="اسم المستلم" className="h-9 text-xs" disabled={isSubmitted} />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">رقم الجوال *</label>
+                    <Input value={shipping.recipient_phone} onChange={e => updateShipping('recipient_phone', e.target.value)} placeholder="05XXXXXXXX" className="h-9 text-xs" disabled={isSubmitted} />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">المدينة *</label>
+                    <Select value={shipping.shipping_city_id} onValueChange={v => updateShipping('shipping_city_id', v)} disabled={isSubmitted}>
+                      <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="اختر المدينة" /></SelectTrigger>
+                      <SelectContent>
+                        {cities.map(c => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">الحي *</label>
+                    <Input value={shipping.district} onChange={e => updateShipping('district', e.target.value)} placeholder="اسم الحي" className="h-9 text-xs" disabled={isSubmitted} />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">تفاصيل العنوان *</label>
+                    <Input value={shipping.address_details} onChange={e => updateShipping('address_details', e.target.value)} placeholder="الشارع، رقم المبنى..." className="h-9 text-xs" disabled={isSubmitted} />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">العنوان الوطني (اختياري)</label>
+                    <Input value={shipping.national_address} onChange={e => updateShipping('national_address', e.target.value)} placeholder="العنوان الوطني" className="h-9 text-xs" disabled={isSubmitted} />
+                  </div>
                 </div>
               </div>
             </div>
