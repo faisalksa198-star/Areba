@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X,
-  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown
+  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -19,6 +20,7 @@ interface MasterItem {
   description?: string | null;
   image_url?: string | null;
   is_active: boolean;
+  has_extra_text?: boolean | null;
 }
 
 const CATEGORIES = [
@@ -28,8 +30,9 @@ const CATEGORIES = [
   { key: 'scarf_methods', label: 'طرق الوشاح', icon: Wind, hasImage: true, hasDescription: false },
   { key: 'embroidery_directions', label: 'اتجاه التطريز', icon: Compass, hasImage: true, hasDescription: false },
   { key: 'fonts', label: 'الخطوط', icon: Type, hasImage: false, hasDescription: false },
-  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: false, hasDescription: false },
+  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: true, hasDescription: false },
   { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true, hasDescription: false },
+  { key: 'hat_embroideries', label: 'تطريز القبعات', icon: Sparkles, hasImage: true, hasDescription: false },
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
 ] as const;
 
