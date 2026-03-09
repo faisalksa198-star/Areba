@@ -82,6 +82,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
 export default function Orders() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [userRole, setUserRole] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
