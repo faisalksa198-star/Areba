@@ -293,6 +293,30 @@ export default function Orders() {
     loadTotalStudents();
   };
 
+  const handleDeleteOrder = async () => {
+    if (!deleteOrderId) return;
+    setDeleting(true);
+    // Delete related records first
+    await supabase.from('students').delete().eq('order_id', deleteOrderId);
+    await supabase.from('order_scarf_designs').delete().eq('order_id', deleteOrderId);
+    const { error } = await supabase.from('orders').delete().eq('id', deleteOrderId);
+    if (error) {
+      toast({ title: 'خطأ في حذف الطلب', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'تم حذف الطلب بنجاح ✓' });
+      loadOrders();
+      loadTotalStudents();
+    }
+    setDeleting(false);
+    setShowDeleteDialog(false);
+    setDeleteOrderId(null);
+  };
+
+  const handleEditOrder = (orderId: string) => {
+    setEditOrderId(orderId);
+    setShowEditDialog(true);
+  };
+
   const statsCards = [
     { label: 'إجمالي الطلبات', value: stats.total, icon: ClipboardList, color: 'text-primary' },
     { label: 'بانتظار البيانات', value: stats.pending, icon: Clock, color: 'text-warning' },
