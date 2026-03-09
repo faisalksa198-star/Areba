@@ -499,6 +499,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 )}
               </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
@@ -510,6 +511,26 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                     <Input
                       value={backEmbroideryCount}
                       onChange={e => setBackEmbroideryCount(e.target.value)}
+                      placeholder="الكل"
+                      type="number"
+                      min="1"
+                      className="w-20 h-8 text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Switch checked={hatEmbroideryEnabled} onCheckedChange={setHatEmbroideryEnabled} />
+                  <span className="text-sm text-foreground">تطريز قبعة</span>
+                </div>
+                {hatEmbroideryEnabled && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">العدد:</label>
+                    <Input
+                      value={hatEmbroideryCount}
+                      onChange={e => setHatEmbroideryCount(e.target.value)}
                       placeholder="الكل"
                       type="number"
                       min="1"
