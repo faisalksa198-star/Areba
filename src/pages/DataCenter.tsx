@@ -224,6 +224,9 @@ export default function DataCenter() {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="font-semibold text-sm text-foreground">{item.name}</p>
+                                {activeTab === 'hat_embroideries' && item.has_extra_text && (
+                                  <Badge variant="outline" className="mt-1 text-[10px]">يحتاج نص إضافي</Badge>
+                                )}
                                 {(item as any).description && (
                                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                     {(item as any).description}
