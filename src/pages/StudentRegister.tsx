@@ -123,8 +123,8 @@ export default function StudentRegister() {
         .from('order_scarf_designs')
         .select(`
           id, sort_order, embroidery_color,
-          scarf_styles!scarf_style_id(name, image_url),
-          date_types!date_type_id(name, image_url),
+          scarf_style:scarf_styles!scarf_style_id(name, image_url),
+          date_type:date_types!date_type_id(name, image_url),
           scarf_methods!scarf_method_id(name),
           embroidery_directions!embroidery_direction_id(name),
           fonts!font_id(name)
@@ -153,6 +153,7 @@ export default function StudentRegister() {
 
     // Scarf designs
     const parsed: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
+    parsed.forEach((scarf) => console.log('[StudentRegister][Scarf]', scarf));
     setScarfDesigns(parsed);
     if (parsed.length > 0) setScarfDesignId(parsed[0].id);
 

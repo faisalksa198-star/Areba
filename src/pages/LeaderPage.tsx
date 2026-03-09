@@ -211,8 +211,8 @@ export default function LeaderPage() {
         .from('order_scarf_designs')
         .select(`
           id, sort_order, embroidery_color,
-          scarf_styles!scarf_style_id(name, image_url),
-          date_types!date_type_id(name, image_url),
+          scarf_style:scarf_styles!scarf_style_id(name, image_url),
+          date_type:date_types!date_type_id(name, image_url),
           scarf_methods!scarf_method_id(name),
           embroidery_directions!embroidery_direction_id(name),
           fonts!font_id(name)
@@ -239,6 +239,7 @@ export default function LeaderPage() {
     setNoEmbroideryId(noneId);
 
     const parsedScarfs: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
+    parsedScarfs.forEach((scarf) => console.log('[LeaderPage][Scarf]', scarf));
     setScarfDesigns(parsedScarfs);
 
     const defaultScarfId = parsedScarfs[0]?.id || '';

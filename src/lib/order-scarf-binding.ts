@@ -21,9 +21,9 @@ export function toImagePublicUrl(pathOrUrl?: string | null): string | null {
 }
 
 export function mapOrderScarfDesign(row: any) {
-  const scarfStyle = firstRelated(row.scarf_styles);
-  const dateType = firstRelated(row.date_types);
-  const scarfMethod = firstRelated(row.scarf_methods);
+  const scarfStyle = firstRelated((row.scarf_style ?? row.scarf_styles) as RelatedLookup);
+  const dateType = firstRelated((row.date_type ?? row.date_types) as RelatedLookup);
+  const scarfMethod = firstRelated((row.scarf_method ?? row.scarf_methods) as RelatedLookup);
   const embroideryDirection = firstRelated(row.embroidery_directions);
   const font = firstRelated(row.fonts);
 
