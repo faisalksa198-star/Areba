@@ -35,6 +35,7 @@ interface HatEmbroideryOption {
 interface OrderInfo {
   leader_name: string;
   order_number: string;
+  status: string;
   student_count: number;
   logo_embroidery_enabled: boolean;
   logo_embroidery_count: number;
@@ -170,7 +171,7 @@ export default function LeaderPage() {
     const { data: order } = await supabase
       .from('orders')
       .select(`
-        leader_name, order_number,
+        leader_name, order_number, status,
         student_count, logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
@@ -196,6 +197,7 @@ export default function LeaderPage() {
     const info: OrderInfo = {
       leader_name: o.leader_name || '',
       order_number: o.order_number || '',
+      status: o.status || 'pending_data',
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
       logo_embroidery_count: o.logo_embroidery_count || 0,
@@ -515,6 +517,24 @@ export default function LeaderPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
         <p className="text-muted-foreground">الطلب غير موجود</p>
+      </div>
+    );
+  }
+
+  // Lock page when status is not pending_data
+  const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+  if (isLocked) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <Send className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
+            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

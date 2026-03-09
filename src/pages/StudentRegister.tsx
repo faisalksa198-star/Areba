@@ -39,6 +39,7 @@ interface OrderInfo {
   back_embroidery_count: number;
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
+  status: string;
 }
 
 export default function StudentRegister() {
@@ -76,7 +77,7 @@ export default function StudentRegister() {
     const [orderRes, countRes] = await Promise.all([
       supabase
         .from('orders')
-        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count')
+        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, status, data_submitted')
         .eq('id', orderId!)
         .maybeSingle(),
       supabase.from('students').select('has_logo_embroidery, back_embroidery_text, hat_embroidery_id').eq('order_id', orderId!),
@@ -97,6 +98,7 @@ export default function StudentRegister() {
       back_embroidery_count: o.back_embroidery_count || 0,
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
+      status: o.status || 'pending_data',
     };
     setOrderInfo(info);
 
@@ -224,6 +226,23 @@ export default function StudentRegister() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
         <p className="text-muted-foreground">الطلب غير موجود</p>
+      </div>
+    );
+  }
+
+  // Lock page when status is not pending_data
+  if (orderInfo && orderInfo.status !== 'pending_data') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <School className="h-7 w-7 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
+            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+
 import {
   Dialog,
   DialogContent,
@@ -102,8 +102,7 @@ export default function Orders() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Edit/Delete single
-  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
-  const [editForm, setEditForm] = useState({ leader_name: '', leader_phone: '', status: '', notes: '' });
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   // Kits for filter
@@ -294,34 +293,23 @@ export default function Orders() {
     loadTotalStudents();
   };
 
-  const openEditDialog = (order: OrderRow) => {
-    setEditingOrder(order);
-    setEditForm({
-      leader_name: order.leader_name || '',
-      leader_phone: order.leader_phone || '',
-      status: order.status,
-      notes: '',
-    });
-  };
-
-  const handleEditSave = async () => {
-    if (!editingOrder) return;
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
       .from('orders')
-      .update({
-        leader_name: editForm.leader_name.trim() || null,
-        leader_phone: editForm.leader_phone.trim() || null,
-        status: editForm.status as any,
-        notes: editForm.notes.trim() || null,
-      } as any)
-      .eq('id', editingOrder.id);
+      .update({ status: newStatus } as any)
+      .eq('id', orderId);
     if (error) {
-      toast({ title: 'خطأ في التعديل', variant: 'destructive' });
+      toast({ title: 'خطأ في تغيير الحالة', variant: 'destructive' });
     } else {
-      toast({ title: 'تم التعديل بنجاح ✓' });
-      setEditingOrder(null);
+      toast({ title: 'تم تحديث الحالة ✓' });
       loadOrders();
     }
+  };
+
+  const handleEditCreated = (orderId: string) => {
+    setEditingOrderId(null);
+    loadOrders();
+    loadTotalStudents();
   };
 
   const handleDeleteOrder = async () => {
@@ -546,6 +534,20 @@ export default function Orders() {
                           <Badge variant="outline" className={status.className}>
                             {status.label}
                           </Badge>
+                          <Select
+                            value={order.status}
+                            onValueChange={v => handleStatusChange(order.id, v)}
+                          >
+                            <SelectTrigger className="h-7 w-[130px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                              <SelectItem value="completed">مكتمل</SelectItem>
+                              <SelectItem value="cancelled">ملغي</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
@@ -577,7 +579,7 @@ export default function Orders() {
                             variant="outline"
                             size="sm"
                             className="gap-1 text-xs"
-                            onClick={() => openEditDialog(order)}
+                            onClick={() => setEditingOrderId(order.id)}
                           >
                             <Pencil className="h-3 w-3" />
                             تعديل
@@ -659,44 +661,16 @@ export default function Orders() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Order Dialog */}
-      <Dialog open={!!editingOrder} onOpenChange={open => !open && setEditingOrder(null)}>
-        <DialogContent className="max-w-sm" dir="rtl">
-          <DialogHeader>
-            <DialogTitle>تعديل الطلب {editingOrder?.order_number}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم القائدة</label>
-              <Input value={editForm.leader_name} onChange={e => setEditForm(f => ({ ...f, leader_name: e.target.value }))} className="h-9 text-sm" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال</label>
-              <Input value={editForm.leader_phone} onChange={e => setEditForm(f => ({ ...f, leader_phone: e.target.value }))} className="h-9 text-sm" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">الحالة</label>
-              <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
-                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
-                  <SelectItem value="cancelled">ملغي</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">ملاحظات</label>
-              <Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-sm" />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleEditSave} className="flex-1">حفظ التعديلات</Button>
-              <Button variant="outline" onClick={() => setEditingOrder(null)}>إلغاء</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Edit Order Dialog (Full) */}
+      {user && (
+        <CreateOrderDialog
+          open={!!editingOrderId}
+          onOpenChange={open => !open && setEditingOrderId(null)}
+          userId={user.id}
+          onCreated={handleEditCreated}
+          editOrderId={editingOrderId}
+        />
+      )}
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deletingOrderId} onOpenChange={open => !open && setDeletingOrderId(null)}>

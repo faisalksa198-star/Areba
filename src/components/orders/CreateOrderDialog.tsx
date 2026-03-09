@@ -49,11 +49,13 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   userId: string;
   onCreated: (orderId: string) => void;
+  editOrderId?: string | null;
 }
 
-export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated }: Props) {
+export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated, editOrderId }: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(false);
 
   // Basic fields
   const [leaderName, setLeaderName] = useState('');
@@ -100,7 +102,17 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([
+    loadMasterData();
+  }, [open]);
+
+  // Load existing order data when editing
+  useEffect(() => {
+    if (!open || !editOrderId) return;
+    loadEditData();
+  }, [open, editOrderId]);
+
+  const loadMasterData = async () => {
+    const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR] = await Promise.all([
       supabase.from('ready_kits').select('id, name').eq('is_active', true),
       supabase.from('abaya_designs').select('id, name, image_url').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name, image_url').eq('is_active', true),
@@ -109,17 +121,67 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       supabase.from('date_types').select('id, name').eq('is_active', true),
       supabase.from('embroidery_directions').select('id, name, image_url').eq('is_active', true),
       supabase.from('fonts').select('id, name').eq('is_active', true),
-    ]).then(([kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR]) => {
-      setKits(kitsR.data || []);
-      setAbayaDesigns(abayaR.data || []);
-      setSleeveStyles(sleeveR.data || []);
-      setScarfStyles(scarfSR.data || []);
-      setScarfMethods(scarfMR.data || []);
-      setDateTypes(dateR.data || []);
-      setEmbroideryDirections(embR.data || []);
-      setFonts(fontR.data || []);
-    });
-  }, [open]);
+    ]);
+    setKits(kitsR.data || []);
+    setAbayaDesigns(abayaR.data || []);
+    setSleeveStyles(sleeveR.data || []);
+    setScarfStyles(scarfSR.data || []);
+    setScarfMethods(scarfMR.data || []);
+    setDateTypes(dateR.data || []);
+    setEmbroideryDirections(embR.data || []);
+    setFonts(fontR.data || []);
+  };
+
+  const loadEditData = async () => {
+    if (!editOrderId) return;
+    setLoadingEdit(true);
+    
+    const [orderRes, scarfRes] = await Promise.all([
+      supabase.from('orders').select('*').eq('id', editOrderId).single(),
+      supabase.from('order_scarf_designs').select('*').eq('order_id', editOrderId).order('sort_order'),
+    ]);
+
+    if (orderRes.data) {
+      const o = orderRes.data as any;
+      setLeaderName(o.leader_name || '');
+      setLeaderPhone(o.leader_phone || '');
+      setStudentCount(String(o.student_count || ''));
+      setOrderType(o.order_type === 'custom' ? 'custom' : 'ready_kit');
+      setSelectedKit(o.kit_id || '');
+      setCustomAbayaColor(o.custom_abaya_color || '');
+      setCustomAbayaColorDegree(o.custom_abaya_color_degree || '');
+      setCustomScarfColor(o.custom_scarf_color || '');
+      setCustomScarfColorDegree(o.custom_scarf_color_degree || '');
+      setCustomHatColor(o.custom_hat_color || '');
+      setCustomHatColorDegree(o.custom_hat_color_degree || '');
+      setColorImagePreview(o.color_image_url || '');
+      setAbayaDesignId(o.abaya_design_id || '');
+      setSleeveStyleId(o.sleeve_style_id || '');
+      setSleeveColor(o.sleeve_color || '');
+      setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
+      setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
+      setBackEmbroideryEnabled(o.back_embroidery_enabled || false);
+      setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
+      setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
+      setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
+    }
+
+    if (scarfRes.data && scarfRes.data.length > 0) {
+      setScarfDesigns(scarfRes.data.map((s: any) => ({
+        localId: s.id || crypto.randomUUID(),
+        scarf_style_id: s.scarf_style_id || '',
+        date_type_id: s.date_type_id || '',
+        scarf_method_id: s.scarf_method_id || '',
+        embroidery_direction_id: s.embroidery_direction_id || '',
+        font_id: s.font_id || '',
+        embroidery_color: s.embroidery_color || '',
+      })));
+    } else {
+      setScarfDesigns([createEmptyScarfDesign()]);
+    }
+
+    setLoadingEdit(false);
+  };
 
   const resetForm = () => {
     setLeaderName('');
@@ -177,8 +239,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
     setSaving(true);
     try {
-      // Upload color image if exists
-      let colorImageUrl: string | null = null;
+      // Upload color image if exists (new file only)
+      let colorImageUrl: string | null = colorImagePreview || null;
       if (colorImage) {
         const ext = colorImage.name.split('.').pop();
         const path = `orders/colors/${crypto.randomUUID()}.${ext}`;
@@ -189,44 +251,74 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
-       const orderNumber = generateOrderNumber();
-       const { data: orderData, error: orderErr } = await supabase
-         .from('orders')
-         .insert({
-           order_number: orderNumber,
-           employee_id: userId,
-           leader_name: leaderName.trim() || null,
-           leader_phone: leaderPhone.trim() || null,
-           student_count: parseInt(studentCount) || null,
-           order_type: orderType,
-           kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-           custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
-           custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
-           custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
-           custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
-           custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
-           custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
-           color_image_url: colorImageUrl,
-           abaya_design_id: abayaDesignId || null,
-           sleeve_style_id: sleeveStyleId || null,
-           sleeve_color: sleeveColor || null,
-           logo_embroidery_enabled: logoEmbroideryEnabled,
-           logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
-           back_embroidery_enabled: backEmbroideryEnabled,
-           back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
-           hat_embroidery_enabled: hatEmbroideryEnabled,
-           hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
-           status: 'pending_data' as const,
-         } as any)
-         .select('id')
-         .single();
+      const orderPayload = {
+        leader_name: leaderName.trim() || null,
+        leader_phone: leaderPhone.trim() || null,
+        student_count: parseInt(studentCount) || null,
+        order_type: orderType,
+        kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
+        custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
+        custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
+        custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
+        custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
+        custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
+        custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
+        color_image_url: colorImageUrl,
+        abaya_design_id: abayaDesignId || null,
+        sleeve_style_id: sleeveStyleId || null,
+        sleeve_color: sleeveColor || null,
+        logo_embroidery_enabled: logoEmbroideryEnabled,
+        logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
+        back_embroidery_enabled: backEmbroideryEnabled,
+        back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
+        hat_embroidery_enabled: hatEmbroideryEnabled,
+        hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
+      };
 
-      if (orderErr) throw orderErr;
+      let finalOrderId: string;
+
+      if (editOrderId) {
+        // UPDATE existing order
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update(orderPayload as any)
+          .eq('id', editOrderId);
+        if (updateErr) throw updateErr;
+        finalOrderId = editOrderId;
+
+        // Replace scarf designs
+        await supabase.from('order_scarf_designs').delete().eq('order_id', editOrderId);
+      } else {
+        // INSERT new order
+        const orderNumber = generateOrderNumber();
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .insert({
+            ...orderPayload,
+            order_number: orderNumber,
+            employee_id: userId,
+            status: 'pending_data' as const,
+          } as any)
+          .select('id')
+          .single();
+        if (orderErr) throw orderErr;
+        finalOrderId = orderData.id;
+
+        // Update links
+        await supabase
+          .from('orders')
+          .update({
+            leader_link: finalOrderId,
+            registration_link: finalOrderId,
+            tracking_link: finalOrderId,
+          })
+          .eq('id', finalOrderId);
+      }
 
       // Save scarf designs
       if (scarfDesigns.length > 0) {
         const scarfRows = scarfDesigns.map((s, i) => ({
-          order_id: orderData.id,
+          order_id: finalOrderId,
           scarf_style_id: s.scarf_style_id || null,
           date_type_id: s.date_type_id || null,
           scarf_method_id: s.scarf_method_id || null,
@@ -238,22 +330,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         await supabase.from('order_scarf_designs').insert(scarfRows as any);
       }
 
-      // Update links
-      await supabase
-        .from('orders')
-        .update({
-          leader_link: orderData.id,
-          registration_link: orderData.id,
-          tracking_link: orderData.id,
-        })
-        .eq('id', orderData.id);
-
-      toast({ title: `تم إنشاء الطلب ${orderNumber} بنجاح ✓` });
+      toast({ title: editOrderId ? 'تم تعديل الطلب بنجاح ✓' : `تم إنشاء الطلب بنجاح ✓` });
       resetForm();
       onOpenChange(false);
-      onCreated(orderData.id);
+      onCreated(finalOrderId);
     } catch (err: any) {
-      toast({ title: 'خطأ في إنشاء الطلب', description: err.message, variant: 'destructive' });
+      toast({ title: 'خطأ في حفظ الطلب', description: err.message, variant: 'destructive' });
     }
     setSaving(false);
   };
@@ -267,286 +349,295 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     return `ORD-${y}${m}${d}-${r}`;
   };
 
+  const isEditMode = !!editOrderId;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>إنشاء طلب جديد</DialogTitle>
+          <DialogTitle>{isEditMode ? 'تعديل الطلب' : 'إنشاء طلب جديد'}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-5 mt-2">
-          {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">اسم القائدة</label>
-              <Input value={leaderName} onChange={e => setLeaderName(e.target.value)} placeholder="اسم القائدة" />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">رقم الجوال</label>
-              <Input value={leaderPhone} onChange={e => setLeaderPhone(e.target.value)} placeholder="05xxxxxxxx" type="tel" />
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الطالبات *</label>
-            <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="30" type="number" min="1" />
-          </div>
 
-          {/* Order Type */}
-          <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">نوع الطلب</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setOrderType('ready_kit')}
-                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
-                  orderType === 'ready_kit'
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-                }`}
-              >
-                طقم جاهز
-              </button>
-              <button
-                onClick={() => setOrderType('custom')}
-                className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
-                  orderType === 'custom'
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-                }`}
-              >
-                تفصيل جديد
-              </button>
-            </div>
+        {loadingEdit ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-
-          {/* Ready Kit Selection */}
-          {orderType === 'ready_kit' && (
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">اختر الطقم</label>
-              <Select value={selectedKit} onValueChange={setSelectedKit}>
-                <SelectTrigger><SelectValue placeholder="اختر الطقم" /></SelectTrigger>
-                <SelectContent>
-                  {kits.map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Custom Colors */}
-          {orderType === 'custom' && (
-            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-              <p className="text-sm font-semibold text-foreground">ألوان التفصيل</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">لون العباية</label>
-                  <Input value={customAbayaColor} onChange={e => setCustomAbayaColor(e.target.value)} placeholder="اللون" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
-                  <Input value={customAbayaColorDegree} onChange={e => setCustomAbayaColorDegree(e.target.value)} placeholder="الدرجة" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">لون الوشاح</label>
-                  <Input value={customScarfColor} onChange={e => setCustomScarfColor(e.target.value)} placeholder="اللون" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
-                  <Input value={customScarfColorDegree} onChange={e => setCustomScarfColorDegree(e.target.value)} placeholder="الدرجة" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">لون القبعة</label>
-                  <Input value={customHatColor} onChange={e => setCustomHatColor(e.target.value)} placeholder="اللون" />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
-                  <Input value={customHatColorDegree} onChange={e => setCustomHatColorDegree(e.target.value)} placeholder="الدرجة" />
-                </div>
+        ) : (
+          <div className="space-y-5 mt-2">
+            {/* Basic Info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">اسم القائدة</label>
+                <Input value={leaderName} onChange={e => setLeaderName(e.target.value)} placeholder="اسم القائدة" />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">صورة الألوان</label>
-                {colorImagePreview ? (
-                  <div className="relative w-24 h-24">
-                    <img src={colorImagePreview} className="w-full h-full object-cover rounded-lg" />
-                    <button onClick={() => { setColorImage(null); setColorImagePreview(''); }} className="absolute -top-1.5 -left-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5">
-                      <X className="h-3 w-3" />
-                    </button>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">رقم الجوال</label>
+                <Input value={leaderPhone} onChange={e => setLeaderPhone(e.target.value)} placeholder="05xxxxxxxx" type="tel" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الطالبات *</label>
+              <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="30" type="number" min="1" />
+            </div>
+
+            {/* Order Type */}
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">نوع الطلب</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setOrderType('ready_kit')}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+                    orderType === 'ready_kit'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                  }`}
+                >
+                  طقم جاهز
+                </button>
+                <button
+                  onClick={() => setOrderType('custom')}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors border ${
+                    orderType === 'custom'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border hover:bg-accent'
+                  }`}
+                >
+                  تفصيل جديد
+                </button>
+              </div>
+            </div>
+
+            {/* Ready Kit Selection */}
+            {orderType === 'ready_kit' && (
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">اختر الطقم</label>
+                <Select value={selectedKit} onValueChange={setSelectedKit}>
+                  <SelectTrigger><SelectValue placeholder="اختر الطقم" /></SelectTrigger>
+                  <SelectContent>
+                    {kits.map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Custom Colors */}
+            {orderType === 'custom' && (
+              <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                <p className="text-sm font-semibold text-foreground">ألوان التفصيل</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">لون العباية</label>
+                    <Input value={customAbayaColor} onChange={e => setCustomAbayaColor(e.target.value)} placeholder="اللون" />
                   </div>
-                ) : (
-                  <label className="flex items-center justify-center w-24 h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
-                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
-                    <input type="file" accept="image/*" className="hidden" onChange={handleColorImage} />
-                  </label>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Abaya Design Section */}
-          <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-            <p className="text-sm font-semibold text-foreground">تصميم العباية</p>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">شكل العباية</label>
-                <Select value={abayaDesignId} onValueChange={setAbayaDesignId}>
-                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
-                  <SelectContent>
-                    {abayaDesigns.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">طرف الكم</label>
-                <Select value={sleeveStyleId} onValueChange={setSleeveStyleId}>
-                  <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
-                  <SelectContent>
-                    {sleeveStyles.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground mb-1 block">لون طرف الكم</label>
-                <Input value={sleeveColor} onChange={e => setSleeveColor(e.target.value)} placeholder="اللون" />
-              </div>
-            </div>
-          </div>
-
-          {/* Scarf Designs Section */}
-          <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
-              <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs">
-                <Plus className="h-3 w-3" /> إضافة وشاح
-              </Button>
-            </div>
-            {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.localId} className="p-3 rounded-lg bg-background border border-border space-y-2">
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
-                  {scarfDesigns.length > 1 && (
-                    <button onClick={() => removeScarfDesign(scarf.localId)} className="text-muted-foreground hover:text-destructive transition-colors">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
+                    <Input value={customAbayaColorDegree} onChange={e => setCustomAbayaColorDegree(e.target.value)} placeholder="الدرجة" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">لون الوشاح</label>
+                    <Input value={customScarfColor} onChange={e => setCustomScarfColor(e.target.value)} placeholder="اللون" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
+                    <Input value={customScarfColorDegree} onChange={e => setCustomScarfColorDegree(e.target.value)} placeholder="الدرجة" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">لون القبعة</label>
+                    <Input value={customHatColor} onChange={e => setCustomHatColor(e.target.value)} placeholder="اللون" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">درجة اللون</label>
+                    <Input value={customHatColorDegree} onChange={e => setCustomHatColorDegree(e.target.value)} placeholder="الدرجة" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">صورة الألوان</label>
+                  {colorImagePreview ? (
+                    <div className="relative w-24 h-24">
+                      <img src={colorImagePreview} className="w-full h-full object-cover rounded-lg" />
+                      <button onClick={() => { setColorImage(null); setColorImagePreview(''); }} className="absolute -top-1.5 -left-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center w-24 h-24 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                      <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                      <input type="file" accept="image/*" className="hidden" onChange={handleColorImage} />
+                    </label>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">تصميم الوشاح</label>
-                    <Select value={scarf.scarf_style_id} onValueChange={v => updateScarfDesign(scarf.localId, 'scarf_style_id', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>{scarfStyles.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">نوع التاريخ</label>
-                    <Select value={scarf.date_type_id} onValueChange={v => updateScarfDesign(scarf.localId, 'date_type_id', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>{dateTypes.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">طرف الوشاح</label>
-                    <Select value={scarf.scarf_method_id} onValueChange={v => updateScarfDesign(scarf.localId, 'scarf_method_id', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>{scarfMethods.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">اتجاه التطريز</label>
-                    <Select value={scarf.embroidery_direction_id} onValueChange={v => updateScarfDesign(scarf.localId, 'embroidery_direction_id', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>{embroideryDirections.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">خط التطريز</label>
-                    <Select value={scarf.font_id} onValueChange={v => updateScarfDesign(scarf.localId, 'font_id', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>{fonts.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-muted-foreground mb-0.5 block">لون التطريز</label>
-                    <Select value={scarf.embroidery_color} onValueChange={v => updateScarfDesign(scarf.localId, 'embroidery_color', v)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
-                      <SelectContent>
-                        {EMBROIDERY_COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
               </div>
-            ))}
-          </div>
+            )}
 
-          {/* Extra Services */}
-          <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-            <p className="text-sm font-semibold text-foreground">الخدمات الإضافية</p>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch checked={logoEmbroideryEnabled} onCheckedChange={setLogoEmbroideryEnabled} />
-                  <span className="text-sm text-foreground">تطريز شعار</span>
+            {/* Abaya Design Section */}
+            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+              <p className="text-sm font-semibold text-foreground">تصميم العباية</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">شكل العباية</label>
+                  <Select value={abayaDesignId} onValueChange={setAbayaDesignId}>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectContent>
+                      {abayaDesigns.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                {logoEmbroideryEnabled && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground">العدد:</label>
-                    <Input
-                      value={logoEmbroideryCount}
-                      onChange={e => setLogoEmbroideryCount(e.target.value)}
-                      placeholder="الكل"
-                      type="number"
-                      min="1"
-                      className="w-20 h-8 text-xs"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
-                  <span className="text-sm text-foreground">تطريز خلفي</span>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">طرف الكم</label>
+                  <Select value={sleeveStyleId} onValueChange={setSleeveStyleId}>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectContent>
+                      {sleeveStyles.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                {backEmbroideryEnabled && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground">العدد:</label>
-                    <Input
-                      value={backEmbroideryCount}
-                      onChange={e => setBackEmbroideryCount(e.target.value)}
-                      placeholder="الكل"
-                      type="number"
-                      min="1"
-                      className="w-20 h-8 text-xs"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch checked={hatEmbroideryEnabled} onCheckedChange={setHatEmbroideryEnabled} />
-                  <span className="text-sm text-foreground">تطريز قبعة</span>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">لون طرف الكم</label>
+                  <Input value={sleeveColor} onChange={e => setSleeveColor(e.target.value)} placeholder="اللون" />
                 </div>
-                {hatEmbroideryEnabled && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground">العدد:</label>
-                    <Input
-                      value={hatEmbroideryCount}
-                      onChange={e => setHatEmbroideryCount(e.target.value)}
-                      placeholder="الكل"
-                      type="number"
-                      min="1"
-                      className="w-20 h-8 text-xs"
-                    />
-                  </div>
-                )}
               </div>
             </div>
-          </div>
 
-          <Button onClick={handleSubmit} disabled={saving} className="w-full gap-1.5">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {saving ? 'جارٍ الإنشاء...' : 'حفظ وإرسال الطلب'}
-          </Button>
-        </div>
+            {/* Scarf Designs Section */}
+            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
+                <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs">
+                  <Plus className="h-3 w-3" /> إضافة وشاح
+                </Button>
+              </div>
+              {scarfDesigns.map((scarf, idx) => (
+                <div key={scarf.localId} className="p-3 rounded-lg bg-background border border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
+                    {scarfDesigns.length > 1 && (
+                      <button onClick={() => removeScarfDesign(scarf.localId)} className="text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">تصميم الوشاح</label>
+                      <Select value={scarf.scarf_style_id} onValueChange={v => updateScarfDesign(scarf.localId, 'scarf_style_id', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>{scarfStyles.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">نوع التاريخ</label>
+                      <Select value={scarf.date_type_id} onValueChange={v => updateScarfDesign(scarf.localId, 'date_type_id', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>{dateTypes.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">طرف الوشاح</label>
+                      <Select value={scarf.scarf_method_id} onValueChange={v => updateScarfDesign(scarf.localId, 'scarf_method_id', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>{scarfMethods.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">اتجاه التطريز</label>
+                      <Select value={scarf.embroidery_direction_id} onValueChange={v => updateScarfDesign(scarf.localId, 'embroidery_direction_id', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>{embroideryDirections.map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">خط التطريز</label>
+                      <Select value={scarf.font_id} onValueChange={v => updateScarfDesign(scarf.localId, 'font_id', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>{fonts.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground mb-0.5 block">لون التطريز</label>
+                      <Select value={scarf.embroidery_color} onValueChange={v => updateScarfDesign(scarf.localId, 'embroidery_color', v)}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="اختر" /></SelectTrigger>
+                        <SelectContent>
+                          {EMBROIDERY_COLORS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Extra Services */}
+            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+              <p className="text-sm font-semibold text-foreground">الخدمات الإضافية</p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={logoEmbroideryEnabled} onCheckedChange={setLogoEmbroideryEnabled} />
+                    <span className="text-sm text-foreground">تطريز شعار</span>
+                  </div>
+                  {logoEmbroideryEnabled && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">العدد:</label>
+                      <Input
+                        value={logoEmbroideryCount}
+                        onChange={e => setLogoEmbroideryCount(e.target.value)}
+                        placeholder="الكل"
+                        type="number"
+                        min="1"
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
+                    <span className="text-sm text-foreground">تطريز خلفي</span>
+                  </div>
+                  {backEmbroideryEnabled && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">العدد:</label>
+                      <Input
+                        value={backEmbroideryCount}
+                        onChange={e => setBackEmbroideryCount(e.target.value)}
+                        placeholder="الكل"
+                        type="number"
+                        min="1"
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={hatEmbroideryEnabled} onCheckedChange={setHatEmbroideryEnabled} />
+                    <span className="text-sm text-foreground">تطريز قبعة</span>
+                  </div>
+                  {hatEmbroideryEnabled && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">العدد:</label>
+                      <Input
+                        value={hatEmbroideryCount}
+                        onChange={e => setHatEmbroideryCount(e.target.value)}
+                        placeholder="الكل"
+                        type="number"
+                        min="1"
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Button onClick={handleSubmit} disabled={saving} className="w-full gap-1.5">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : isEditMode ? <Loader2 className="h-4 w-4 hidden" /> : <Plus className="h-4 w-4" />}
+              {saving ? 'جارٍ الحفظ...' : isEditMode ? 'حفظ التعديلات' : 'حفظ وإرسال الطلب'}
+            </Button>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
