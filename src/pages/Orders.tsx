@@ -476,19 +476,42 @@ export default function Orders() {
           )}
         </div>
 
-        {/* Bulk Actions */}
+        {/* Bulk Actions Toolbar */}
         {selectedOrderIds.size > 0 && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border flex-wrap">
-            <span className="text-sm text-muted-foreground">تم تحديد {selectedOrderIds.size} طلب</span>
-            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 flex-wrap">
+            <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+              تم تحديد {selectedOrderIds.size} طلب
+            </Badge>
+            <div className="h-5 w-px bg-border" />
+            <Select onValueChange={async (v) => {
+              const ids = Array.from(selectedOrderIds);
+              for (const id of ids) {
+                await supabase.from('orders').update({ status: v } as any).eq('id', id);
+              }
+              toast({ title: `تم تغيير حالة ${ids.length} طلب ✓` });
+              setSelectedOrderIds(new Set());
+              loadOrders();
+            }}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="تغيير الحالة إلى..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                <SelectItem value="completed">مكتمل</SelectItem>
+                <SelectItem value="cancelled">ملغي</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="h-5 w-px bg-border" />
+            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
               تصدير JSON
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1">
+            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               حذف جماعي
             </Button>
