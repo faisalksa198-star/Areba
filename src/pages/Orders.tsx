@@ -579,68 +579,88 @@ export default function Orders() {
                             </p>
                           </div>
                         </div>
-                        {order.leader_name && (
-                          <span className="text-xs text-muted-foreground truncate">القائدة: {order.leader_name}</span>
-                        )}
                         {order.student_count ? (
                           <span className="text-xs text-muted-foreground">{order.student_count} طالبة</span>
                         ) : null}
-                        <Select
-                          value={order.status}
-                          onValueChange={v => handleStatusChange(order.id, v)}
-                        >
-                          <SelectTrigger className="h-7 w-[130px] text-xs shrink-0">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
-                            <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                            <SelectItem value="completed">مكتمل</SelectItem>
-                            <SelectItem value="cancelled">ملغي</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Badge className={`${status.className} border text-[11px] px-2 py-0.5`}>
+                          {status.label}
+                        </Badge>
+                        {isAdmin && (
+                          <Select
+                            value={order.status}
+                            onValueChange={v => handleStatusChange(order.id, v)}
+                          >
+                            <SelectTrigger className="h-7 w-[130px] text-xs shrink-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                              <SelectItem value="completed">مكتمل</SelectItem>
+                              <SelectItem value="cancelled">ملغي</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
-                      {/* Action Buttons - unified row */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 h-8 w-[72px] text-xs"
-                          onClick={() => {
-                            setGeneratedLinks(links);
-                            setShowLinks(true);
-                          }}
-                        >
-                          <Link className="h-3.5 w-3.5" />
-                          الروابط
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 h-8 w-[72px] text-xs"
-                          onClick={() => exportOrderJSON(order.id)}
-                        >
-                          <FileJson className="h-3.5 w-3.5" />
-                          تصدير
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1.5 h-8 w-[72px] text-xs"
-                          onClick={() => setEditingOrderId(order.id)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          تعديل
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1.5 h-8 w-[72px] text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => setDeletingOrderId(order.id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          حذف
-                        </Button>
+                      {/* Action Buttons - icon only with tooltips */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => {
+                                setGeneratedLinks(links);
+                                setShowLinks(true);
+                              }}
+                            >
+                              <Link className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>الروابط</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => exportOrderJSON(order.id)}
+                            >
+                              <FileJson className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>تصدير</TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => setEditingOrderId(order.id)}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>تعديل</TooltipContent>
+                        </Tooltip>
+                        {isAdmin && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeletingOrderId(order.id)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>حذف</TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </div>
                   </CardContent>
