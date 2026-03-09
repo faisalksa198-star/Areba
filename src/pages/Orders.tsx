@@ -70,6 +70,8 @@ interface OrderRow {
   kit_id: string | null;
   order_type: string | null;
   created_at: string;
+  employee_id: string;
+  profiles: { full_name: string } | null;
 }
 
 const statusLabels: Record<string, { label: string; className: string }> = {
