@@ -490,11 +490,19 @@ export default function Orders() {
 
         {/* Bulk Actions */}
         {selectedOrderIds.size > 0 && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border">
+          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border flex-wrap">
             <span className="text-sm text-muted-foreground">تم تحديد {selectedOrderIds.size} طلب</span>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              تصدير جماعي
+              تصدير CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+              {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
+              تصدير JSON
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1">
+              {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              حذف جماعي
             </Button>
           </div>
         )}
