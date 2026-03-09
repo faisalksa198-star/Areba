@@ -119,7 +119,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
 
   useEffect(() => {
     if (userRole !== null) loadOrders();
-  }, [userRole]);
+  }, [userRole, myOrdersOnly]);
 
   const loadUserRole = async () => {
     if (!user) return;
