@@ -123,12 +123,15 @@ export default function LeaderPage() {
   const [maxStudents, setMaxStudents] = useState(30);
   const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null);
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesign[]>([]);
+  const [hatEmbroideries, setHatEmbroideries] = useState<HatEmbroideryOption[]>([]);
+  const [noEmbroideryId, setNoEmbroideryId] = useState('');
   const [cities, setCities] = useState<City[]>([]);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [shippingOpen, setShippingOpen] = useState(false);
 
   // Shipping state
   const [shipping, setShipping] = useState<ShippingInfo>({
