@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown } from 'lucide-react';
+import ScarfCard from '@/components/orders/ScarfCard';
+import OrderInfoHeader from '@/components/orders/OrderInfoHeader';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
