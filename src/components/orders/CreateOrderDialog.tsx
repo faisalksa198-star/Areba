@@ -166,6 +166,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
       setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
       setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
+      setPurplePackageEnabled(o.purple_package_enabled || false);
+      setPurplePackageCount(o.purple_package_count ? String(o.purple_package_count) : '');
     }
 
     if (scarfRes.data && scarfRes.data.length > 0) {
