@@ -89,6 +89,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
   const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
+  const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
+  const [purplePackageCount, setPurplePackageCount] = useState('');
 
   // Master data
   const [kits, setKits] = useState<MasterItem[]>([]);
@@ -164,6 +166,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
       setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
       setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
+      setPurplePackageEnabled(o.purple_package_enabled || false);
+      setPurplePackageCount(o.purple_package_count ? String(o.purple_package_count) : '');
     }
 
     if (scarfRes.data && scarfRes.data.length > 0) {
@@ -207,6 +211,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setBackEmbroideryCount('');
     setHatEmbroideryEnabled(false);
     setHatEmbroideryCount('');
+    setPurplePackageEnabled(false);
+    setPurplePackageCount('');
   };
 
   const handleColorImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,6 +279,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
         hat_embroidery_enabled: hatEmbroideryEnabled,
         hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
+        purple_package_enabled: purplePackageEnabled,
+        purple_package_count: purplePackageEnabled ? Math.min(parseInt(purplePackageCount) || 0, parseInt(studentCount) || 0) : 0,
       };
 
       let finalOrderId: string;
@@ -624,6 +632,35 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                         placeholder="الكل"
                         type="number"
                         min="1"
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={purplePackageEnabled} onCheckedChange={setPurplePackageEnabled} />
+                    <span className="text-sm text-foreground">بكج Purple</span>
+                  </div>
+                  {purplePackageEnabled && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">العدد:</label>
+                      <Input
+                        value={purplePackageCount}
+                        onChange={e => {
+                          const max = parseInt(studentCount) || 0;
+                          const val = parseInt(e.target.value) || 0;
+                          if (val > max) {
+                            setPurplePackageCount(String(max));
+                          } else {
+                            setPurplePackageCount(e.target.value);
+                          }
+                        }}
+                        placeholder="العدد"
+                        type="number"
+                        min="1"
+                        max={parseInt(studentCount) || undefined}
                         className="w-20 h-8 text-xs"
                       />
                     </div>

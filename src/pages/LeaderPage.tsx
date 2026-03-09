@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import jsPDF from 'jspdf';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown, Download } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
@@ -43,6 +44,8 @@ interface OrderInfo {
   back_embroidery_count: number;
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
+  purple_package_enabled: boolean;
+  purple_package_count: number;
   data_submitted: boolean;
   order_type: string;
   kit_name: string;
@@ -61,6 +64,7 @@ interface OrderInfo {
   kit_scarf_color_degree: string;
   kit_hat_color: string;
   kit_hat_color_degree: string;
+  school_name: string;
 }
 
 interface ShippingInfo {
@@ -87,6 +91,7 @@ interface StudentRow {
   hatExtraText: string;
   hasLogoEmbroidery: boolean;
   backEmbroideryText: string;
+  hasPurplePackage: boolean;
   nameError: string;
   similarWarning: string;
 }
@@ -102,6 +107,7 @@ function createEmptyRow(serial: number, defaultScarfId: string, noEmbroideryId: 
     hatExtraText: '',
     hasLogoEmbroidery: false,
     backEmbroideryText: '',
+    hasPurplePackage: false,
     nameError: '',
     similarWarning: '',
   };
@@ -171,9 +177,10 @@ export default function LeaderPage() {
     const { data: order } = await supabase
       .from('orders')
       .select(`
-        leader_name, order_number, status,
+        leader_name, order_number, status, school_name,
         student_count, logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
+        purple_package_enabled, purple_package_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
         abaya_design_id, sleeve_style_id,
@@ -205,6 +212,8 @@ export default function LeaderPage() {
       back_embroidery_count: o.back_embroidery_count || 0,
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
+      purple_package_enabled: o.purple_package_enabled || false,
+      purple_package_count: o.purple_package_count || 0,
       data_submitted: o.data_submitted || false,
       order_type: o.order_type || 'ready_kit',
       kit_name: kit?.name || '',
@@ -223,6 +232,7 @@ export default function LeaderPage() {
       kit_scarf_color_degree: kit?.scarf_color_degree || '',
       kit_hat_color: kit?.hat_color || '',
       kit_hat_color_degree: kit?.hat_color_degree || '',
+      school_name: o.school_name || '',
     };
     setOrderInfo(info);
     setMaxStudents(info.student_count);
@@ -301,6 +311,7 @@ export default function LeaderPage() {
         hatExtraText: s.hat_extra_text || '',
         hasLogoEmbroidery: s.has_logo_embroidery || false,
         backEmbroideryText: s.back_embroidery_text || '',
+        hasPurplePackage: s.has_purple_package || false,
         nameError: '',
         similarWarning: '',
       })));
@@ -374,6 +385,19 @@ export default function LeaderPage() {
     });
   }, [logoIsAll, orderInfo]);
 
+  const togglePurple = useCallback((id: string) => {
+    setStudents(prev => {
+      const student = prev.find(s => s.id === id);
+      if (!student) return prev;
+      const currentCount = prev.filter(s => s.hasPurplePackage).length;
+      if (!student.hasPurplePackage && orderInfo && orderInfo.purple_package_count > 0 && currentCount >= orderInfo.purple_package_count) {
+        toast({ title: 'تم الوصول للحد الأقصى لبكج Purple', variant: 'destructive' });
+        return prev;
+      }
+      return prev.map(s => s.id === id ? { ...s, hasPurplePackage: !s.hasPurplePackage } : s);
+    });
+  }, [orderInfo, toast]);
+
   const updateShipping = (field: keyof ShippingInfo, value: string) => {
     setShipping(prev => ({ ...prev, [field]: value }));
   };
@@ -440,6 +464,7 @@ export default function LeaderPage() {
         hat_extra_text: !isNone ? (s.hatExtraText.trim() || null) : null,
         has_logo_embroidery: s.hasLogoEmbroidery,
         back_embroidery_text: s.backEmbroideryText.trim() || null,
+        has_purple_package: s.hasPurplePackage,
         extra_services: [],
       };
     });
@@ -523,6 +548,48 @@ export default function LeaderPage() {
 
   // Lock page when status is not pending_data
   const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+
+  const generatePDF = async () => {
+    if (!orderId) return;
+    const { data: studentsData } = await supabase.from('students').select('*').eq('order_id', orderId).order('serial_number');
+    const rows = studentsData || [];
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    // Use built-in font (supports basic Latin)
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16);
+    doc.text(`Order: ${orderInfo?.order_number || ''}`, 105, 20, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`Leader: ${orderInfo?.leader_name || ''}`, 105, 30, { align: 'center' });
+    doc.text(`Students: ${rows.length} / ${orderInfo?.student_count || 0}`, 105, 38, { align: 'center' });
+
+    // Table
+    let y = 50;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('#', 190, y, { align: 'right' });
+    doc.text('Name', 170, y, { align: 'right' });
+    doc.text('Size', 100, y, { align: 'right' });
+    doc.text('Logo', 70, y, { align: 'right' });
+    doc.text('Purple', 40, y, { align: 'right' });
+    y += 2;
+    doc.line(15, y, 195, y);
+    y += 5;
+
+    doc.setFont('helvetica', 'normal');
+    rows.forEach((s: any, i: number) => {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(String(s.serial_number || i + 1), 190, y, { align: 'right' });
+      doc.text(s.name || '', 170, y, { align: 'right' });
+      doc.text(s.size || '-', 100, y, { align: 'right' });
+      doc.text(s.has_logo_embroidery ? 'Yes' : 'No', 70, y, { align: 'right' });
+      doc.text(s.has_purple_package ? 'Yes' : 'No', 40, y, { align: 'right' });
+      y += 6;
+    });
+
+    doc.save(`order-${orderInfo?.order_number || orderId}.pdf`);
+  };
+
   if (isLocked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
@@ -533,6 +600,13 @@ export default function LeaderPage() {
             </div>
             <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
             <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+            <button
+              onClick={generatePDF}
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline cursor-pointer"
+            >
+              <Download className="h-4 w-4" />
+              لتحميل تقرير طلبكم PDF اضغط هنا
+            </button>
           </CardContent>
         </Card>
       </div>
@@ -542,6 +616,7 @@ export default function LeaderPage() {
   const showLogo = orderInfo?.logo_embroidery_enabled;
   const showBack = orderInfo?.back_embroidery_enabled;
   const showHat = orderInfo?.hat_embroidery_enabled;
+  const showPurple = orderInfo?.purple_package_enabled;
   const isSubmitted = orderInfo?.data_submitted;
 
   return (
@@ -571,6 +646,11 @@ export default function LeaderPage() {
             {orderInfo?.hat_embroidery_enabled && (
               <Badge variant="outline" className="gap-1">
                 تطريز قبعات: {students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length} / {orderInfo!.hat_embroidery_count || 'الكل'}
+              </Badge>
+            )}
+            {showPurple && (
+              <Badge variant="outline" className="gap-1">
+                بكج Purple: {students.filter(s => s.hasPurplePackage).length} / {orderInfo!.purple_package_count || 'الكل'}
               </Badge>
             )}
             {isSubmitted && (
@@ -736,6 +816,7 @@ export default function LeaderPage() {
                         {showHat && <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>}
                         {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
                         {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
+                        {showPurple && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">بكج Purple</th>}
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
                       </tr>
                     </thead>
@@ -873,6 +954,15 @@ export default function LeaderPage() {
                                 }}
                                 placeholder="النص"
                                 className="h-8 text-xs"
+                                disabled={isSubmitted}
+                              />
+                            </td>
+                          )}
+                          {showPurple && (
+                            <td className="px-2 py-2.5 text-center">
+                              <Checkbox
+                                checked={student.hasPurplePackage}
+                                onCheckedChange={() => togglePurple(student.id)}
                                 disabled={isSubmitted}
                               />
                             </td>

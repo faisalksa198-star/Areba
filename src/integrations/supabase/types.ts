@@ -352,6 +352,8 @@ export type Database = {
           notes: string | null
           order_number: string
           order_type: string | null
+          purple_package_count: number | null
+          purple_package_enabled: boolean | null
           recipient_name: string | null
           recipient_phone: string | null
           registration_link: string | null
@@ -394,6 +396,8 @@ export type Database = {
           notes?: string | null
           order_number: string
           order_type?: string | null
+          purple_package_count?: number | null
+          purple_package_enabled?: boolean | null
           recipient_name?: string | null
           recipient_phone?: string | null
           registration_link?: string | null
@@ -436,6 +440,8 @@ export type Database = {
           notes?: string | null
           order_number?: string
           order_type?: string | null
+          purple_package_count?: number | null
+          purple_package_enabled?: boolean | null
           recipient_name?: string | null
           recipient_phone?: string | null
           registration_link?: string | null
@@ -715,6 +721,7 @@ export type Database = {
           created_at: string
           extra_services: string[] | null
           has_logo_embroidery: boolean | null
+          has_purple_package: boolean | null
           hat_choice: string | null
           hat_embroidery_id: string | null
           hat_extra_text: string | null
@@ -732,6 +739,7 @@ export type Database = {
           created_at?: string
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
+          has_purple_package?: boolean | null
           hat_choice?: string | null
           hat_embroidery_id?: string | null
           hat_extra_text?: string | null
@@ -749,6 +757,7 @@ export type Database = {
           created_at?: string
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
+          has_purple_package?: boolean | null
           hat_choice?: string | null
           hat_embroidery_id?: string | null
           hat_extra_text?: string | null

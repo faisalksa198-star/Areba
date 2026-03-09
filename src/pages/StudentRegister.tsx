@@ -241,6 +241,14 @@ export default function StudentRegister() {
             </div>
             <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
             <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+            <a
+              href={`${window.location.origin}/order/${orderId}/leader`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              لتحميل تقرير طلبكم PDF اضغط هنا
+            </a>
           </CardContent>
         </Card>
       </div>
