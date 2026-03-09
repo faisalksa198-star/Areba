@@ -450,6 +450,7 @@ export default function LeaderPage() {
         hat_extra_text: !isNone ? (s.hatExtraText.trim() || null) : null,
         has_logo_embroidery: s.hasLogoEmbroidery,
         back_embroidery_text: s.backEmbroideryText.trim() || null,
+        has_purple_package: s.hasPurplePackage,
         extra_services: [],
       };
     });
