@@ -271,9 +271,18 @@ export default function DataCenter() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">الاسم *</label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="أدخل الاسم" />
+              <label className="text-sm font-medium mb-1.5 block">
+                {activeTab === 'hat_embroideries' ? 'رقم التطريز *' : 'الاسم *'}
+              </label>
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder={activeTab === 'hat_embroideries' ? 'مثال: 12' : 'أدخل الاسم'} />
             </div>
+
+            {activeTab === 'hat_embroideries' && (
+              <div className="flex items-center gap-2">
+                <Checkbox checked={formHasExtraText} onCheckedChange={v => setFormHasExtraText(!!v)} />
+                <span className="text-sm text-foreground">نص إضافي</span>
+              </div>
+            )}
 
             {activeCat.hasDescription && (
               <div>
