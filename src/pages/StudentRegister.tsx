@@ -39,6 +39,7 @@ interface OrderInfo {
   back_embroidery_count: number;
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
+  status: string;
 }
 
 export default function StudentRegister() {
