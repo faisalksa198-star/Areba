@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Loader2, School } from 'lucide-react';
 import ScarfCard from '@/components/orders/ScarfCard';
 import OrderInfoHeader from '@/components/orders/OrderInfoHeader';
+import { mapOrderScarfDesign } from '@/lib/order-scarf-binding';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
@@ -143,18 +144,7 @@ export default function StudentRegister() {
     if (noneId) setHatEmbroideryId(noneId);
 
     // Scarf designs
-    const parsed: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map((s: any) => ({
-      id: s.id,
-      sort_order: s.sort_order,
-      scarf_style_name: s.scarf_styles?.name,
-      scarf_style_image: s.scarf_styles?.image_url,
-      date_type_name: s.date_types?.name,
-      date_type_image: s.date_types?.image_url,
-      scarf_method_name: s.scarf_methods?.name,
-      embroidery_direction_name: s.embroidery_directions?.name,
-      font_name: s.fonts?.name,
-      embroidery_color: s.embroidery_color,
-    }));
+    const parsed: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
     setScarfDesigns(parsed);
     if (parsed.length > 0) setScarfDesignId(parsed[0].id);
 

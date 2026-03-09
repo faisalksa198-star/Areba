@@ -27,6 +27,8 @@ export default function OrderInfoHeader({ orderId }: Props) {
 
   useEffect(() => {
     if (!orderId) return;
+    setDetails(null);
+
     let cancelled = false;
     (async () => {
       const { data } = await supabase
@@ -62,49 +64,49 @@ export default function OrderInfoHeader({ orderId }: Props) {
         kit_hat_color: d.ready_kits?.hat_color || null,
       });
     })();
-    return () => { cancelled = true; };
+
+    return () => {
+      cancelled = true;
+    };
   }, [orderId]);
 
   if (!details) return null;
 
   const isCustom = details.order_type === 'custom';
-  const abayaColor = isCustom
-    ? [details.custom_abaya_color, details.custom_abaya_color_degree].filter(Boolean).join(' ')
-    : details.kit_abaya_color;
-  const scarfColor = isCustom
-    ? [details.custom_scarf_color, details.custom_scarf_color_degree].filter(Boolean).join(' ')
-    : details.kit_scarf_color;
-  const hatColor = isCustom
-    ? [details.custom_hat_color, details.custom_hat_color_degree].filter(Boolean).join(' ')
-    : details.kit_hat_color;
+  const orderDetails = {
+    kitName: details.kit_name,
+    abayaColor: isCustom
+      ? [details.custom_abaya_color, details.custom_abaya_color_degree].filter(Boolean).join(' ')
+      : details.kit_abaya_color,
+    scarfColor: isCustom
+      ? [details.custom_scarf_color, details.custom_scarf_color_degree].filter(Boolean).join(' ')
+      : details.kit_scarf_color,
+    hatColor: isCustom
+      ? [details.custom_hat_color, details.custom_hat_color_degree].filter(Boolean).join(' ')
+      : details.kit_hat_color,
+    abayaDesignName: details.abaya_design_name,
+    sleeveStyleName: details.sleeve_style_name,
+    sleeveColor: details.sleeve_color,
+  };
 
-  // Line 1: type + colors
   const line1Parts: string[] = [];
-  if (isCustom) {
-    line1Parts.push('تفصيل جديد');
-  } else {
-    line1Parts.push(details.kit_name ? `اسم الطقم: ${details.kit_name}` : 'طقم جاهز');
-  }
-  if (abayaColor) line1Parts.push(`عباية: ${abayaColor}`);
-  if (scarfColor) line1Parts.push(`وشاح: ${scarfColor}`);
-  if (hatColor) line1Parts.push(`قبعة: ${hatColor}`);
+  if (orderDetails.kitName) line1Parts.push(`اسم الطقم: ${orderDetails.kitName}`);
+  else if (isCustom) line1Parts.push('تفصيل جديد');
+  else line1Parts.push('طقم جاهز');
 
-  // Line 2: design details
+  if (orderDetails.abayaColor) line1Parts.push(`عباية: ${orderDetails.abayaColor}`);
+  if (orderDetails.scarfColor) line1Parts.push(`وشاح: ${orderDetails.scarfColor}`);
+  if (orderDetails.hatColor) line1Parts.push(`قبعة: ${orderDetails.hatColor}`);
+
   const line2Parts: string[] = [];
-  if (details.abaya_design_name) line2Parts.push(`تصميم العباية: ${details.abaya_design_name}`);
-  if (details.sleeve_style_name) line2Parts.push(`طرف الكم: ${details.sleeve_style_name}`);
-  if (details.sleeve_color) line2Parts.push(`لون طرف الكم: ${details.sleeve_color}`);
+  if (orderDetails.abayaDesignName) line2Parts.push(`تصميم العباية: ${orderDetails.abayaDesignName}`);
+  if (orderDetails.sleeveStyleName) line2Parts.push(`طرف الكم: ${orderDetails.sleeveStyleName}`);
+  if (orderDetails.sleeveColor) line2Parts.push(`لون طرف الكم: ${orderDetails.sleeveColor}`);
 
   return (
     <div className="px-4 py-2 bg-muted/30 border-b border-border space-y-0.5">
-      <p className="text-[11px] text-foreground font-medium">
-        {line1Parts.join(' - ')}
-      </p>
-      {line2Parts.length > 0 && (
-        <p className="text-[11px] text-muted-foreground">
-          {line2Parts.join(' - ')}
-        </p>
-      )}
+      <p className="text-[11px] text-foreground font-medium">{line1Parts.join(' - ')}</p>
+      {line2Parts.length > 0 && <p className="text-[11px] text-muted-foreground">{line2Parts.join(' - ')}</p>}
     </div>
   );
 }
