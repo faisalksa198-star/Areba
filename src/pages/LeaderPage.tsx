@@ -813,19 +813,16 @@ export default function LeaderPage() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2 items-center">
         {!isSubmitted && (
           <>
-            <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
-              <Plus className="h-3.5 w-3.5" /> صف
-            </Button>
-            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-1 flex-1">
+            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1">
               <Save className="h-3.5 w-3.5" />
               {saving ? 'جارٍ الحفظ...' : 'حفظ'}
             </Button>
-            <Button onClick={handleFinalSubmit} disabled={submitting} className="gap-1 flex-1 bg-success hover:bg-success/90">
+            <Button size="sm" onClick={handleFinalSubmit} disabled={submitting} className="gap-1 bg-success hover:bg-success/90">
               <Send className="h-3.5 w-3.5" />
-              {submitting ? 'جارٍ الإرسال...' : 'إرسال البيانات'}
+              {submitting ? 'جارٍ الإرسال...' : 'إرسال الطلب'}
             </Button>
           </>
         )}
