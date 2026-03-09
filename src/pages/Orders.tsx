@@ -79,7 +79,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
-export default function Orders() {
+export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [userRole, setUserRole] = useState<string | null>(null);
