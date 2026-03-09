@@ -49,6 +49,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   userId: string;
   onCreated: (orderId: string) => void;
+  editOrderId?: string | null;
 }
 
 export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated }: Props) {
