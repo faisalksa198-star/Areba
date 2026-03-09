@@ -46,11 +46,9 @@ export default function Login() {
       <div className="w-full max-w-sm relative z-10">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary text-primary-foreground mb-4">
-            <span className="text-2xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>ع</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
-            عباية ستور
+          <img src="/logo.svg" alt="متجر Areba" className="h-16 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground">
+            متجر Areba
           </h1>
           <p className="text-muted-foreground text-sm mt-1">نظام إدارة الطلبات الجماعية</p>
         </div>
@@ -93,7 +91,7 @@ export default function Login() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © {new Date().getFullYear()} عباية ستور — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} متجر Areba — جميع الحقوق محفوظة
         </p>
       </div>
     </div>

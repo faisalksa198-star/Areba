@@ -235,11 +235,16 @@ export default function StudentRegister() {
     <div className="min-h-screen bg-background p-4" dir="rtl">
       <div className="max-w-md mx-auto space-y-4 pt-4">
         {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-2 text-primary">
-            <School className="h-5 w-5" />
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 text-primary">
+              <School className="h-5 w-5" />
+            </div>
+            <h1 className="text-lg font-bold text-foreground">تسجيل الطالبة</h1>
           </div>
-          <h1 className="text-lg font-bold text-foreground">تسجيل الطالبة</h1>
+          <img src="/logo.svg" alt="متجر Areba" className="h-8 object-contain" />
+        </div>
+        <div className="text-center">
           <p className="text-xs text-muted-foreground">
             إجمالي الطالبات المسجلات: {existingCount} من {maxStudents}
           </p>

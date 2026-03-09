@@ -475,7 +475,10 @@ export default function LeaderPage() {
       {/* Header */}
       <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
         <div className="px-4 py-3">
-          <h1 className="text-lg font-bold text-foreground">إدخال بيانات الطالبات</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg font-bold text-foreground">إدخال بيانات الطالبات</h1>
+            <img src="/logo.svg" alt="متجر Areba" className="h-8 object-contain" />
+          </div>
           <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <Users className="h-3 w-3" />

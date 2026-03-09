@@ -33,12 +33,10 @@ export function AppSidebar() {
         {/* Brand */}
         {!collapsed && (
           <div className="px-4 pb-4 mb-2 border-b border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center text-sidebar-primary-foreground">
-                <span className="text-sm font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>ع</span>
-              </div>
+          <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="متجر Areba" className="h-9 w-9 rounded-xl object-contain" />
               <div>
-                <h2 className="text-sm font-bold text-sidebar-foreground">عباية ستور</h2>
+                <h2 className="text-sm font-bold text-sidebar-foreground">متجر Areba</h2>
                 <p className="text-[10px] text-sidebar-foreground/50">إدارة الطلبات</p>
               </div>
             </div>

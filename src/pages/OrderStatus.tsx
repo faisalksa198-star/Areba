@@ -63,11 +63,16 @@ export default function OrderStatus() {
     <div className="min-h-screen bg-background p-4" dir="rtl">
       <div className="max-w-md mx-auto space-y-6 pt-6">
         {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
-            <Package className="h-6 w-6 text-primary" />
+        <div className="flex items-start justify-between mb-4">
+          <div className="text-center flex-1 space-y-1">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
+              <Package className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">متابعة الطلب</h1>
           </div>
-          <h1 className="text-xl font-bold text-foreground">متابعة الطلب</h1>
+          <img src="/logo.svg" alt="متجر Areba" className="h-8 object-contain" />
+        </div>
+        <div className="text-center">
           <p className="text-sm text-muted-foreground font-mono">{order.order_number}</p>
         </div>
 
