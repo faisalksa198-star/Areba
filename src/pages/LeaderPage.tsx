@@ -188,7 +188,6 @@ export default function LeaderPage() {
     }
 
     const o = order as any;
-    console.log('Order data:', JSON.stringify(o, null, 2));
     const kit = o.ready_kits;
     const isKit = o.order_type === 'ready_kit';
     const info: OrderInfo = {
