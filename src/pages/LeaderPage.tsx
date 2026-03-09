@@ -152,7 +152,7 @@ export default function LeaderPage() {
     // Load order info with shipping
     const { data: order } = await supabase
       .from('orders')
-      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted')
+      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted')
       .eq('id', orderId!)
       .maybeSingle();
 
