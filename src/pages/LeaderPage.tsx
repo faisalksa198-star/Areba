@@ -580,24 +580,7 @@ export default function LeaderPage() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-2 p-4 rounded-xl border border-border bg-card shadow-sm space-y-3">
-                {/* Order Type */}
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">نوع الطلب:</span>
-                  <Badge variant="secondary">
-                    {orderInfo.order_type === 'ready_kit' ? 'طقم جاهز' : 'تفصيل جديد'}
-                  </Badge>
-                </div>
-
-                {/* Kit name if ready_kit */}
-                {orderInfo.order_type === 'ready_kit' && orderInfo.kit_name && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-muted-foreground">نوع الطقم:</span>
-                    <span className="font-medium text-foreground">{orderInfo.kit_name}</span>
-                  </div>
-                )}
-
-                {/* Colors */}
+              <div className="mt-2 p-4 rounded-xl border border-border bg-card shadow-sm space-y-4">
                 {(() => {
                   const isKit = orderInfo.order_type === 'ready_kit';
                   const abayaColor = isKit ? orderInfo.kit_abaya_color : orderInfo.custom_abaya_color;
@@ -606,53 +589,53 @@ export default function LeaderPage() {
                   const scarfDegree = isKit ? orderInfo.kit_scarf_color_degree : orderInfo.custom_scarf_color_degree;
                   const hatColor = isKit ? orderInfo.kit_hat_color : orderInfo.custom_hat_color;
                   const hatDegree = isKit ? orderInfo.kit_hat_color_degree : orderInfo.custom_hat_color_degree;
-                  return (
-                    <div className="space-y-2 border-t border-border pt-3">
-                      <p className="text-xs font-semibold text-muted-foreground">الألوان</p>
-                      {(abayaColor || abayaDegree) && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">لون العباية:</span>
-                          <span className="font-medium text-foreground">{abayaColor}{abayaDegree ? ` - ${abayaDegree}` : ''}</span>
-                        </div>
-                      )}
-                      {(scarfColor || scarfDegree) && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">لون الوشاح:</span>
-                          <span className="font-medium text-foreground">{scarfColor}{scarfDegree ? ` - ${scarfDegree}` : ''}</span>
-                        </div>
-                      )}
-                      {(hatColor || hatDegree) && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">لون القبعة:</span>
-                          <span className="font-medium text-foreground">{hatColor}{hatDegree ? ` - ${hatDegree}` : ''}</span>
-                        </div>
-                      )}
+
+                  const DataCell = ({ label, value }: { label: string; value: string }) => (
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] text-muted-foreground">{label}</p>
+                      <p className="text-sm font-medium text-foreground">{value || '---'}</p>
                     </div>
                   );
-                })()}
 
-                {/* Abaya details */}
-                <div className="space-y-2 border-t border-border pt-3">
-                  <p className="text-xs font-semibold text-muted-foreground">تفاصيل العباية</p>
-                  {orderInfo.abaya_design_name && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">شكل العباية:</span>
-                      <span className="font-medium text-foreground">{orderInfo.abaya_design_name}</span>
-                    </div>
-                  )}
-                  {orderInfo.sleeve_style_name && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">طرف الكم:</span>
-                      <span className="font-medium text-foreground">{orderInfo.sleeve_style_name}</span>
-                    </div>
-                  )}
-                  {orderInfo.sleeve_color && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">لون طرف الكم:</span>
-                      <span className="font-medium text-foreground">{orderInfo.sleeve_color}</span>
-                    </div>
-                  )}
-                </div>
+                  const ColorCell = ({ label, color, degree }: { label: string; color: string; degree: string }) => {
+                    if (!color && !degree) return null;
+                    const display = [color, degree].filter(Boolean).join(' - ');
+                    return (
+                      <div className="space-y-0.5">
+                        <p className="text-[11px] text-muted-foreground">{label}</p>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-full border border-border bg-muted" />
+                          <p className="text-sm font-medium text-foreground">{display}</p>
+                        </div>
+                      </div>
+                    );
+                  };
+
+                  return (
+                    <>
+                      {/* Row 1: Order type + kit/abaya info */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <DataCell label="نوع الطلب" value={isKit ? 'طقم جاهز' : 'تفصيل جديد'} />
+                        {isKit && orderInfo.kit_name && <DataCell label="اسم الطقم" value={orderInfo.kit_name} />}
+                        <DataCell label="شكل العباية" value={orderInfo.abaya_design_name} />
+                        <DataCell label="طرف الكم" value={orderInfo.sleeve_style_name} />
+                        {orderInfo.sleeve_color && <DataCell label="لون طرف الكم" value={orderInfo.sleeve_color} />}
+                      </div>
+
+                      {/* Colors section */}
+                      {(abayaColor || scarfColor || hatColor) && (
+                        <div className="border-t border-border pt-3">
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">الألوان</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                            <ColorCell label="لون العباية" color={abayaColor} degree={abayaDegree} />
+                            <ColorCell label="لون الوشاح" color={scarfColor} degree={scarfDegree} />
+                            <ColorCell label="لون القبعة" color={hatColor} degree={hatDegree} />
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </CollapsibleContent>
           </Collapsible>
