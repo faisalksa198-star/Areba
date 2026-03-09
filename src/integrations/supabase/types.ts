@@ -291,6 +291,7 @@ export type Database = {
       orders: {
         Row: {
           abaya_design_id: string | null
+          address_details: string | null
           back_embroidery_count: number | null
           back_embroidery_enabled: boolean | null
           city_id: string | null
@@ -302,6 +303,8 @@ export type Database = {
           custom_hat_color_degree: string | null
           custom_scarf_color: string | null
           custom_scarf_color_degree: string | null
+          data_submitted: boolean | null
+          district: string | null
           employee_id: string
           id: string
           kit_id: string | null
@@ -310,11 +313,15 @@ export type Database = {
           leader_phone: string | null
           logo_embroidery_count: number | null
           logo_embroidery_enabled: boolean | null
+          national_address: string | null
           notes: string | null
           order_number: string
           order_type: string | null
+          recipient_name: string | null
+          recipient_phone: string | null
           registration_link: string | null
           school_name: string | null
+          shipping_city_id: string | null
           sleeve_color: string | null
           sleeve_style_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -324,6 +331,7 @@ export type Database = {
         }
         Insert: {
           abaya_design_id?: string | null
+          address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
           city_id?: string | null
@@ -335,6 +343,8 @@ export type Database = {
           custom_hat_color_degree?: string | null
           custom_scarf_color?: string | null
           custom_scarf_color_degree?: string | null
+          data_submitted?: boolean | null
+          district?: string | null
           employee_id: string
           id?: string
           kit_id?: string | null
@@ -343,11 +353,15 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
+          national_address?: string | null
           notes?: string | null
           order_number: string
           order_type?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
           registration_link?: string | null
           school_name?: string | null
+          shipping_city_id?: string | null
           sleeve_color?: string | null
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -357,6 +371,7 @@ export type Database = {
         }
         Update: {
           abaya_design_id?: string | null
+          address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
           city_id?: string | null
@@ -368,6 +383,8 @@ export type Database = {
           custom_hat_color_degree?: string | null
           custom_scarf_color?: string | null
           custom_scarf_color_degree?: string | null
+          data_submitted?: boolean | null
+          district?: string | null
           employee_id?: string
           id?: string
           kit_id?: string | null
@@ -376,11 +393,15 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
+          national_address?: string | null
           notes?: string | null
           order_number?: string
           order_type?: string | null
+          recipient_name?: string | null
+          recipient_phone?: string | null
           registration_link?: string | null
           school_name?: string | null
+          shipping_city_id?: string | null
           sleeve_color?: string | null
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -408,6 +429,13 @@ export type Database = {
             columns: ["kit_id"]
             isOneToOne: false
             referencedRelation: "ready_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shipping_city_id_fkey"
+            columns: ["shipping_city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {

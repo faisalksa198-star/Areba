@@ -17,6 +17,11 @@ interface ScarfDesign {
   id: string;
   sort_order: number;
   scarf_style_name?: string;
+  date_type_name?: string;
+  scarf_method_name?: string;
+  embroidery_direction_name?: string;
+  font_name?: string;
+  embroidery_color?: string;
   scarf_style_image?: string | null;
 }
 
@@ -90,10 +95,17 @@ export default function StudentRegister() {
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
     if (logoIsAll) setHasLogoEmbroidery(true);
 
-    // Load scarf designs
+    // Load scarf designs with full details
     const { data: scarfs } = await supabase
       .from('order_scarf_designs')
-      .select('id, sort_order, scarf_styles!scarf_style_id(name, image_url)')
+      .select(`
+        id, sort_order, embroidery_color,
+        scarf_styles!scarf_style_id(name, image_url),
+        date_types!date_type_id(name),
+        scarf_methods!scarf_method_id(name),
+        embroidery_directions!embroidery_direction_id(name),
+        fonts!font_id(name)
+      `)
       .eq('order_id', orderId!)
       .order('sort_order');
 
@@ -102,6 +114,11 @@ export default function StudentRegister() {
       sort_order: s.sort_order,
       scarf_style_name: s.scarf_styles?.name,
       scarf_style_image: s.scarf_styles?.image_url,
+      date_type_name: s.date_types?.name,
+      scarf_method_name: s.scarf_methods?.name,
+      embroidery_direction_name: s.embroidery_directions?.name,
+      font_name: s.fonts?.name,
+      embroidery_color: s.embroidery_color,
     }));
     setScarfDesigns(parsed);
     if (parsed.length > 0) setScarfDesignId(parsed[0].id);
@@ -183,14 +200,27 @@ export default function StudentRegister() {
           </p>
         </div>
 
-        {/* Scarf Design Cards */}
-        {scarfDesigns.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {scarfDesigns.map((s, idx) => (
-              <div key={s.id} className="min-w-[100px] p-2 rounded-lg border border-border bg-card flex-shrink-0 text-center">
-                {s.scarf_style_image && <img src={s.scarf_style_image} className="w-10 h-10 mx-auto rounded object-cover mb-1" />}
-                <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
-                {s.scarf_style_name && <p className="text-[10px] text-muted-foreground mt-0.5">{s.scarf_style_name}</p>}
+        {/* Scarf Design Cards - Same as Leader Page */}
+        {scarfDesigns.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {scarfDesigns.map((scarf, idx) => (
+              <div key={scarf.id} className="min-w-[160px] p-2.5 rounded-lg border border-border bg-card flex-shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
+                </div>
+                {scarf.scarf_style_image && (
+                  <div className="w-12 h-12 rounded-lg border border-border overflow-hidden bg-muted/30 mb-2">
+                    <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
+                  </div>
+                )}
+                <div className="space-y-0.5 text-[10px] text-muted-foreground">
+                  {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
+                  {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
+                  {scarf.scarf_method_name && <p>الطرف: {scarf.scarf_method_name}</p>}
+                  {scarf.embroidery_direction_name && <p>الاتجاه: {scarf.embroidery_direction_name}</p>}
+                  {scarf.font_name && <p>الخط: {scarf.font_name}</p>}
+                  {scarf.embroidery_color && <p>اللون: {scarf.embroidery_color}</p>}
+                </div>
               </div>
             ))}
           </div>
