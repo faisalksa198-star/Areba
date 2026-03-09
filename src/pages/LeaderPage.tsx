@@ -176,10 +176,10 @@ export default function LeaderPage() {
     setOrderInfo(info);
     setMaxStudents(info.student_count);
 
-    // Load shipping info
+    // Load shipping info - auto-fill phone from leader_phone if empty
     setShipping({
       recipient_name: o.recipient_name || '',
-      recipient_phone: o.recipient_phone || '',
+      recipient_phone: o.recipient_phone || o.leader_phone || '',
       shipping_city_id: o.shipping_city_id || '',
       district: o.district || '',
       address_details: o.address_details || '',
