@@ -149,10 +149,10 @@ export default function LeaderPage() {
   }, [orderId]);
 
   const loadData = async () => {
-    // Load order info with shipping
+    // Load order info with shipping + leader_phone
     const { data: order } = await supabase
       .from('orders')
-      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted')
+      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted, leader_phone')
       .eq('id', orderId!)
       .maybeSingle();
 
@@ -176,10 +176,10 @@ export default function LeaderPage() {
     setOrderInfo(info);
     setMaxStudents(info.student_count);
 
-    // Load shipping info
+    // Load shipping info - auto-fill phone from leader_phone if empty
     setShipping({
       recipient_name: o.recipient_name || '',
-      recipient_phone: o.recipient_phone || '',
+      recipient_phone: o.recipient_phone || o.leader_phone || '',
       shipping_city_id: o.shipping_city_id || '',
       district: o.district || '',
       address_details: o.address_details || '',
@@ -287,11 +287,15 @@ export default function LeaderPage() {
   const addRow = useCallback(() => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
+      if (prev.length >= maxStudents) {
+        toast({ title: `لا يمكن إضافة أكثر من ${maxStudents} صف`, variant: 'destructive' });
+        return prev;
+      }
       const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
       if (logoIsAll) row.hasLogoEmbroidery = true;
       return [...prev, row];
     });
-  }, [scarfDesigns, logoIsAll, noEmbroideryId]);
+  }, [scarfDesigns, logoIsAll, noEmbroideryId, maxStudents, toast]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
@@ -730,22 +734,20 @@ export default function LeaderPage() {
 
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
-        <Card className="border-border">
+        <div className="max-w-2xl mx-auto">
           <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
-            <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <button className="w-full flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-primary" />
-                    بيانات الشحن
-                  </CardTitle>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </CollapsibleTrigger>
-            </CardHeader>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Truck className="h-4 w-4 text-primary" />
+                  بيانات الشحن
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </CollapsibleTrigger>
 
             <CollapsibleContent>
-              <CardContent className="space-y-3">
+              <div className="mt-2 p-4 rounded-lg border border-border bg-card space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
@@ -815,10 +817,10 @@ export default function LeaderPage() {
                     disabled={isSubmitted}
                   />
                 </div>
-              </CardContent>
+              </div>
             </CollapsibleContent>
           </Collapsible>
-        </Card>
+        </div>
       </div>
 
       {/* Bottom Bar */}
