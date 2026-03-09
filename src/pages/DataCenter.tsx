@@ -49,6 +49,7 @@ export default function DataCenter() {
   const [formDescription, setFormDescription] = useState('');
   const [formImage, setFormImage] = useState<File | null>(null);
   const [formImagePreview, setFormImagePreview] = useState('');
+  const [formHasExtraText, setFormHasExtraText] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const activeCat = CATEGORIES.find(c => c.key === activeTab)!;
@@ -73,6 +74,7 @@ export default function DataCenter() {
     setFormDescription('');
     setFormImage(null);
     setFormImagePreview('');
+    setFormHasExtraText(false);
     setShowForm(true);
   };
 
@@ -82,6 +84,7 @@ export default function DataCenter() {
     setFormDescription(item.description || '');
     setFormImage(null);
     setFormImagePreview(item.image_url || '');
+    setFormHasExtraText(!!item.has_extra_text);
     setShowForm(true);
   };
 
