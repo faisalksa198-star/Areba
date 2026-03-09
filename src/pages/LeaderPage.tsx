@@ -719,6 +719,15 @@ export default function LeaderPage() {
         </div>
       </div>
 
+      {/* Add Row */}
+      {!isSubmitted && (
+        <div className="px-3 pt-2">
+          <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
+            <Plus className="h-3.5 w-3.5" /> إضافة صف
+          </Button>
+        </div>
+      )}
+
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
         <Card className="border-border">
