@@ -658,6 +658,76 @@ export default function Orders() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Order Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={open => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل الطلب {editingOrder?.order_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم القائدة</label>
+              <Input value={editForm.leader_name} onChange={e => setEditForm(f => ({ ...f, leader_name: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال</label>
+              <Input value={editForm.leader_phone} onChange={e => setEditForm(f => ({ ...f, leader_phone: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">الحالة</label>
+              <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                  <SelectItem value="completed">مكتمل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">ملاحظات</label>
+              <Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-sm" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEditSave} className="flex-1">حفظ التعديلات</Button>
+              <Button variant="outline" onClick={() => setEditingOrder(null)}>إلغاء</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deletingOrderId} onOpenChange={open => !open && setDeletingOrderId(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>هل أنت متأكد من حذف هذا الطلب؟ سيتم حذف جميع بيانات الطالبات المرتبطة به. لا يمكن التراجع.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteOrder} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirm */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف الجماعي</AlertDialogTitle>
+            <AlertDialogDescription>هل أنت متأكد من حذف {selectedOrderIds.size} طلب؟ سيتم حذف جميع البيانات المرتبطة. لا يمكن التراجع.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+              حذف الكل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
