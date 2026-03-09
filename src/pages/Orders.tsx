@@ -131,12 +131,19 @@ export default function Orders() {
     setUserRole(data?.role || 'customer_service');
   };
 
+  const isAdmin = userRole === 'owner' || userRole === 'manager';
+
   const loadOrders = async () => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
+    // Staff (customer_service) only sees their own orders
+    if (!isAdmin && user) {
+      query = query.eq('employee_id', user.id);
+    }
+    const { data } = await query;
     setOrders((data as OrderRow[]) || []);
     setLoading(false);
   };
