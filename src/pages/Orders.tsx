@@ -70,6 +70,8 @@ interface OrderRow {
   kit_id: string | null;
   order_type: string | null;
   created_at: string;
+  employee_id: string;
+  employee_name?: string;
 }
 
 const statusLabels: Record<string, { label: string; className: string }> = {
@@ -118,8 +120,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   }, []);
 
   useEffect(() => {
-    if (userRole !== null) loadOrders();
-  }, [userRole, myOrdersOnly]);
+    loadOrders();
+  }, [myOrdersOnly, user]);
 
   const loadUserRole = async () => {
     if (!user) return;
@@ -139,12 +141,29 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    // "My Orders" mode or Staff always filter by employee_id
-    if (myOrdersOnly || (!isAdmin && user)) {
-      if (user) query = query.eq('employee_id', user.id);
+    // "My Orders" mode only filters by employee_id
+    if (myOrdersOnly && user) {
+      query = query.eq('employee_id', user.id);
     }
-    const { data } = await query;
-    setOrders((data as OrderRow[]) || []);
+    const { data: ordersData } = await query;
+    
+    // Fetch employee names from profiles
+    if (ordersData && ordersData.length > 0) {
+      const employeeIds = [...new Set(ordersData.map(o => o.employee_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', employeeIds);
+      
+      const nameMap = new Map(profilesData?.map(p => [p.user_id, p.full_name]) || []);
+      const enriched = ordersData.map(o => ({
+        ...o,
+        employee_name: nameMap.get(o.employee_id) || 'غير معروف',
+      }));
+      setOrders(enriched as OrderRow[]);
+    } else {
+      setOrders([]);
+    }
     setLoading(false);
   };
 
@@ -576,6 +595,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                             <p className="font-bold text-foreground text-sm truncate">{order.order_number}</p>
                             <p className="text-muted-foreground text-[11px]">
                               {(order as any).order_type === 'custom' ? 'تفصيل جديد' : 'طقم جاهز'}
+                              {' · '}
+                              <span className="text-primary/70">{order.employee_name || 'غير معروف'}</span>
                             </p>
                           </div>
                         </div>
