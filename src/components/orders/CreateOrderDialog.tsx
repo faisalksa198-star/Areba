@@ -89,6 +89,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
   const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
+  const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
+  const [purplePackageCount, setPurplePackageCount] = useState('');
 
   // Master data
   const [kits, setKits] = useState<MasterItem[]>([]);
