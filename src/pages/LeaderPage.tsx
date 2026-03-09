@@ -761,6 +761,7 @@ export default function LeaderPage() {
                         {showHat && <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>}
                         {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
                         {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
+                        {showPurple && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">بكج Purple</th>}
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
                       </tr>
                     </thead>
