@@ -508,212 +508,239 @@ export default function LeaderPage() {
         </div>
       )}
 
-      {/* Scarf Design Cards */}
+      {/* Scarf Designs Accordion */}
       {scarfDesigns.length > 0 && (
-        <div className="px-3 pt-3">
-          <div className="flex flex-wrap gap-3">
-            {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="max-w-[300px] flex-1 min-w-[240px] rounded-lg border border-border bg-background shadow-sm">
-                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
-                  <span className="text-xs font-semibold text-foreground">وشاح {idx + 1}</span>
-                </div>
-                <div className="p-3 space-y-1.5 text-[13px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">تصميم الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_style_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">نوع التاريخ:</span><span className="font-medium text-foreground">{scarf.date_type_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">طرف الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_method_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">اتجاه التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_direction_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">خط التطريز:</span><span className="font-medium text-foreground">{scarf.font_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">لون التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_color || '---'}</span></div>
+        <div className="pt-3 w-[90%] mx-auto">
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+                <span className="text-sm font-medium text-foreground">استعراض بيانات الأوشحة</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 p-4 rounded-xl border border-border bg-card shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center">
+                  {scarfDesigns.map((scarf, idx) => (
+                    <div key={scarf.id} className="w-full max-w-[300px] rounded-lg border border-border bg-background shadow-sm">
+                      <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                        <span className="text-xs font-semibold text-foreground">وشاح {idx + 1}</span>
+                      </div>
+                      <div className="p-3 space-y-1.5 text-[13px] text-right">
+                        <div className="flex justify-between"><span className="text-muted-foreground">تصميم الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_style_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">نوع التاريخ:</span><span className="font-medium text-foreground">{scarf.date_type_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">طرف الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_method_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">اتجاه التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_direction_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">خط التطريز:</span><span className="font-medium text-foreground">{scarf.font_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">لون التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_color || '---'}</span></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       )}
 
-      {/* Table */}
-      <div className="px-3 pt-3">
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <div className="min-w-[700px] max-h-[calc(100vh-400px)] overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 z-20 bg-card border-b border-border">
-                <tr>
-                  <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
-                  <th className="w-[200px] px-2 py-3 text-right font-semibold text-muted-foreground">اسم الطالبة</th>
-                  <th className="w-[160px] px-2 py-3 text-center font-semibold text-muted-foreground">المقاس</th>
-                  <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">الوشاح</th>
-                  <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>
-                  {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
-                  {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
-                  <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
-                </tr>
-              </thead>
-              <tbody>
-                {students.map(student => (
-                  <tr key={student.id} className="border-b border-border/50 align-top">
-                    <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{student.serialNumber}</td>
-                    <td className="px-2 py-2.5">
-                      <Input
-                        value={student.name}
-                        onChange={e => updateStudent(student.id, 'name', e.target.value)}
-                        onBlur={e => updateStudent(student.id, 'name', e.target.value.trim().replace(/\s+/g, ' '))}
-                        placeholder="الاسم"
-                        className="h-9 text-xs"
-                        disabled={isSubmitted}
-                      />
-                      {student.nameError && (
-                        <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">
-                          <AlertTriangle className="h-3 w-3 shrink-0" />{student.nameError}
-                        </p>
-                      )}
-                      {student.similarWarning && (
-                        <p className="text-[10px] text-warning flex items-center gap-1 mt-1">
-                          <AlertTriangle className="h-3 w-3 shrink-0" />{student.similarWarning}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <div className="flex flex-wrap gap-1 justify-center">
-                        {SIZES.map(size => (
-                          <button
-                            key={size}
-                            onClick={() => updateStudent(student.id, 'size', size)}
-                            disabled={isSubmitted}
-                            className={`min-w-[32px] h-7 rounded-md text-xs font-medium transition-colors ${
-                              student.size === size
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-accent'
-                            } disabled:opacity-50`}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-2 py-2.5">
-                      {scarfDesigns.length > 0 ? (
-                        <Select
-                          value={student.scarfDesignId}
-                          onValueChange={v => updateStudent(student.id, 'scarfDesignId', v)}
-                          disabled={isSubmitted}
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="اختر" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {scarfDesigns.map((s, i) => (
-                              <SelectItem key={s.id} value={s.id}>وشاح {i + 1}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="px-2 py-2.5">
-                      <div className="flex items-center justify-center gap-1">
-                        <Select
-                          value={student.hatEmbroideryId}
-                          onValueChange={(v) => {
-                            const hat = hatEmbroideries.find(h => h.id === v);
-                            const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
-
-                            if (!isNone) {
-                              if (!orderInfo?.hat_embroidery_enabled) {
-                                toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
-                                return;
-                              }
-
-                              const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
-                              if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
-                                toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
-                                return;
-                              }
-                            }
-
-                            updateStudent(student.id, 'hatEmbroideryId', v);
-                            if (isNone) updateStudent(student.id, 'hatExtraText', '');
-                          }}
-                          disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
-                        >
-                          <SelectTrigger className="h-8 text-xs w-[120px]">
-                            <SelectValue placeholder="بدون تطريز" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {hatEmbroideries.map(h => (
-                              <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        {(() => {
-                          const hat = hatEmbroideries.find(h => h.id === student.hatEmbroideryId);
-                          const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
-                          if (!needsText) return null;
-                          return (
-                             <Input
-                              value={student.hatExtraText}
-                              onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
-                              placeholder="نص تطريز القبعة"
-                              maxLength={10}
-                              className="h-8 text-xs w-[120px]"
+      {/* Students Table Accordion */}
+      <div className="pt-3 w-[90%] mx-auto">
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Users className="h-4 w-4 text-primary" />
+                بيانات الخريجات
+              </div>
+              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="mt-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <div className="min-w-[700px] max-h-[calc(100vh-400px)] overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-20 bg-card border-b border-border">
+                      <tr>
+                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
+                        <th className="w-[200px] px-2 py-3 text-right font-semibold text-muted-foreground">اسم الطالبة</th>
+                        <th className="w-[160px] px-2 py-3 text-center font-semibold text-muted-foreground">المقاس</th>
+                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">الوشاح</th>
+                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>
+                        {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
+                        {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
+                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map(student => (
+                        <tr key={student.id} className="border-b border-border/50 align-top">
+                          <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{student.serialNumber}</td>
+                          <td className="px-2 py-2.5">
+                            <Input
+                              value={student.name}
+                              onChange={e => updateStudent(student.id, 'name', e.target.value)}
+                              onBlur={e => updateStudent(student.id, 'name', e.target.value.trim().replace(/\s+/g, ' '))}
+                              placeholder="الاسم"
+                              className="h-9 text-xs"
                               disabled={isSubmitted}
                             />
-                          );
-                        })()}
-                      </div>
-                    </td>
-                    {showLogo && (
-                      <td className="px-2 py-2.5 text-center">
-                        <Checkbox
-                          checked={student.hasLogoEmbroidery}
-                          onCheckedChange={() => toggleLogo(student.id)}
-                          disabled={!!logoIsAll || isSubmitted}
-                        />
-                      </td>
-                    )}
-                    {showBack && (
-                      <td className="px-2 py-2.5">
-                        <Input
-                          value={student.backEmbroideryText}
-                          onChange={e => {
-                            if (!student.backEmbroideryText.trim() && e.target.value.trim()) {
-                              const currentBack = students.filter(s => s.id !== student.id && s.backEmbroideryText.trim()).length;
-                              if (orderInfo && orderInfo.back_embroidery_count > 0 && currentBack >= orderInfo.back_embroidery_count) return;
-                            }
-                            updateStudent(student.id, 'backEmbroideryText', e.target.value);
-                          }}
-                          placeholder="النص"
-                          className="h-8 text-xs"
-                          disabled={isSubmitted}
-                        />
-                      </td>
-                    )}
-                    <td className="px-2 py-2.5 text-center">
-                      <button
-                        onClick={() => removeRow(student.id)}
-                        disabled={isSubmitted}
-                        className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+                            {student.nameError && (
+                              <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">
+                                <AlertTriangle className="h-3 w-3 shrink-0" />{student.nameError}
+                              </p>
+                            )}
+                            {student.similarWarning && (
+                              <p className="text-[10px] text-warning flex items-center gap-1 mt-1">
+                                <AlertTriangle className="h-3 w-3 shrink-0" />{student.similarWarning}
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-2 py-2.5">
+                            <div className="flex flex-wrap gap-1 justify-center">
+                              {SIZES.map(size => (
+                                <button
+                                  key={size}
+                                  onClick={() => updateStudent(student.id, 'size', size)}
+                                  disabled={isSubmitted}
+                                  className={`min-w-[32px] h-7 rounded-md text-xs font-medium transition-colors ${
+                                    student.size === size
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-muted text-muted-foreground hover:bg-accent'
+                                  } disabled:opacity-50`}
+                                >
+                                  {size}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-2 py-2.5">
+                            {scarfDesigns.length > 0 ? (
+                              <Select
+                                value={student.scarfDesignId}
+                                onValueChange={v => updateStudent(student.id, 'scarfDesignId', v)}
+                                disabled={isSubmitted}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="اختر" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {scarfDesigns.map((s, i) => (
+                                    <SelectItem key={s.id} value={s.id}>وشاح {i + 1}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="px-2 py-2.5">
+                            <div className="flex items-center justify-center gap-1">
+                              <Select
+                                value={student.hatEmbroideryId}
+                                onValueChange={(v) => {
+                                  const hat = hatEmbroideries.find(h => h.id === v);
+                                  const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
 
-      {/* Add Row */}
-      {!isSubmitted && (
-        <div className="px-3 pt-2">
-          <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
-            <Plus className="h-3.5 w-3.5" /> إضافة صف
-          </Button>
-        </div>
-      )}
+                                  if (!isNone) {
+                                    if (!orderInfo?.hat_embroidery_enabled) {
+                                      toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
+                                      return;
+                                    }
+
+                                    const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+                                    if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
+                                      toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
+                                      return;
+                                    }
+                                  }
+
+                                  updateStudent(student.id, 'hatEmbroideryId', v);
+                                  if (isNone) updateStudent(student.id, 'hatExtraText', '');
+                                }}
+                                disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-[120px]">
+                                  <SelectValue placeholder="بدون تطريز" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {hatEmbroideries.map(h => (
+                                    <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+
+                              {(() => {
+                                const hat = hatEmbroideries.find(h => h.id === student.hatEmbroideryId);
+                                const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
+                                if (!needsText) return null;
+                                return (
+                                   <Input
+                                    value={student.hatExtraText}
+                                    onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
+                                    placeholder="نص تطريز القبعة"
+                                    maxLength={10}
+                                    className="h-8 text-xs w-[120px]"
+                                    disabled={isSubmitted}
+                                  />
+                                );
+                              })()}
+                            </div>
+                          </td>
+                          {showLogo && (
+                            <td className="px-2 py-2.5 text-center">
+                              <Checkbox
+                                checked={student.hasLogoEmbroidery}
+                                onCheckedChange={() => toggleLogo(student.id)}
+                                disabled={!!logoIsAll || isSubmitted}
+                              />
+                            </td>
+                          )}
+                          {showBack && (
+                            <td className="px-2 py-2.5">
+                              <Input
+                                value={student.backEmbroideryText}
+                                onChange={e => {
+                                  if (!student.backEmbroideryText.trim() && e.target.value.trim()) {
+                                    const currentBack = students.filter(s => s.id !== student.id && s.backEmbroideryText.trim()).length;
+                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && currentBack >= orderInfo.back_embroidery_count) return;
+                                  }
+                                  updateStudent(student.id, 'backEmbroideryText', e.target.value);
+                                }}
+                                placeholder="النص"
+                                className="h-8 text-xs"
+                                disabled={isSubmitted}
+                              />
+                            </td>
+                          )}
+                          <td className="px-2 py-2.5 text-center">
+                            <button
+                              onClick={() => removeRow(student.id)}
+                              disabled={isSubmitted}
+                              className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Add Row */}
+              {!isSubmitted && (
+                <div className="p-3 border-t border-border">
+                  <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> إضافة صف
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
 
       {/* Shipping Section */}
       <div className="pt-4 pb-28 w-[90%] mx-auto">

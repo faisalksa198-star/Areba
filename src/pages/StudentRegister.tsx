@@ -244,25 +244,37 @@ export default function StudentRegister() {
           </p>
         </div>
 
-        {/* Scarf Design Cards */}
+        {/* Scarf Design Cards - Accordion */}
         {scarfDesigns.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="max-w-[300px] flex-1 min-w-[220px] rounded-lg border border-border bg-background shadow-sm">
-                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
-                  <span className="text-xs font-semibold text-foreground">وشاح {idx + 1}</span>
-                </div>
-                <div className="p-3 space-y-1.5 text-[13px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">تصميم الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_style_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">نوع التاريخ:</span><span className="font-medium text-foreground">{scarf.date_type_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">طرف الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_method_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">اتجاه التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_direction_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">خط التطريز:</span><span className="font-medium text-foreground">{scarf.font_name || '---'}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">لون التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_color || '---'}</span></div>
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+                <span className="text-sm font-medium text-foreground">استعراض بيانات الأوشحة</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 p-3 rounded-xl border border-border bg-card shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center">
+                  {scarfDesigns.map((scarf, idx) => (
+                    <div key={scarf.id} className="w-full max-w-[300px] rounded-lg border border-border bg-background shadow-sm">
+                      <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                        <span className="text-xs font-semibold text-foreground">وشاح {idx + 1}</span>
+                      </div>
+                      <div className="p-3 space-y-1.5 text-[13px] text-right">
+                        <div className="flex justify-between"><span className="text-muted-foreground">تصميم الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_style_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">نوع التاريخ:</span><span className="font-medium text-foreground">{scarf.date_type_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">طرف الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_method_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">اتجاه التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_direction_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">خط التطريز:</span><span className="font-medium text-foreground">{scarf.font_name || '---'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">لون التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_color || '---'}</span></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
 
         {isFull ? (
