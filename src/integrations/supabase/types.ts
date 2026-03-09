@@ -206,62 +206,196 @@ export type Database = {
         }
         Relationships: []
       }
+      order_scarf_designs: {
+        Row: {
+          created_at: string | null
+          date_type_id: string | null
+          embroidery_color: string | null
+          embroidery_direction_id: string | null
+          font_id: string | null
+          id: string
+          order_id: string
+          scarf_method_id: string | null
+          scarf_style_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_type_id?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
+          font_id?: string | null
+          id?: string
+          order_id: string
+          scarf_method_id?: string | null
+          scarf_style_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date_type_id?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
+          font_id?: string | null
+          id?: string
+          order_id?: string
+          scarf_method_id?: string | null
+          scarf_style_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_scarf_designs_date_type_id_fkey"
+            columns: ["date_type_id"]
+            isOneToOne: false
+            referencedRelation: "date_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_scarf_designs_embroidery_direction_id_fkey"
+            columns: ["embroidery_direction_id"]
+            isOneToOne: false
+            referencedRelation: "embroidery_directions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_scarf_designs_font_id_fkey"
+            columns: ["font_id"]
+            isOneToOne: false
+            referencedRelation: "fonts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_scarf_designs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_scarf_designs_scarf_method_id_fkey"
+            columns: ["scarf_method_id"]
+            isOneToOne: false
+            referencedRelation: "scarf_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_scarf_designs_scarf_style_id_fkey"
+            columns: ["scarf_style_id"]
+            isOneToOne: false
+            referencedRelation: "scarf_styles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          abaya_design_id: string | null
+          back_embroidery_count: number | null
+          back_embroidery_enabled: boolean | null
           city_id: string | null
+          color_image_url: string | null
           created_at: string
+          custom_abaya_color: string | null
+          custom_abaya_color_degree: string | null
+          custom_hat_color: string | null
+          custom_hat_color_degree: string | null
+          custom_scarf_color: string | null
+          custom_scarf_color_degree: string | null
           employee_id: string
           id: string
           kit_id: string | null
           leader_link: string | null
           leader_name: string | null
           leader_phone: string | null
+          logo_embroidery_count: number | null
+          logo_embroidery_enabled: boolean | null
           notes: string | null
           order_number: string
+          order_type: string | null
           registration_link: string | null
           school_name: string | null
+          sleeve_color: string | null
+          sleeve_style_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           student_count: number | null
           tracking_link: string | null
           updated_at: string
         }
         Insert: {
+          abaya_design_id?: string | null
+          back_embroidery_count?: number | null
+          back_embroidery_enabled?: boolean | null
           city_id?: string | null
+          color_image_url?: string | null
           created_at?: string
+          custom_abaya_color?: string | null
+          custom_abaya_color_degree?: string | null
+          custom_hat_color?: string | null
+          custom_hat_color_degree?: string | null
+          custom_scarf_color?: string | null
+          custom_scarf_color_degree?: string | null
           employee_id: string
           id?: string
           kit_id?: string | null
           leader_link?: string | null
           leader_name?: string | null
           leader_phone?: string | null
+          logo_embroidery_count?: number | null
+          logo_embroidery_enabled?: boolean | null
           notes?: string | null
           order_number: string
+          order_type?: string | null
           registration_link?: string | null
           school_name?: string | null
+          sleeve_color?: string | null
+          sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
           tracking_link?: string | null
           updated_at?: string
         }
         Update: {
+          abaya_design_id?: string | null
+          back_embroidery_count?: number | null
+          back_embroidery_enabled?: boolean | null
           city_id?: string | null
+          color_image_url?: string | null
           created_at?: string
+          custom_abaya_color?: string | null
+          custom_abaya_color_degree?: string | null
+          custom_hat_color?: string | null
+          custom_hat_color_degree?: string | null
+          custom_scarf_color?: string | null
+          custom_scarf_color_degree?: string | null
           employee_id?: string
           id?: string
           kit_id?: string | null
           leader_link?: string | null
           leader_name?: string | null
           leader_phone?: string | null
+          logo_embroidery_count?: number | null
+          logo_embroidery_enabled?: boolean | null
           notes?: string | null
           order_number?: string
+          order_type?: string | null
           registration_link?: string | null
           school_name?: string | null
+          sleeve_color?: string | null
+          sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
           tracking_link?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_abaya_design_id_fkey"
+            columns: ["abaya_design_id"]
+            isOneToOne: false
+            referencedRelation: "abaya_designs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_city_id_fkey"
             columns: ["city_id"]
@@ -274,6 +408,13 @@ export type Database = {
             columns: ["kit_id"]
             isOneToOne: false
             referencedRelation: "ready_kits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_sleeve_style_id_fkey"
+            columns: ["sleeve_style_id"]
+            isOneToOne: false
+            referencedRelation: "sleeve_styles"
             referencedColumns: ["id"]
           },
         ]
@@ -503,37 +644,46 @@ export type Database = {
       }
       students: {
         Row: {
+          back_embroidery_text: string | null
           created_at: string
           extra_services: string[] | null
+          has_logo_embroidery: boolean | null
           hat_choice: string | null
           id: string
           name: string
           order_id: string
           scarf_choice: string | null
+          scarf_design_id: string | null
           serial_number: number
           size: string | null
           updated_at: string
         }
         Insert: {
+          back_embroidery_text?: string | null
           created_at?: string
           extra_services?: string[] | null
+          has_logo_embroidery?: boolean | null
           hat_choice?: string | null
           id?: string
           name?: string
           order_id: string
           scarf_choice?: string | null
+          scarf_design_id?: string | null
           serial_number: number
           size?: string | null
           updated_at?: string
         }
         Update: {
+          back_embroidery_text?: string | null
           created_at?: string
           extra_services?: string[] | null
+          has_logo_embroidery?: boolean | null
           hat_choice?: string | null
           id?: string
           name?: string
           order_id?: string
           scarf_choice?: string | null
+          scarf_design_id?: string | null
           serial_number?: number
           size?: string | null
           updated_at?: string
@@ -544,6 +694,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_scarf_design_id_fkey"
+            columns: ["scarf_design_id"]
+            isOneToOne: false
+            referencedRelation: "order_scarf_designs"
             referencedColumns: ["id"]
           },
         ]
