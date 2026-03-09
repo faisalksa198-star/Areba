@@ -102,8 +102,7 @@ export default function Orders() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Edit/Delete single
-  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
-  const [editForm, setEditForm] = useState({ leader_name: '', leader_phone: '', status: '', notes: '' });
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   // Kits for filter
