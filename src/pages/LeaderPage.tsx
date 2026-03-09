@@ -186,34 +186,45 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load cities
-    const { data: citiesData } = await supabase
-      .from('cities')
-      .select('id, name')
-      .eq('is_active', true)
-      .order('name');
-    setCities(citiesData || []);
+    // Load cities + hat embroideries + scarf designs + existing students
+    const [citiesRes, hatsRes, scarfsRes, studentsRes] = await Promise.all([
+      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
+      supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
+      supabase
+        .from('order_scarf_designs')
+        .select(`
+          id, sort_order, embroidery_color,
+          scarf_styles!scarf_style_id(name, image_url),
+          date_types!date_type_id(name, image_url),
+          scarf_methods!scarf_method_id(name),
+          embroidery_directions!embroidery_direction_id(name),
+          fonts!font_id(name)
+        `)
+        .eq('order_id', orderId!)
+        .order('sort_order'),
+      supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
+    ]);
 
-    // Load scarf designs with joined names
-    const { data: scarfs } = await supabase
-      .from('order_scarf_designs')
-      .select(`
-        id, sort_order, embroidery_color,
-        scarf_styles!scarf_style_id(name, image_url),
-        date_types!date_type_id(name),
-        scarf_methods!scarf_method_id(name),
-        embroidery_directions!embroidery_direction_id(name),
-        fonts!font_id(name)
-      `)
-      .eq('order_id', orderId!)
-      .order('sort_order');
+    setCities((citiesRes.data as any) || []);
 
-    const parsedScarfs: ScarfDesign[] = (scarfs || []).map((s: any) => ({
+    const hatsSorted = ((hatsRes.data as any[]) || [])
+      .sort((a, b) => {
+        if (a.name === 'بدون تطريز') return -1;
+        if (b.name === 'بدون تطريز') return 1;
+        return String(a.name).localeCompare(String(b.name), 'ar');
+      }) as HatEmbroideryOption[];
+    setHatEmbroideries(hatsSorted);
+    const noneId = hatsSorted.find(h => h.name === 'بدون تطريز')?.id || '';
+    setNoEmbroideryId(noneId);
+
+    const scarfs = (scarfsRes.data as any[]) || [];
+    const parsedScarfs: ScarfDesign[] = scarfs.map((s: any) => ({
       id: s.id,
       sort_order: s.sort_order,
       scarf_style_name: s.scarf_styles?.name,
       scarf_style_image: s.scarf_styles?.image_url,
       date_type_name: s.date_types?.name,
+      date_type_image: s.date_types?.image_url,
       scarf_method_name: s.scarf_methods?.name,
       embroidery_direction_name: s.embroidery_directions?.name,
       font_name: s.fonts?.name,
@@ -226,21 +237,16 @@ export default function LeaderPage() {
     // Check if logo embroidery is "all"
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
 
-    // Load existing students
-    const { data: existingStudents } = await supabase
-      .from('students')
-      .select('*')
-      .eq('order_id', orderId!)
-      .order('serial_number');
-
-    if (existingStudents && existingStudents.length > 0) {
+    const existingStudents = (studentsRes.data as any[]) || [];
+    if (existingStudents.length > 0) {
       setStudents(existingStudents.map((s: any) => ({
         id: s.id,
         serialNumber: s.serial_number,
         name: s.name || '',
         size: s.size || '',
         scarfDesignId: s.scarf_design_id || defaultScarfId,
-        hatChoice: s.hat_choice || '',
+        hatEmbroideryId: s.hat_embroidery_id || noneId,
+        hatExtraText: s.hat_extra_text || '',
         hasLogoEmbroidery: s.has_logo_embroidery || false,
         backEmbroideryText: s.back_embroidery_text || '',
         nameError: '',
@@ -249,11 +255,12 @@ export default function LeaderPage() {
     } else {
       // Initialize rows
       setStudents(Array.from({ length: 5 }, (_, i) => {
-        const row = createEmptyRow(i + 1, defaultScarfId);
+        const row = createEmptyRow(i + 1, defaultScarfId, noneId);
         if (logoIsAll) row.hasLogoEmbroidery = true;
         return row;
       }));
     }
+
     setLoading(false);
   };
 
