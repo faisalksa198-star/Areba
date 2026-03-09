@@ -249,8 +249,9 @@ export default function LeaderPage() {
         similarWarning: '',
       })));
     } else {
-      // Initialize rows
-      setStudents(Array.from({ length: 5 }, (_, i) => {
+      // Initialize rows based on student_count: show min(student_count, 5)
+      const initialCount = Math.min(info.student_count, 5);
+      setStudents(Array.from({ length: initialCount }, (_, i) => {
         const row = createEmptyRow(i + 1, defaultScarfId, noneId);
         if (logoIsAll) row.hasLogoEmbroidery = true;
         return row;
@@ -280,18 +281,27 @@ export default function LeaderPage() {
     }));
   }, []);
 
-  const addRow = useCallback(() => {
+  const addRows = useCallback((count: number) => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
-      if (prev.length >= maxStudents) {
+      const remaining = maxStudents - prev.length;
+      if (remaining <= 0) {
         toast({ title: `لا يمكن إضافة أكثر من ${maxStudents} صف`, variant: 'destructive' });
         return prev;
       }
-      const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
-      if (logoIsAll) row.hasLogoEmbroidery = true;
-      return [...prev, row];
+      const toAdd = Math.min(count, remaining);
+      const newRows = Array.from({ length: toAdd }, (_, i) => {
+        const row = createEmptyRow(prev.length + i + 1, defaultScarfId, noEmbroideryId);
+        if (logoIsAll) row.hasLogoEmbroidery = true;
+        return row;
+      });
+      return [...prev, ...newRows];
     });
   }, [scarfDesigns, logoIsAll, noEmbroideryId, maxStudents, toast]);
+
+  const addRow = useCallback(() => addRows(1), [addRows]);
+  const addFiveRows = useCallback(() => addRows(5), [addRows]);
+  const addAllRows = useCallback(() => addRows(maxStudents), [addRows, maxStudents]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
@@ -457,6 +467,7 @@ export default function LeaderPage() {
 
   const showLogo = orderInfo?.logo_embroidery_enabled;
   const showBack = orderInfo?.back_embroidery_enabled;
+  const showHat = orderInfo?.hat_embroidery_enabled;
   const isSubmitted = orderInfo?.data_submitted;
 
   return (
@@ -566,7 +577,7 @@ export default function LeaderPage() {
                         <th className="w-[200px] px-2 py-3 text-right font-semibold text-muted-foreground">اسم الطالبة</th>
                         <th className="w-[160px] px-2 py-3 text-center font-semibold text-muted-foreground">المقاس</th>
                         <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">الوشاح</th>
-                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>
+                        {showHat && <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>}
                         {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
                         {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
@@ -634,6 +645,7 @@ export default function LeaderPage() {
                               <span className="text-xs text-muted-foreground">—</span>
                             )}
                           </td>
+                          {showHat && (
                           <td className="px-2 py-2.5">
                             <div className="flex items-center justify-center gap-1">
                               <Select
@@ -643,13 +655,8 @@ export default function LeaderPage() {
                                   const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
 
                                   if (!isNone) {
-                                    if (!orderInfo?.hat_embroidery_enabled) {
-                                      toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
-                                      return;
-                                    }
-
                                     const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
-                                    if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
+                                    if (orderInfo!.hat_embroidery_count > 0 && currentChosen >= orderInfo!.hat_embroidery_count) {
                                       toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
                                       return;
                                     }
@@ -658,7 +665,7 @@ export default function LeaderPage() {
                                   updateStudent(student.id, 'hatEmbroideryId', v);
                                   if (isNone) updateStudent(student.id, 'hatExtraText', '');
                                 }}
-                                disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
+                                disabled={isSubmitted}
                               >
                                 <SelectTrigger className="h-8 text-xs w-[120px]">
                                   <SelectValue placeholder="بدون تطريز" />
@@ -687,6 +694,7 @@ export default function LeaderPage() {
                               })()}
                             </div>
                           </td>
+                          )}
                           {showLogo && (
                             <td className="px-2 py-2.5 text-center">
                               <Checkbox
@@ -729,11 +737,17 @@ export default function LeaderPage() {
                 </div>
               </div>
 
-              {/* Add Row */}
-              {!isSubmitted && (
-                <div className="p-3 border-t border-border">
+              {/* Add Rows Buttons */}
+              {!isSubmitted && students.length < maxStudents && (
+                <div className="p-3 border-t border-border flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
                     <Plus className="h-3.5 w-3.5" /> إضافة صف
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={addFiveRows} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> إضافة 5 صفوف
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={addAllRows} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> إضافة جميع الصفوف
                   </Button>
                 </div>
               )}
