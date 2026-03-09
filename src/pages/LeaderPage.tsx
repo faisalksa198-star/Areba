@@ -577,7 +577,7 @@ export default function LeaderPage() {
                         <th className="w-[200px] px-2 py-3 text-right font-semibold text-muted-foreground">اسم الطالبة</th>
                         <th className="w-[160px] px-2 py-3 text-center font-semibold text-muted-foreground">المقاس</th>
                         <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">الوشاح</th>
-                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>
+                        {showHat && <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">القبعة</th>}
                         {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
                         {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">حذف</th>
