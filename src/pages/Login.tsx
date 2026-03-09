@@ -91,7 +91,7 @@ export default function Login() {
         </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          © {new Date().getFullYear()} عباية ستور — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} متجر Areba — جميع الحقوق محفوظة
         </p>
       </div>
     </div>
