@@ -598,6 +598,11 @@ export default function LeaderPage() {
                 تطريز قبعات: {students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length} / {orderInfo!.hat_embroidery_count || 'الكل'}
               </Badge>
             )}
+            {showPurple && (
+              <Badge variant="outline" className="gap-1">
+                بكج Purple: {students.filter(s => s.hasPurplePackage).length} / {orderInfo!.purple_package_count || 'الكل'}
+              </Badge>
+            )}
             {isSubmitted && (
               <Badge className="bg-success/10 text-success border-success/20">تم الإرسال</Badge>
             )}
