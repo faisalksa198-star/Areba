@@ -106,6 +106,7 @@ function createEmptyRow(serial: number, defaultScarfId: string, noEmbroideryId: 
     hatExtraText: '',
     hasLogoEmbroidery: false,
     backEmbroideryText: '',
+    hasPurplePackage: false,
     nameError: '',
     similarWarning: '',
   };
