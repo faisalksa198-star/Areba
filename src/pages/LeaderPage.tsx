@@ -158,7 +158,6 @@ export default function LeaderPage() {
     const { data, error } = await supabase
       .from('cities')
       .select('id, name')
-      .eq('is_active', true)
       .order('name');
 
     console.log('[Cities] data:', data, 'error:', error);
@@ -166,6 +165,8 @@ export default function LeaderPage() {
   };
 
   const loadData = async () => {
+    console.log('[LeaderPage] orderId:', orderId);
+
     // Load order info with shipping + leader_phone
     const { data: order } = await supabase
       .from('orders')
@@ -203,8 +204,8 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load hat embroideries + scarf designs + existing students
-    const [hatsRes, scarfsRes, studentsRes] = await Promise.all([
+    // Load hat embroideries + scarf designs + existing students + debug lookup tables
+    const [hatsRes, scarfsRes, studentsRes, scarfStylesRes, dateTypesRes] = await Promise.all([
       supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
       supabase
         .from('order_scarf_designs')
@@ -219,7 +220,13 @@ export default function LeaderPage() {
         .eq('order_id', orderId!)
         .order('sort_order'),
       supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
+      supabase.from('scarf_styles').select('id, name, image_url').order('created_at'),
+      supabase.from('date_types').select('id, name, image_url').order('created_at'),
     ]);
+
+    console.log('[ScarfStyles] data:', scarfStylesRes.data, 'error:', scarfStylesRes.error);
+    console.log('[DateTypes] data:', dateTypesRes.data, 'error:', dateTypesRes.error);
+    console.log('[OrderScarfDesigns] data:', scarfsRes.data, 'error:', scarfsRes.error, 'orderId:', orderId);
 
     const hatsSorted = ((hatsRes.data as any[]) || [])
       .sort((a, b) => {

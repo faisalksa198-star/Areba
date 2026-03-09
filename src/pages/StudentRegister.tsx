@@ -77,6 +77,8 @@ export default function StudentRegister() {
   }, [orderId]);
 
   const loadData = async () => {
+    console.log('[StudentRegister] orderId:', orderId);
+
     const [orderRes, countRes] = await Promise.all([
       supabase
         .from('orders')
@@ -114,8 +116,8 @@ export default function StudentRegister() {
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
     if (logoIsAll) setHasLogoEmbroidery(true);
 
-    // Load hat embroideries + scarf designs
-    const [hatsRes, scarfsRes] = await Promise.all([
+    // Load hat embroideries + scarf designs + debug lookup tables
+    const [hatsRes, scarfsRes, scarfStylesRes, dateTypesRes] = await Promise.all([
       supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
       supabase
         .from('order_scarf_designs')
@@ -129,7 +131,13 @@ export default function StudentRegister() {
         `)
         .eq('order_id', orderId!)
         .order('sort_order'),
+      supabase.from('scarf_styles').select('id, name, image_url').order('created_at'),
+      supabase.from('date_types').select('id, name, image_url').order('created_at'),
     ]);
+
+    console.log('[ScarfStyles][StudentRegister] data:', scarfStylesRes.data, 'error:', scarfStylesRes.error);
+    console.log('[DateTypes][StudentRegister] data:', dateTypesRes.data, 'error:', dateTypesRes.error);
+    console.log('[OrderScarfDesigns][StudentRegister] data:', scarfsRes.data, 'error:', scarfsRes.error, 'orderId:', orderId);
 
     // Hat embroideries
     const hatsSorted = ((hatsRes.data as any[]) || [])
