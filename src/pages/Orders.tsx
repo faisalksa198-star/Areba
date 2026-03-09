@@ -12,16 +12,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -47,8 +37,6 @@ import {
   Clock,
   Users,
   Package,
-  Pencil,
-  Trash2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 
@@ -88,13 +76,6 @@ export default function Orders() {
   const [generatedLinks, setGeneratedLinks] = useState<OrderLinks | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [totalStudents, setTotalStudents] = useState(0);
-
-  // Edit & Delete
-  const [editOrderId, setEditOrderId] = useState<string | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,30 +274,6 @@ export default function Orders() {
     loadTotalStudents();
   };
 
-  const handleDeleteOrder = async () => {
-    if (!deleteOrderId) return;
-    setDeleting(true);
-    // Delete related records first
-    await supabase.from('students').delete().eq('order_id', deleteOrderId);
-    await supabase.from('order_scarf_designs').delete().eq('order_id', deleteOrderId);
-    const { error } = await supabase.from('orders').delete().eq('id', deleteOrderId);
-    if (error) {
-      toast({ title: 'خطأ في حذف الطلب', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'تم حذف الطلب بنجاح ✓' });
-      loadOrders();
-      loadTotalStudents();
-    }
-    setDeleting(false);
-    setShowDeleteDialog(false);
-    setDeleteOrderId(null);
-  };
-
-  const handleEditOrder = (orderId: string) => {
-    setEditOrderId(orderId);
-    setShowEditDialog(true);
-  };
-
   const statsCards = [
     { label: 'إجمالي الطلبات', value: stats.total, icon: ClipboardList, color: 'text-primary' },
     { label: 'بانتظار البيانات', value: stats.pending, icon: Clock, color: 'text-warning' },
@@ -457,7 +414,7 @@ export default function Orders() {
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
                           {order.student_count && <span>• {order.student_count} طالبة</span>}
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-3">
+                        <div className="flex gap-2 mt-3">
                           <Button
                             variant="outline"
                             size="sm"
@@ -469,15 +426,6 @@ export default function Orders() {
                           >
                             <Link className="h-3 w-3" />
                             الروابط
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => handleEditOrder(order.id)}
-                          >
-                            <Pencil className="h-3 w-3" />
-                            تعديل
                           </Button>
                           <Button
                             variant="outline"
@@ -496,18 +444,6 @@ export default function Orders() {
                           >
                             <ExternalLink className="h-3 w-3" />
                             متابعة
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1 text-xs text-destructive hover:text-destructive"
-                            onClick={() => {
-                              setDeleteOrderId(order.id);
-                              setShowDeleteDialog(true);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            حذف
                           </Button>
                         </div>
                       </div>
@@ -576,48 +512,6 @@ export default function Orders() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Edit Order Dialog */}
-      {user && editOrderId && (
-        <CreateOrderDialog
-          open={showEditDialog}
-          onOpenChange={(open) => {
-            setShowEditDialog(open);
-            if (!open) setEditOrderId(null);
-          }}
-          userId={user.id}
-          onCreated={() => {
-            loadOrders();
-            loadTotalStudents();
-            setShowEditDialog(false);
-            setEditOrderId(null);
-          }}
-          editOrderId={editOrderId}
-        />
-      )}
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من حذف هذا الطلب؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف الطلب وجميع بيانات الطالبات المرتبطة به نهائياً. لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteOrder}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
-              حذف نهائي
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </DashboardLayout>
   );
 }
