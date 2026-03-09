@@ -1,0 +1,1 @@
+CREATE POLICY "Anon can view cities" ON public.cities FOR SELECT TO anon USING (true);
