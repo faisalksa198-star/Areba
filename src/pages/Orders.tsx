@@ -579,7 +579,7 @@ export default function Orders() {
                             variant="outline"
                             size="sm"
                             className="gap-1 text-xs"
-                            onClick={() => openEditDialog(order)}
+                            onClick={() => setEditingOrderId(order.id)}
                           >
                             <Pencil className="h-3 w-3" />
                             تعديل
