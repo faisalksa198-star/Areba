@@ -211,6 +211,8 @@ export default function LeaderPage() {
       back_embroidery_count: o.back_embroidery_count || 0,
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
+      purple_package_enabled: o.purple_package_enabled || false,
+      purple_package_count: o.purple_package_count || 0,
       data_submitted: o.data_submitted || false,
       order_type: o.order_type || 'ready_kit',
       kit_name: kit?.name || '',
@@ -229,6 +231,7 @@ export default function LeaderPage() {
       kit_scarf_color_degree: kit?.scarf_color_degree || '',
       kit_hat_color: kit?.hat_color || '',
       kit_hat_color_degree: kit?.hat_color_degree || '',
+      school_name: o.school_name || '',
     };
     setOrderInfo(info);
     setMaxStudents(info.student_count);
