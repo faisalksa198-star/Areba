@@ -109,7 +109,7 @@ export default function DataCenter() {
 
   const handleSave = async () => {
     if (!formName.trim()) {
-      toast({ title: 'يرجى إدخال الاسم', variant: 'destructive' });
+      toast({ title: activeTab === 'hat_embroideries' ? 'يرجى إدخال رقم التطريز' : 'يرجى إدخال الاسم', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -126,6 +126,7 @@ export default function DataCenter() {
     const record: any = { name: formName.trim() };
     if (activeCat.hasImage) record.image_url = imageUrl;
     if (activeCat.hasDescription) record.description = formDescription.trim() || null;
+    if (activeTab === 'hat_embroideries') record.has_extra_text = formHasExtraText;
 
     let error;
     if (editingItem) {
