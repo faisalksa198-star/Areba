@@ -384,6 +384,19 @@ export default function LeaderPage() {
     });
   }, [logoIsAll, orderInfo]);
 
+  const togglePurple = useCallback((id: string) => {
+    setStudents(prev => {
+      const student = prev.find(s => s.id === id);
+      if (!student) return prev;
+      const currentCount = prev.filter(s => s.hasPurplePackage).length;
+      if (!student.hasPurplePackage && orderInfo && orderInfo.purple_package_count > 0 && currentCount >= orderInfo.purple_package_count) {
+        toast({ title: 'تم الوصول للحد الأقصى لبكج Purple', variant: 'destructive' });
+        return prev;
+      }
+      return prev.map(s => s.id === id ? { ...s, hasPurplePackage: !s.hasPurplePackage } : s);
+    });
+  }, [orderInfo, toast]);
+
   const updateShipping = (field: keyof ShippingInfo, value: string) => {
     setShipping(prev => ({ ...prev, [field]: value }));
   };
