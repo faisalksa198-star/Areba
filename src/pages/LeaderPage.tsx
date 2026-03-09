@@ -734,22 +734,20 @@ export default function LeaderPage() {
 
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
-        <Card className="border-border">
+        <div className="max-w-2xl mx-auto">
           <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
-            <CardHeader className="pb-3">
-              <CollapsibleTrigger asChild>
-                <button className="w-full flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Truck className="h-4 w-4 text-primary" />
-                    بيانات الشحن
-                  </CardTitle>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </CollapsibleTrigger>
-            </CardHeader>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-3 rounded-lg border border-border bg-card hover:bg-accent/5 transition-colors">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Truck className="h-4 w-4 text-primary" />
+                  بيانات الشحن
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </CollapsibleTrigger>
 
             <CollapsibleContent>
-              <CardContent className="space-y-3">
+              <div className="mt-2 p-4 rounded-lg border border-border bg-card space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
@@ -819,10 +817,10 @@ export default function LeaderPage() {
                     disabled={isSubmitted}
                   />
                 </div>
-              </CardContent>
+              </div>
             </CollapsibleContent>
           </Collapsible>
-        </Card>
+        </div>
       </div>
 
       {/* Bottom Bar */}

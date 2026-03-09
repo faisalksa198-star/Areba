@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Loader2, School } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
-const HAT_OPTIONS = ['بدون', 'بونيه', 'طاقية'];
 
 interface ScarfDesign {
   id: string;
@@ -23,6 +22,14 @@ interface ScarfDesign {
   font_name?: string;
   embroidery_color?: string;
   scarf_style_image?: string | null;
+  date_type_image?: string | null;
+}
+
+interface HatEmbroideryOption {
+  id: string;
+  name: string;
+  has_extra_text: boolean;
+  image_url?: string | null;
 }
 
 interface OrderInfo {
@@ -31,6 +38,8 @@ interface OrderInfo {
   logo_embroidery_count: number;
   back_embroidery_enabled: boolean;
   back_embroidery_count: number;
+  hat_embroidery_enabled: boolean;
+  hat_embroidery_count: number;
 }
 
 export default function StudentRegister() {
@@ -38,6 +47,8 @@ export default function StudentRegister() {
   const { toast } = useToast();
   const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null);
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesign[]>([]);
+  const [hatEmbroideries, setHatEmbroideries] = useState<HatEmbroideryOption[]>([]);
+  const [noEmbroideryId, setNoEmbroideryId] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -46,7 +57,8 @@ export default function StudentRegister() {
   const [name, setName] = useState('');
   const [size, setSize] = useState('');
   const [scarfDesignId, setScarfDesignId] = useState('');
-  const [hatChoice, setHatChoice] = useState('');
+  const [hatEmbroideryId, setHatEmbroideryId] = useState('');
+  const [hatExtraText, setHatExtraText] = useState('');
   const [hasLogoEmbroidery, setHasLogoEmbroidery] = useState(false);
   const [backEmbroideryText, setBackEmbroideryText] = useState('');
 
@@ -54,6 +66,7 @@ export default function StudentRegister() {
   const [existingCount, setExistingCount] = useState(0);
   const [existingLogoCount, setExistingLogoCount] = useState(0);
   const [existingBackCount, setExistingBackCount] = useState(0);
+  const [existingHatCount, setExistingHatCount] = useState(0);
 
   useEffect(() => {
     if (!orderId) return;
@@ -64,10 +77,10 @@ export default function StudentRegister() {
     const [orderRes, countRes] = await Promise.all([
       supabase
         .from('orders')
-        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count')
+        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count')
         .eq('id', orderId!)
         .maybeSingle(),
-      supabase.from('students').select('has_logo_embroidery, back_embroidery_text').eq('order_id', orderId!),
+      supabase.from('students').select('has_logo_embroidery, back_embroidery_text, hat_embroidery_id').eq('order_id', orderId!),
     ]);
 
     if (!orderRes.data) {
@@ -83,6 +96,8 @@ export default function StudentRegister() {
       logo_embroidery_count: o.logo_embroidery_count || 0,
       back_embroidery_enabled: o.back_embroidery_enabled || false,
       back_embroidery_count: o.back_embroidery_count || 0,
+      hat_embroidery_enabled: o.hat_embroidery_enabled || false,
+      hat_embroidery_count: o.hat_embroidery_count || 0,
     };
     setOrderInfo(info);
 
@@ -90,31 +105,49 @@ export default function StudentRegister() {
     setExistingCount(studentsData.length);
     setExistingLogoCount(studentsData.filter((s: any) => s.has_logo_embroidery).length);
     setExistingBackCount(studentsData.filter((s: any) => s.back_embroidery_text?.trim()).length);
+    setExistingHatCount(studentsData.filter((s: any) => s.hat_embroidery_id).length);
 
     // Logo is "all" → auto-enable
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
     if (logoIsAll) setHasLogoEmbroidery(true);
 
-    // Load scarf designs with full details
-    const { data: scarfs } = await supabase
-      .from('order_scarf_designs')
-      .select(`
-        id, sort_order, embroidery_color,
-        scarf_styles!scarf_style_id(name, image_url),
-        date_types!date_type_id(name),
-        scarf_methods!scarf_method_id(name),
-        embroidery_directions!embroidery_direction_id(name),
-        fonts!font_id(name)
-      `)
-      .eq('order_id', orderId!)
-      .order('sort_order');
+    // Load hat embroideries + scarf designs
+    const [hatsRes, scarfsRes] = await Promise.all([
+      supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
+      supabase
+        .from('order_scarf_designs')
+        .select(`
+          id, sort_order, embroidery_color,
+          scarf_styles!scarf_style_id(name, image_url),
+          date_types!date_type_id(name, image_url),
+          scarf_methods!scarf_method_id(name),
+          embroidery_directions!embroidery_direction_id(name),
+          fonts!font_id(name)
+        `)
+        .eq('order_id', orderId!)
+        .order('sort_order'),
+    ]);
 
-    const parsed: ScarfDesign[] = (scarfs || []).map((s: any) => ({
+    // Hat embroideries
+    const hatsSorted = ((hatsRes.data as any[]) || [])
+      .sort((a: any, b: any) => {
+        if (a.name === 'بدون تطريز') return -1;
+        if (b.name === 'بدون تطريز') return 1;
+        return String(a.name).localeCompare(String(b.name), 'ar');
+      }) as HatEmbroideryOption[];
+    setHatEmbroideries(hatsSorted);
+    const noneId = hatsSorted.find(h => h.name === 'بدون تطريز')?.id || '';
+    setNoEmbroideryId(noneId);
+    if (noneId) setHatEmbroideryId(noneId);
+
+    // Scarf designs
+    const parsed: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map((s: any) => ({
       id: s.id,
       sort_order: s.sort_order,
       scarf_style_name: s.scarf_styles?.name,
       scarf_style_image: s.scarf_styles?.image_url,
       date_type_name: s.date_types?.name,
+      date_type_image: s.date_types?.image_url,
       scarf_method_name: s.scarf_methods?.name,
       embroidery_direction_name: s.embroidery_directions?.name,
       font_name: s.fonts?.name,
@@ -130,11 +163,22 @@ export default function StudentRegister() {
   const canAddLogo = logoIsAll || (orderInfo && orderInfo.logo_embroidery_count > 0 && existingLogoCount < orderInfo.logo_embroidery_count);
   const canAddBack = orderInfo && (orderInfo.back_embroidery_count === 0 || existingBackCount < orderInfo.back_embroidery_count);
 
+  const selectedHat = hatEmbroideries.find(h => h.id === hatEmbroideryId);
+  const isHatNone = !hatEmbroideryId || hatEmbroideryId === noEmbroideryId || selectedHat?.name === 'بدون تطريز';
+  const canAddHat = isHatNone || (orderInfo && (orderInfo.hat_embroidery_count === 0 || existingHatCount < orderInfo.hat_embroidery_count));
+
   const handleSubmit = async () => {
     if (!orderId || !name.trim()) {
       toast({ title: 'يرجى إدخال الاسم', variant: 'destructive' });
       return;
     }
+
+    // Validate hat extra text
+    if (!isHatNone && selectedHat?.has_extra_text && !hatExtraText.trim()) {
+      toast({ title: 'يرجى إدخال نص تطريز القبعة', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
 
     const nextSerial = existingCount + 1;
@@ -144,7 +188,9 @@ export default function StudentRegister() {
       name: name.trim(),
       size: size || null,
       scarf_design_id: scarfDesignId || null,
-      hat_choice: hatChoice || null,
+      hat_embroidery_id: isHatNone ? null : hatEmbroideryId,
+      hat_extra_text: !isHatNone ? (hatExtraText.trim() || null) : null,
+      hat_choice: null,
       has_logo_embroidery: hasLogoEmbroidery,
       back_embroidery_text: backEmbroideryText.trim() || null,
       extra_services: [],
@@ -156,13 +202,15 @@ export default function StudentRegister() {
       toast({ title: 'تم التسجيل بنجاح ✓' });
       setName('');
       setSize('');
-      setHatChoice('');
+      if (noEmbroideryId) setHatEmbroideryId(noEmbroideryId);
+      setHatExtraText('');
       if (!logoIsAll) setHasLogoEmbroidery(false);
       setBackEmbroideryText('');
       if (scarfDesigns.length > 0) setScarfDesignId(scarfDesigns[0].id);
       setExistingCount(prev => prev + 1);
       if (hasLogoEmbroidery) setExistingLogoCount(prev => prev + 1);
       if (backEmbroideryText.trim()) setExistingBackCount(prev => prev + 1);
+      if (!isHatNone) setExistingHatCount(prev => prev + 1);
     }
     setSaving(false);
   };
@@ -196,23 +244,34 @@ export default function StudentRegister() {
           </div>
           <h1 className="text-lg font-bold text-foreground">تسجيل الطالبة</h1>
           <p className="text-xs text-muted-foreground">
-            {existingCount} / {maxStudents} طالبة مسجلة
+            إجمالي الطالبات المسجلات: {existingCount} من {maxStudents}
           </p>
         </div>
 
-        {/* Scarf Design Cards - Same as Leader Page */}
+        {/* Scarf Design Cards */}
         {scarfDesigns.length > 0 && (
           <div className="flex gap-2 overflow-x-auto pb-2">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[160px] p-2.5 rounded-lg border border-border bg-card flex-shrink-0">
+              <div key={scarf.id} className="min-w-[200px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
                 </div>
-                {scarf.scarf_style_image && (
-                  <div className="w-12 h-12 rounded-lg border border-border overflow-hidden bg-muted/30 mb-2">
-                    <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
-                  </div>
-                )}
+
+                {/* Images row */}
+                <div className="flex items-center gap-2 mb-2">
+                  {scarf.scarf_style_image && (
+                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
+                      <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
+                    </div>
+                  )}
+                  {scarf.date_type_image && (
+                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
+                      <img src={scarf.date_type_image} className="w-full h-full object-contain" alt="نوع التاريخ" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Text details */}
                 <div className="space-y-0.5 text-[10px] text-muted-foreground">
                   {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
                   {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
@@ -278,25 +337,40 @@ export default function StudentRegister() {
                 </div>
               )}
 
-              {/* Hat */}
-              <div>
-                <label className="text-sm font-medium text-foreground mb-2 block">القبعة</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {HAT_OPTIONS.map(opt => (
-                    <button
-                      key={opt}
-                      onClick={() => setHatChoice(opt)}
-                      className={`px-4 h-9 rounded-lg text-sm font-medium transition-all ${
-                        hatChoice === opt
-                          ? 'bg-primary text-primary-foreground shadow-sm'
-                          : 'bg-muted text-muted-foreground hover:bg-accent/20'
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
+              {/* Hat Embroidery */}
+              {orderInfo?.hat_embroidery_enabled && hatEmbroideries.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground block">تطريز القبعة</label>
+                  <Select
+                    value={hatEmbroideryId}
+                    onValueChange={(v) => {
+                      const hat = hatEmbroideries.find(h => h.id === v);
+                      const none = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
+                      if (!none && orderInfo.hat_embroidery_count > 0 && existingHatCount >= orderInfo.hat_embroidery_count) {
+                        toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
+                        return;
+                      }
+                      setHatEmbroideryId(v);
+                      if (none) setHatExtraText('');
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="بدون تطريز" /></SelectTrigger>
+                    <SelectContent>
+                      {hatEmbroideries.map(h => (
+                        <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!isHatNone && selectedHat?.has_extra_text && (
+                    <Input
+                      value={hatExtraText}
+                      onChange={e => setHatExtraText(e.target.value)}
+                      placeholder="النص الإضافي للقبعة"
+                      className="bg-background"
+                    />
+                  )}
                 </div>
-              </div>
+              )}
 
               {/* Logo Embroidery */}
               {orderInfo?.logo_embroidery_enabled && (
