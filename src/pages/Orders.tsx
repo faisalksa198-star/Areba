@@ -139,14 +139,31 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setLoading(true);
     let query = supabase
       .from('orders')
-      .select('*, profiles!inner(full_name)')
+      .select('*')
       .order('created_at', { ascending: false });
     // "My Orders" mode only filters by employee_id
     if (myOrdersOnly && user) {
       query = query.eq('employee_id', user.id);
     }
-    const { data } = await query;
-    setOrders((data as unknown as OrderRow[]) || []);
+    const { data: ordersData } = await query;
+    
+    // Fetch employee names from profiles
+    if (ordersData && ordersData.length > 0) {
+      const employeeIds = [...new Set(ordersData.map(o => o.employee_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .in('user_id', employeeIds);
+      
+      const nameMap = new Map(profilesData?.map(p => [p.user_id, p.full_name]) || []);
+      const enriched = ordersData.map(o => ({
+        ...o,
+        employee_name: nameMap.get(o.employee_id) || 'غير معروف',
+      }));
+      setOrders(enriched as OrderRow[]);
+    } else {
+      setOrders([]);
+    }
     setLoading(false);
   };
 
