@@ -5,12 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -37,6 +48,8 @@ import {
   Clock,
   Users,
   Package,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 
@@ -82,9 +95,16 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [kitFilter, setKitFilter] = useState('all');
 
-  // Bulk export
+  // Bulk actions
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Edit/Delete single
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [editForm, setEditForm] = useState({ leader_name: '', leader_phone: '', status: '', notes: '' });
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
@@ -274,6 +294,115 @@ export default function Orders() {
     loadTotalStudents();
   };
 
+  const openEditDialog = (order: OrderRow) => {
+    setEditingOrder(order);
+    setEditForm({
+      leader_name: order.leader_name || '',
+      leader_phone: order.leader_phone || '',
+      status: order.status,
+      notes: '',
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        leader_name: editForm.leader_name.trim() || null,
+        leader_phone: editForm.leader_phone.trim() || null,
+        status: editForm.status as any,
+        notes: editForm.notes.trim() || null,
+      } as any)
+      .eq('id', editingOrder.id);
+    if (error) {
+      toast({ title: 'خطأ في التعديل', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم التعديل بنجاح ✓' });
+      setEditingOrder(null);
+      loadOrders();
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deletingOrderId) return;
+    await supabase.from('students').delete().eq('order_id', deletingOrderId);
+    await supabase.from('order_scarf_designs').delete().eq('order_id', deletingOrderId);
+    const { error } = await supabase.from('orders').delete().eq('id', deletingOrderId);
+    if (error) {
+      toast({ title: 'خطأ في الحذف', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم حذف الطلب ✓' });
+      loadOrders();
+      loadTotalStudents();
+    }
+    setDeletingOrderId(null);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const ids = Array.from(selectedOrderIds);
+    await supabase.from('students').delete().in('order_id', ids);
+    await supabase.from('order_scarf_designs').delete().in('order_id', ids);
+    const { error } = await supabase.from('orders').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'خطأ في الحذف الجماعي', variant: 'destructive' });
+    } else {
+      toast({ title: `تم حذف ${ids.length} طلب ✓` });
+      setSelectedOrderIds(new Set());
+      loadOrders();
+      loadTotalStudents();
+    }
+    setBulkDeleting(false);
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const exportBulkCSV = async () => {
+    if (selectedOrderIds.size === 0) return;
+    setBulkExporting(true);
+    const ids = Array.from(selectedOrderIds);
+    const [ordersRes, studentsRes] = await Promise.all([
+      supabase.from('orders').select('*').in('id', ids),
+      supabase.from('students').select('*').in('order_id', ids).order('serial_number'),
+    ]);
+    const ordersData = ordersRes.data || [];
+    const studentsData = studentsRes.data || [];
+
+    // Build CSV
+    const headers = ['رقم الطلب', 'اسم القائدة', 'رقم الجوال', 'الحالة', 'عدد الطالبات', 'م', 'اسم الطالبة', 'المقاس'];
+    const rows: string[][] = [];
+    ordersData.forEach(order => {
+      const orderStudents = studentsData.filter(s => s.order_id === order.id);
+      if (orderStudents.length === 0) {
+        rows.push([order.order_number, order.leader_name || '', order.leader_phone || '', order.status, String(order.student_count || 0), '', '', '']);
+      } else {
+        orderStudents.forEach((s, i) => {
+          rows.push([
+            i === 0 ? order.order_number : '',
+            i === 0 ? (order.leader_name || '') : '',
+            i === 0 ? (order.leader_phone || '') : '',
+            i === 0 ? order.status : '',
+            i === 0 ? String(order.student_count || 0) : '',
+            String(s.serial_number),
+            s.name || '',
+            s.size || '',
+          ]);
+        });
+      }
+    });
+
+    const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBulkExporting(false);
+    setSelectedOrderIds(new Set());
+  };
+
   const statsCards = [
     { label: 'إجمالي الطلبات', value: stats.total, icon: ClipboardList, color: 'text-primary' },
     { label: 'بانتظار البيانات', value: stats.pending, icon: Clock, color: 'text-warning' },
@@ -361,11 +490,19 @@ export default function Orders() {
 
         {/* Bulk Actions */}
         {selectedOrderIds.size > 0 && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border">
+          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border flex-wrap">
             <span className="text-sm text-muted-foreground">تم تحديد {selectedOrderIds.size} طلب</span>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              تصدير جماعي
+              تصدير CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+              {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
+              تصدير JSON
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1">
+              {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              حذف جماعي
             </Button>
           </div>
         )}
@@ -414,7 +551,7 @@ export default function Orders() {
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
                           {order.student_count && <span>• {order.student_count} طالبة</span>}
                         </div>
-                        <div className="flex gap-2 mt-3">
+                        <div className="flex gap-2 mt-3 flex-wrap">
                           <Button
                             variant="outline"
                             size="sm"
@@ -437,13 +574,22 @@ export default function Orders() {
                             تصدير
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             className="gap-1 text-xs"
-                            onClick={() => window.open(links.statusLink, '_blank')}
+                            onClick={() => openEditDialog(order)}
                           >
-                            <ExternalLink className="h-3 w-3" />
-                            متابعة
+                            <Pencil className="h-3 w-3" />
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 text-xs text-destructive hover:text-destructive"
+                            onClick={() => setDeletingOrderId(order.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            حذف
                           </Button>
                         </div>
                       </div>
@@ -512,6 +658,76 @@ export default function Orders() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Order Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={open => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تعديل الطلب {editingOrder?.order_number}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم القائدة</label>
+              <Input value={editForm.leader_name} onChange={e => setEditForm(f => ({ ...f, leader_name: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال</label>
+              <Input value={editForm.leader_phone} onChange={e => setEditForm(f => ({ ...f, leader_phone: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">الحالة</label>
+              <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                  <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                  <SelectItem value="completed">مكتمل</SelectItem>
+                  <SelectItem value="cancelled">ملغي</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">ملاحظات</label>
+              <Textarea value={editForm.notes} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={2} className="text-sm" />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleEditSave} className="flex-1">حفظ التعديلات</Button>
+              <Button variant="outline" onClick={() => setEditingOrder(null)}>إلغاء</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!deletingOrderId} onOpenChange={open => !open && setDeletingOrderId(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>هل أنت متأكد من حذف هذا الطلب؟ سيتم حذف جميع بيانات الطالبات المرتبطة به. لا يمكن التراجع.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteOrder} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">حذف</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Delete Confirm */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف الجماعي</AlertDialogTitle>
+            <AlertDialogDescription>هل أنت متأكد من حذف {selectedOrderIds.size} طلب؟ سيتم حذف جميع البيانات المرتبطة. لا يمكن التراجع.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
+              حذف الكل
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
@@ -540,14 +756,25 @@ function LinkCard({
           <span className="text-lg">{icon}</span>
           <p className="text-sm font-bold text-foreground">{label}</p>
         </div>
-        <Button
-          variant={copied ? 'default' : 'outline'}
-          size="icon"
-          onClick={onCopy}
-          className={`h-9 w-9 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
-        >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => window.open(url, '_blank')}
+            className="h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm"
+            title="فتح في تبويب جديد"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={copied ? 'default' : 'outline'}
+            size="icon"
+            onClick={onCopy}
+            className={`h-9 w-9 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );

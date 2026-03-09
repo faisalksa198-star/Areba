@@ -33,6 +33,8 @@ interface HatEmbroideryOption {
 }
 
 interface OrderInfo {
+  leader_name: string;
+  order_number: string;
   student_count: number;
   logo_embroidery_enabled: boolean;
   logo_embroidery_count: number;
@@ -168,6 +170,7 @@ export default function LeaderPage() {
     const { data: order } = await supabase
       .from('orders')
       .select(`
+        leader_name, order_number,
         student_count, logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
@@ -191,6 +194,8 @@ export default function LeaderPage() {
     const kit = o.ready_kits;
     const isKit = o.order_type === 'ready_kit';
     const info: OrderInfo = {
+      leader_name: o.leader_name || '',
+      order_number: o.order_number || '',
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
       logo_embroidery_count: o.logo_embroidery_count || 0,
@@ -615,6 +620,12 @@ export default function LeaderPage() {
 
                   return (
                     <>
+                      {/* Leader & Order number */}
+                      <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
+                        {orderInfo.leader_name && <DataCell label="اسم القائدة" value={orderInfo.leader_name} />}
+                        <DataCell label="رقم الطلب" value={orderInfo.order_number} />
+                      </div>
+
                       {/* Row 1: Order type + kit/abaya info */}
                       <div className="grid grid-cols-2 gap-4">
                         <DataCell label="نوع الطلب" value={isKit ? 'طقم جاهز' : 'تفصيل جديد'} />
