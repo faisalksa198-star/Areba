@@ -281,18 +281,27 @@ export default function LeaderPage() {
     }));
   }, []);
 
-  const addRow = useCallback(() => {
+  const addRows = useCallback((count: number) => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
-      if (prev.length >= maxStudents) {
+      const remaining = maxStudents - prev.length;
+      if (remaining <= 0) {
         toast({ title: `لا يمكن إضافة أكثر من ${maxStudents} صف`, variant: 'destructive' });
         return prev;
       }
-      const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
-      if (logoIsAll) row.hasLogoEmbroidery = true;
-      return [...prev, row];
+      const toAdd = Math.min(count, remaining);
+      const newRows = Array.from({ length: toAdd }, (_, i) => {
+        const row = createEmptyRow(prev.length + i + 1, defaultScarfId, noEmbroideryId);
+        if (logoIsAll) row.hasLogoEmbroidery = true;
+        return row;
+      });
+      return [...prev, ...newRows];
     });
   }, [scarfDesigns, logoIsAll, noEmbroideryId, maxStudents, toast]);
+
+  const addRow = useCallback(() => addRows(1), [addRows]);
+  const addFiveRows = useCallback(() => addRows(5), [addRows]);
+  const addAllRows = useCallback(() => addRows(maxStudents), [addRows, maxStudents]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
