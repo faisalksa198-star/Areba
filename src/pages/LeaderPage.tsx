@@ -669,10 +669,11 @@ export default function LeaderPage() {
                           const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
                           if (!needsText) return null;
                           return (
-                            <Input
+                             <Input
                               value={student.hatExtraText}
                               onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
-                              placeholder="نص إضافي"
+                              placeholder="نص تطريز القبعة"
+                              maxLength={10}
                               className="h-8 text-xs w-[120px]"
                               disabled={isSubmitted}
                             />
