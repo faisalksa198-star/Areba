@@ -143,6 +143,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setLogoEmbroideryCount('');
     setBackEmbroideryEnabled(false);
     setBackEmbroideryCount('');
+    setHatEmbroideryEnabled(false);
+    setHatEmbroideryCount('');
   };
 
   const handleColorImage = (e: React.ChangeEvent<HTMLInputElement>) => {
