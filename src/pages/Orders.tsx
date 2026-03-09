@@ -293,34 +293,23 @@ export default function Orders() {
     loadTotalStudents();
   };
 
-  const openEditDialog = (order: OrderRow) => {
-    setEditingOrder(order);
-    setEditForm({
-      leader_name: order.leader_name || '',
-      leader_phone: order.leader_phone || '',
-      status: order.status,
-      notes: '',
-    });
-  };
-
-  const handleEditSave = async () => {
-    if (!editingOrder) return;
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
     const { error } = await supabase
       .from('orders')
-      .update({
-        leader_name: editForm.leader_name.trim() || null,
-        leader_phone: editForm.leader_phone.trim() || null,
-        status: editForm.status as any,
-        notes: editForm.notes.trim() || null,
-      } as any)
-      .eq('id', editingOrder.id);
+      .update({ status: newStatus } as any)
+      .eq('id', orderId);
     if (error) {
-      toast({ title: 'خطأ في التعديل', variant: 'destructive' });
+      toast({ title: 'خطأ في تغيير الحالة', variant: 'destructive' });
     } else {
-      toast({ title: 'تم التعديل بنجاح ✓' });
-      setEditingOrder(null);
+      toast({ title: 'تم تحديث الحالة ✓' });
       loadOrders();
     }
+  };
+
+  const handleEditCreated = (orderId: string) => {
+    setEditingOrderId(null);
+    loadOrders();
+    loadTotalStudents();
   };
 
   const handleDeleteOrder = async () => {
