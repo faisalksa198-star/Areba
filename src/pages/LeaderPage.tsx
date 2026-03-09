@@ -8,11 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
-const HAT_OPTIONS = ['بدون', 'بونيه', 'طاقية'];
 
 interface ScarfDesign {
   id: string;
@@ -24,7 +24,14 @@ interface ScarfDesign {
   font_name?: string;
   embroidery_color?: string;
   scarf_style_image?: string | null;
-  date_type_id?: string;
+  date_type_image?: string | null;
+}
+
+interface HatEmbroideryOption {
+  id: string;
+  name: string;
+  has_extra_text: boolean;
+  image_url?: string | null;
 }
 
 interface OrderInfo {
@@ -33,6 +40,8 @@ interface OrderInfo {
   logo_embroidery_count: number;
   back_embroidery_enabled: boolean;
   back_embroidery_count: number;
+  hat_embroidery_enabled: boolean;
+  hat_embroidery_count: number;
   data_submitted: boolean;
 }
 
@@ -56,21 +65,23 @@ interface StudentRow {
   name: string;
   size: string;
   scarfDesignId: string;
-  hatChoice: string;
+  hatEmbroideryId: string;
+  hatExtraText: string;
   hasLogoEmbroidery: boolean;
   backEmbroideryText: string;
   nameError: string;
   similarWarning: string;
 }
 
-function createEmptyRow(serial: number, defaultScarfId: string): StudentRow {
+function createEmptyRow(serial: number, defaultScarfId: string, noEmbroideryId: string): StudentRow {
   return {
     id: crypto.randomUUID(),
     serialNumber: serial,
     name: '',
     size: '',
     scarfDesignId: defaultScarfId,
-    hatChoice: '',
+    hatEmbroideryId: noEmbroideryId,
+    hatExtraText: '',
     hasLogoEmbroidery: false,
     backEmbroideryText: '',
     nameError: '',
@@ -112,12 +123,15 @@ export default function LeaderPage() {
   const [maxStudents, setMaxStudents] = useState(30);
   const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null);
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesign[]>([]);
+  const [hatEmbroideries, setHatEmbroideries] = useState<HatEmbroideryOption[]>([]);
+  const [noEmbroideryId, setNoEmbroideryId] = useState('');
   const [cities, setCities] = useState<City[]>([]);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [shippingOpen, setShippingOpen] = useState(false);
 
   // Shipping state
   const [shipping, setShipping] = useState<ShippingInfo>({
@@ -138,7 +152,7 @@ export default function LeaderPage() {
     // Load order info with shipping
     const { data: order } = await supabase
       .from('orders')
-      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted')
+      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted')
       .eq('id', orderId!)
       .maybeSingle();
 
@@ -155,6 +169,8 @@ export default function LeaderPage() {
       logo_embroidery_count: o.logo_embroidery_count || 0,
       back_embroidery_enabled: o.back_embroidery_enabled || false,
       back_embroidery_count: o.back_embroidery_count || 0,
+      hat_embroidery_enabled: o.hat_embroidery_enabled || false,
+      hat_embroidery_count: o.hat_embroidery_count || 0,
       data_submitted: o.data_submitted || false,
     };
     setOrderInfo(info);
@@ -170,34 +186,45 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load cities
-    const { data: citiesData } = await supabase
-      .from('cities')
-      .select('id, name')
-      .eq('is_active', true)
-      .order('name');
-    setCities(citiesData || []);
+    // Load cities + hat embroideries + scarf designs + existing students
+    const [citiesRes, hatsRes, scarfsRes, studentsRes] = await Promise.all([
+      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
+      supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
+      supabase
+        .from('order_scarf_designs')
+        .select(`
+          id, sort_order, embroidery_color,
+          scarf_styles!scarf_style_id(name, image_url),
+          date_types!date_type_id(name, image_url),
+          scarf_methods!scarf_method_id(name),
+          embroidery_directions!embroidery_direction_id(name),
+          fonts!font_id(name)
+        `)
+        .eq('order_id', orderId!)
+        .order('sort_order'),
+      supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
+    ]);
 
-    // Load scarf designs with joined names
-    const { data: scarfs } = await supabase
-      .from('order_scarf_designs')
-      .select(`
-        id, sort_order, embroidery_color,
-        scarf_styles!scarf_style_id(name, image_url),
-        date_types!date_type_id(name),
-        scarf_methods!scarf_method_id(name),
-        embroidery_directions!embroidery_direction_id(name),
-        fonts!font_id(name)
-      `)
-      .eq('order_id', orderId!)
-      .order('sort_order');
+    setCities((citiesRes.data as any) || []);
 
-    const parsedScarfs: ScarfDesign[] = (scarfs || []).map((s: any) => ({
+    const hatsSorted = ((hatsRes.data as any[]) || [])
+      .sort((a, b) => {
+        if (a.name === 'بدون تطريز') return -1;
+        if (b.name === 'بدون تطريز') return 1;
+        return String(a.name).localeCompare(String(b.name), 'ar');
+      }) as HatEmbroideryOption[];
+    setHatEmbroideries(hatsSorted);
+    const noneId = hatsSorted.find(h => h.name === 'بدون تطريز')?.id || '';
+    setNoEmbroideryId(noneId);
+
+    const scarfs = (scarfsRes.data as any[]) || [];
+    const parsedScarfs: ScarfDesign[] = scarfs.map((s: any) => ({
       id: s.id,
       sort_order: s.sort_order,
       scarf_style_name: s.scarf_styles?.name,
       scarf_style_image: s.scarf_styles?.image_url,
       date_type_name: s.date_types?.name,
+      date_type_image: s.date_types?.image_url,
       scarf_method_name: s.scarf_methods?.name,
       embroidery_direction_name: s.embroidery_directions?.name,
       font_name: s.fonts?.name,
@@ -210,21 +237,16 @@ export default function LeaderPage() {
     // Check if logo embroidery is "all"
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
 
-    // Load existing students
-    const { data: existingStudents } = await supabase
-      .from('students')
-      .select('*')
-      .eq('order_id', orderId!)
-      .order('serial_number');
-
-    if (existingStudents && existingStudents.length > 0) {
+    const existingStudents = (studentsRes.data as any[]) || [];
+    if (existingStudents.length > 0) {
       setStudents(existingStudents.map((s: any) => ({
         id: s.id,
         serialNumber: s.serial_number,
         name: s.name || '',
         size: s.size || '',
         scarfDesignId: s.scarf_design_id || defaultScarfId,
-        hatChoice: s.hat_choice || '',
+        hatEmbroideryId: s.hat_embroidery_id || noneId,
+        hatExtraText: s.hat_extra_text || '',
         hasLogoEmbroidery: s.has_logo_embroidery || false,
         backEmbroideryText: s.back_embroidery_text || '',
         nameError: '',
@@ -233,11 +255,12 @@ export default function LeaderPage() {
     } else {
       // Initialize rows
       setStudents(Array.from({ length: 5 }, (_, i) => {
-        const row = createEmptyRow(i + 1, defaultScarfId);
+        const row = createEmptyRow(i + 1, defaultScarfId, noneId);
         if (logoIsAll) row.hasLogoEmbroidery = true;
         return row;
       }));
     }
+
     setLoading(false);
   };
 
@@ -264,11 +287,11 @@ export default function LeaderPage() {
   const addRow = useCallback(() => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
-      const row = createEmptyRow(prev.length + 1, defaultScarfId);
+      const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
       if (logoIsAll) row.hasLogoEmbroidery = true;
       return [...prev, row];
     });
-  }, [scarfDesigns, logoIsAll]);
+  }, [scarfDesigns, logoIsAll, noEmbroideryId]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
@@ -297,11 +320,27 @@ export default function LeaderPage() {
       errors.push('يجب إدخال بيانات طالبة واحدة على الأقل');
     }
 
-    filledStudents.forEach((s, idx) => {
+    filledStudents.forEach((s) => {
       if (!s.size) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار المقاس`);
-      if (!s.hatChoice) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار القبعة`);
       if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
+
+      const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
+      const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+      if (!isNone && hat?.has_extra_text && !s.hatExtraText.trim()) {
+        errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
+      }
+      if (!orderInfo?.hat_embroidery_enabled && !isNone) {
+        errors.push(`الطالبة رقم ${s.serialNumber}: خدمة تطريز القبعات غير مفعّلة لهذا الطلب`);
+      }
     });
+
+    // Hat embroidery limit
+    if (orderInfo?.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0) {
+      const chosen = students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+      if (chosen > orderInfo.hat_embroidery_count) {
+        errors.push(`تم اختيار تطريز القبعات لأكثر من العدد المسموح (${chosen} / ${orderInfo.hat_embroidery_count})`);
+      }
+    }
 
     // Shipping validation
     if (!shipping.recipient_name.trim()) errors.push('يجب إدخال اسم المستلم');
@@ -321,17 +360,23 @@ export default function LeaderPage() {
     // Delete existing students and insert new ones
     await supabase.from('students').delete().eq('order_id', orderId);
 
-    const rows = students.filter(s => s.name.trim()).map(s => ({
-      order_id: orderId,
-      serial_number: s.serialNumber,
-      name: s.name.trim(),
-      size: s.size || null,
-      scarf_design_id: s.scarfDesignId || null,
-      hat_choice: s.hatChoice || null,
-      has_logo_embroidery: s.hasLogoEmbroidery,
-      back_embroidery_text: s.backEmbroideryText.trim() || null,
-      extra_services: [],
-    }));
+    const rows = students.filter(s => s.name.trim()).map(s => {
+      const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
+      const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+      return {
+        order_id: orderId,
+        serial_number: s.serialNumber,
+        name: s.name.trim(),
+        size: s.size || null,
+        scarf_design_id: s.scarfDesignId || null,
+        hat_choice: null,
+        hat_embroidery_id: isNone ? null : s.hatEmbroideryId,
+        hat_extra_text: !isNone ? (s.hatExtraText.trim() || null) : null,
+        has_logo_embroidery: s.hasLogoEmbroidery,
+        back_embroidery_text: s.backEmbroideryText.trim() || null,
+        extra_services: [],
+      };
+    });
 
     if (rows.length > 0) {
       const { error: studentsError } = await supabase.from('students').insert(rows as any);
@@ -423,7 +468,7 @@ export default function LeaderPage() {
           <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <Users className="h-3 w-3" />
-              {students.filter(s => s.name.trim()).length} / {maxStudents}
+              إجمالي الطالبات المسجلات: {students.filter(s => s.name.trim()).length} من {maxStudents}
             </Badge>
             {showLogo && (
               <Badge variant="outline" className="gap-1">
@@ -433,6 +478,11 @@ export default function LeaderPage() {
             {showBack && (
               <Badge variant="outline" className="gap-1">
                 تطريز خلفي: {backCount} / {orderInfo!.back_embroidery_count || 'الكل'}
+              </Badge>
+            )}
+            {orderInfo?.hat_embroidery_enabled && (
+              <Badge variant="outline" className="gap-1">
+                تطريز قبعات: {students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length} / {orderInfo!.hat_embroidery_count || 'الكل'}
               </Badge>
             )}
             {isSubmitted && (
@@ -463,24 +513,31 @@ export default function LeaderPage() {
         <div className="px-3 pt-3">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[180px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
-                <div className="flex items-center gap-2 mb-2">
+              <div key={scarf.id} className="min-w-[220px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
+                <div className="flex items-center justify-between gap-2 mb-2">
                   <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
                 </div>
-                <div className="flex gap-2 mb-2">
+
+                <div className="flex items-center gap-2 mb-2">
                   {scarf.scarf_style_image && (
                     <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
                       <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
                     </div>
                   )}
+                  {scarf.date_type_image && (
+                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
+                      <img src={scarf.date_type_image} className="w-full h-full object-contain" alt="نوع التاريخ" />
+                    </div>
+                  )}
                 </div>
+
                 <div className="space-y-0.5 text-[10px] text-muted-foreground">
-                  {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
-                  {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
                   {scarf.scarf_method_name && <p>الطرف: {scarf.scarf_method_name}</p>}
+                  {scarf.embroidery_color && <p>اللون: {scarf.embroidery_color}</p>}
                   {scarf.embroidery_direction_name && <p>الاتجاه: {scarf.embroidery_direction_name}</p>}
                   {scarf.font_name && <p>الخط: {scarf.font_name}</p>}
-                  {scarf.embroidery_color && <p>اللون: {scarf.embroidery_color}</p>}
+                  {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
+                  {scarf.date_type_name && <p>التاريخ: {scarf.date_type_name}</p>}
                 </div>
               </div>
             ))}
@@ -568,21 +625,55 @@ export default function LeaderPage() {
                       )}
                     </td>
                     <td className="px-2 py-2.5">
-                      <div className="flex flex-wrap gap-1 justify-center">
-                        {HAT_OPTIONS.map(opt => (
-                          <button
-                            key={opt}
-                            onClick={() => updateStudent(student.id, 'hatChoice', opt)}
-                            disabled={isSubmitted}
-                            className={`px-2 h-7 rounded-md text-xs font-medium transition-colors ${
-                              student.hatChoice === opt
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-accent'
-                            } disabled:opacity-50`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
+                      <div className="flex items-center justify-center gap-1">
+                        <Select
+                          value={student.hatEmbroideryId}
+                          onValueChange={(v) => {
+                            const hat = hatEmbroideries.find(h => h.id === v);
+                            const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
+
+                            if (!isNone) {
+                              if (!orderInfo?.hat_embroidery_enabled) {
+                                toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
+                                return;
+                              }
+
+                              const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+                              if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
+                                toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
+                                return;
+                              }
+                            }
+
+                            updateStudent(student.id, 'hatEmbroideryId', v);
+                            if (isNone) updateStudent(student.id, 'hatExtraText', '');
+                          }}
+                          disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
+                        >
+                          <SelectTrigger className="h-8 text-xs w-[120px]">
+                            <SelectValue placeholder="بدون تطريز" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hatEmbroideries.map(h => (
+                              <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {(() => {
+                          const hat = hatEmbroideries.find(h => h.id === student.hatEmbroideryId);
+                          const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
+                          if (!needsText) return null;
+                          return (
+                            <Input
+                              value={student.hatExtraText}
+                              onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
+                              placeholder="نص إضافي"
+                              className="h-8 text-xs w-[120px]"
+                              disabled={isSubmitted}
+                            />
+                          );
+                        })()}
                       </div>
                     </td>
                     {showLogo && (
@@ -628,103 +719,119 @@ export default function LeaderPage() {
         </div>
       </div>
 
+      {/* Add Row */}
+      {!isSubmitted && (
+        <div className="px-3 pt-2">
+          <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
+            <Plus className="h-3.5 w-3.5" /> إضافة صف
+          </Button>
+        </div>
+      )}
+
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
         <Card className="border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Truck className="h-4 w-4 text-primary" />
-              بيانات الشحن
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
-                <Input
-                  value={shipping.recipient_name}
-                  onChange={e => updateShipping('recipient_name', e.target.value)}
-                  placeholder="اسم المستلم"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
-                <Input
-                  value={shipping.recipient_phone}
-                  onChange={e => updateShipping('recipient_phone', e.target.value)}
-                  placeholder="05XXXXXXXX"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">المدينة *</label>
-                <Select
-                  value={shipping.shipping_city_id}
-                  onValueChange={v => updateShipping('shipping_city_id', v)}
-                  disabled={isSubmitted}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="اختر المدينة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">الحي *</label>
-                <Input
-                  value={shipping.district}
-                  onChange={e => updateShipping('district', e.target.value)}
-                  placeholder="اسم الحي"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
-              <Input
-                value={shipping.address_details}
-                onChange={e => updateShipping('address_details', e.target.value)}
-                placeholder="الشارع، رقم المبنى، علامة مميزة..."
-                className="h-9 text-sm"
-                disabled={isSubmitted}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
-              <Input
-                value={shipping.national_address}
-                onChange={e => updateShipping('national_address', e.target.value)}
-                placeholder="العنوان الوطني"
-                className="h-9 text-sm"
-                disabled={isSubmitted}
-              />
-            </div>
-          </CardContent>
+          <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
+            <CardHeader className="pb-3">
+              <CollapsibleTrigger asChild>
+                <button className="w-full flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    بيانات الشحن
+                  </CardTitle>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </CollapsibleTrigger>
+            </CardHeader>
+
+            <CollapsibleContent>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
+                    <Input
+                      value={shipping.recipient_name}
+                      onChange={e => updateShipping('recipient_name', e.target.value)}
+                      placeholder="اسم المستلم"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
+                    <Input
+                      value={shipping.recipient_phone}
+                      onChange={e => updateShipping('recipient_phone', e.target.value)}
+                      placeholder="05XXXXXXXX"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">المدينة *</label>
+                    <Select
+                      value={shipping.shipping_city_id}
+                      onValueChange={v => updateShipping('shipping_city_id', v)}
+                      disabled={isSubmitted}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="اختر المدينة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">الحي *</label>
+                    <Input
+                      value={shipping.district}
+                      onChange={e => updateShipping('district', e.target.value)}
+                      placeholder="اسم الحي"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
+                  <Input
+                    value={shipping.address_details}
+                    onChange={e => updateShipping('address_details', e.target.value)}
+                    placeholder="الشارع، رقم المبنى، علامة مميزة..."
+                    className="h-9 text-sm"
+                    disabled={isSubmitted}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
+                  <Input
+                    value={shipping.national_address}
+                    onChange={e => updateShipping('national_address', e.target.value)}
+                    placeholder="العنوان الوطني"
+                    className="h-9 text-sm"
+                    disabled={isSubmitted}
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border p-3 flex gap-2 items-center">
         {!isSubmitted && (
           <>
-            <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
-              <Plus className="h-3.5 w-3.5" /> صف
-            </Button>
-            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-1 flex-1">
+            <Button variant="outline" size="sm" onClick={handleSave} disabled={saving} className="gap-1">
               <Save className="h-3.5 w-3.5" />
               {saving ? 'جارٍ الحفظ...' : 'حفظ'}
             </Button>
-            <Button onClick={handleFinalSubmit} disabled={submitting} className="gap-1 flex-1 bg-success hover:bg-success/90">
+            <Button size="sm" onClick={handleFinalSubmit} disabled={submitting} className="gap-1 bg-success hover:bg-success/90">
               <Send className="h-3.5 w-3.5" />
-              {submitting ? 'جارٍ الإرسال...' : 'إرسال البيانات'}
+              {submitting ? 'جارٍ الإرسال...' : 'إرسال الطلب'}
             </Button>
           </>
         )}

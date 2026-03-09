@@ -85,6 +85,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [logoEmbroideryCount, setLogoEmbroideryCount] = useState('');
   const [backEmbroideryEnabled, setBackEmbroideryEnabled] = useState(false);
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
+  const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
+  const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
 
   // Master data
   const [kits, setKits] = useState<MasterItem[]>([]);
@@ -141,6 +143,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setLogoEmbroideryCount('');
     setBackEmbroideryEnabled(false);
     setBackEmbroideryCount('');
+    setHatEmbroideryEnabled(false);
+    setHatEmbroideryCount('');
   };
 
   const handleColorImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,35 +189,37 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
-      const orderNumber = generateOrderNumber();
-      const { data: orderData, error: orderErr } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          employee_id: userId,
-          leader_name: leaderName.trim() || null,
-          leader_phone: leaderPhone.trim() || null,
-          student_count: parseInt(studentCount) || null,
-          order_type: orderType,
-          kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-          custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
-          custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
-          custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
-          custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
-          custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
-          custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
-          color_image_url: colorImageUrl,
-          abaya_design_id: abayaDesignId || null,
-          sleeve_style_id: sleeveStyleId || null,
-          sleeve_color: sleeveColor || null,
-          logo_embroidery_enabled: logoEmbroideryEnabled,
-          logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
-          back_embroidery_enabled: backEmbroideryEnabled,
-          back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
-          status: 'pending_data' as const,
-        } as any)
-        .select('id')
-        .single();
+       const orderNumber = generateOrderNumber();
+       const { data: orderData, error: orderErr } = await supabase
+         .from('orders')
+         .insert({
+           order_number: orderNumber,
+           employee_id: userId,
+           leader_name: leaderName.trim() || null,
+           leader_phone: leaderPhone.trim() || null,
+           student_count: parseInt(studentCount) || null,
+           order_type: orderType,
+           kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
+           custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
+           custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
+           custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
+           custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
+           custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
+           custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
+           color_image_url: colorImageUrl,
+           abaya_design_id: abayaDesignId || null,
+           sleeve_style_id: sleeveStyleId || null,
+           sleeve_color: sleeveColor || null,
+           logo_embroidery_enabled: logoEmbroideryEnabled,
+           logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
+           back_embroidery_enabled: backEmbroideryEnabled,
+           back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
+           hat_embroidery_enabled: hatEmbroideryEnabled,
+           hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
+           status: 'pending_data' as const,
+         } as any)
+         .select('id')
+         .single();
 
       if (orderErr) throw orderErr;
 
@@ -493,6 +499,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 )}
               </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
@@ -504,6 +511,26 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                     <Input
                       value={backEmbroideryCount}
                       onChange={e => setBackEmbroideryCount(e.target.value)}
+                      placeholder="الكل"
+                      type="number"
+                      min="1"
+                      className="w-20 h-8 text-xs"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Switch checked={hatEmbroideryEnabled} onCheckedChange={setHatEmbroideryEnabled} />
+                  <span className="text-sm text-foreground">تطريز قبعة</span>
+                </div>
+                {hatEmbroideryEnabled && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground">العدد:</label>
+                    <Input
+                      value={hatEmbroideryCount}
+                      onChange={e => setHatEmbroideryCount(e.target.value)}
                       placeholder="الكل"
                       type="number"
                       min="1"
