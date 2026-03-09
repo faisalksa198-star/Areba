@@ -359,11 +359,12 @@ export default function StudentRegister() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {!isHatNone && selectedHat?.has_extra_text && (
+                   {!isHatNone && selectedHat?.has_extra_text && (
                     <Input
                       value={hatExtraText}
                       onChange={e => setHatExtraText(e.target.value)}
-                      placeholder="النص الإضافي للقبعة"
+                      placeholder="نص تطريز القبعة"
+                      maxLength={10}
                       className="bg-background"
                     />
                   )}
