@@ -551,7 +551,7 @@ export default function Orders() {
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
                           {order.student_count && <span>• {order.student_count} طالبة</span>}
                         </div>
-                        <div className="flex gap-2 mt-3">
+                        <div className="flex gap-2 mt-3 flex-wrap">
                           <Button
                             variant="outline"
                             size="sm"
@@ -574,13 +574,22 @@ export default function Orders() {
                             تصدير
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             className="gap-1 text-xs"
-                            onClick={() => window.open(links.statusLink, '_blank')}
+                            onClick={() => openEditDialog(order)}
                           >
-                            <ExternalLink className="h-3 w-3" />
-                            متابعة
+                            <Pencil className="h-3 w-3" />
+                            تعديل
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 text-xs text-destructive hover:text-destructive"
+                            onClick={() => setDeletingOrderId(order.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            حذف
                           </Button>
                         </div>
                       </div>
