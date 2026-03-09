@@ -172,10 +172,11 @@ export default function LeaderPage() {
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
+        abaya_design_id, sleeve_style_id,
         custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
         custom_hat_color, custom_hat_color_degree,
-        abaya_designs(name), sleeve_styles(name),
-        ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, abaya_designs(name), sleeve_styles(name))
+        abaya_designs:abaya_design_id(name), sleeve_styles:sleeve_style_id(name),
+        ready_kits:kit_id(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, sleeve_color, abaya_designs:abaya_design_id(name), sleeve_styles:sleeve_style_id(name))
       `)
       .eq('id', orderId!)
       .maybeSingle();
@@ -187,7 +188,9 @@ export default function LeaderPage() {
     }
 
     const o = order as any;
+    console.log('Order data:', JSON.stringify(o, null, 2));
     const kit = o.ready_kits;
+    const isKit = o.order_type === 'ready_kit';
     const info: OrderInfo = {
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
@@ -199,9 +202,9 @@ export default function LeaderPage() {
       data_submitted: o.data_submitted || false,
       order_type: o.order_type || 'ready_kit',
       kit_name: kit?.name || '',
-      abaya_design_name: (o.order_type === 'ready_kit' ? kit?.abaya_designs?.name : o.abaya_designs?.name) || '',
-      sleeve_style_name: (o.order_type === 'ready_kit' ? kit?.sleeve_styles?.name : o.sleeve_styles?.name) || '',
-      sleeve_color: o.sleeve_color || '',
+      abaya_design_name: (isKit ? kit?.abaya_designs?.name : o.abaya_designs?.name) || '',
+      sleeve_style_name: (isKit ? kit?.sleeve_styles?.name : o.sleeve_styles?.name) || '',
+      sleeve_color: (isKit ? (kit?.sleeve_color || '') : (o.sleeve_color || '')),
       custom_abaya_color: o.custom_abaya_color || '',
       custom_abaya_color_degree: o.custom_abaya_color_degree || '',
       custom_scarf_color: o.custom_scarf_color || '',
