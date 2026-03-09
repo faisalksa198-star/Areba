@@ -21,8 +21,6 @@ interface ScarfDesign {
   embroidery_direction_name?: string;
   font_name?: string;
   embroidery_color?: string;
-  scarf_style_image?: string | null;
-  date_type_image?: string | null;
 }
 
 interface HatEmbroideryOption {
@@ -145,9 +143,7 @@ export default function StudentRegister() {
       id: s.id,
       sort_order: s.sort_order,
       scarf_style_name: s.scarf_styles?.name,
-      scarf_style_image: s.scarf_styles?.image_url,
       date_type_name: s.date_types?.name,
-      date_type_image: s.date_types?.image_url,
       scarf_method_name: s.scarf_methods?.name,
       embroidery_direction_name: s.embroidery_directions?.name,
       font_name: s.fonts?.name,
@@ -250,23 +246,19 @@ export default function StudentRegister() {
 
         {/* Scarf Design Cards */}
         {scarfDesigns.length > 0 && (
-          <div className="space-y-3">
+          <div className="flex flex-wrap gap-3">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-                <div className="px-3 py-2 border-b border-border bg-muted/20">
-                  <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
+              <div key={scarf.id} className="max-w-[300px] flex-1 min-w-[220px] rounded-lg border border-border bg-background shadow-sm">
+                <div className="px-3 py-1.5 border-b border-border bg-muted/30">
+                  <span className="text-xs font-semibold text-foreground">وشاح {idx + 1}</span>
                 </div>
-                <div className="p-3">
-                  <table className="w-full text-sm">
-                    <tbody className="divide-y divide-border">
-                      {scarf.scarf_style_name && <tr><td className="py-1.5 font-medium text-foreground w-1/3">تصميم الوشاح</td><td className="py-1.5 text-muted-foreground">{scarf.scarf_style_name}</td></tr>}
-                      {scarf.date_type_name && <tr><td className="py-1.5 font-medium text-foreground">نوع التاريخ</td><td className="py-1.5 text-muted-foreground">{scarf.date_type_name}</td></tr>}
-                      {scarf.scarf_method_name && <tr><td className="py-1.5 font-medium text-foreground">طرف الوشاح</td><td className="py-1.5 text-muted-foreground">{scarf.scarf_method_name}</td></tr>}
-                      {scarf.embroidery_direction_name && <tr><td className="py-1.5 font-medium text-foreground">اتجاه التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.embroidery_direction_name}</td></tr>}
-                      {scarf.font_name && <tr><td className="py-1.5 font-medium text-foreground">خط التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.font_name}</td></tr>}
-                      {scarf.embroidery_color && <tr><td className="py-1.5 font-medium text-foreground">لون التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.embroidery_color}</td></tr>}
-                    </tbody>
-                  </table>
+                <div className="p-3 space-y-1.5 text-[13px]">
+                  <div className="flex justify-between"><span className="text-muted-foreground">تصميم الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_style_name || '---'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">نوع التاريخ:</span><span className="font-medium text-foreground">{scarf.date_type_name || '---'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">طرف الوشاح:</span><span className="font-medium text-foreground">{scarf.scarf_method_name || '---'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">اتجاه التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_direction_name || '---'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">خط التطريز:</span><span className="font-medium text-foreground">{scarf.font_name || '---'}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">لون التطريز:</span><span className="font-medium text-foreground">{scarf.embroidery_color || '---'}</span></div>
                 </div>
               </div>
             ))}
