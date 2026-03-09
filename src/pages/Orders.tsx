@@ -457,7 +457,7 @@ export default function Orders() {
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
                           {order.student_count && <span>• {order.student_count} طالبة</span>}
                         </div>
-                        <div className="flex gap-2 mt-3">
+                        <div className="flex flex-wrap gap-2 mt-3">
                           <Button
                             variant="outline"
                             size="sm"
@@ -469,6 +469,15 @@ export default function Orders() {
                           >
                             <Link className="h-3 w-3" />
                             الروابط
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1 text-xs"
+                            onClick={() => handleEditOrder(order.id)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                            تعديل
                           </Button>
                           <Button
                             variant="outline"
@@ -487,6 +496,18 @@ export default function Orders() {
                           >
                             <ExternalLink className="h-3 w-3" />
                             متابعة
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="gap-1 text-xs text-destructive hover:text-destructive"
+                            onClick={() => {
+                              setDeleteOrderId(order.id);
+                              setShowDeleteDialog(true);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            حذف
                           </Button>
                         </div>
                       </div>
