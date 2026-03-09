@@ -95,9 +95,16 @@ export default function Orders() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [kitFilter, setKitFilter] = useState('all');
 
-  // Bulk export
+  // Bulk actions
   const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
   const [bulkExporting, setBulkExporting] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+
+  // Edit/Delete single
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [editForm, setEditForm] = useState({ leader_name: '', leader_phone: '', status: '', notes: '' });
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
