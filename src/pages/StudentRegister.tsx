@@ -98,6 +98,7 @@ export default function StudentRegister() {
       back_embroidery_count: o.back_embroidery_count || 0,
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
+      status: o.status || 'pending_data',
     };
     setOrderInfo(info);
 
