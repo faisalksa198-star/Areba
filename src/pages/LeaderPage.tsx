@@ -613,21 +613,55 @@ export default function LeaderPage() {
                       )}
                     </td>
                     <td className="px-2 py-2.5">
-                      <div className="flex flex-wrap gap-1 justify-center">
-                        {HAT_OPTIONS.map(opt => (
-                          <button
-                            key={opt}
-                            onClick={() => updateStudent(student.id, 'hatChoice', opt)}
-                            disabled={isSubmitted}
-                            className={`px-2 h-7 rounded-md text-xs font-medium transition-colors ${
-                              student.hatChoice === opt
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground hover:bg-accent'
-                            } disabled:opacity-50`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
+                      <div className="flex items-center justify-center gap-1">
+                        <Select
+                          value={student.hatEmbroideryId}
+                          onValueChange={(v) => {
+                            const hat = hatEmbroideries.find(h => h.id === v);
+                            const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
+
+                            if (!isNone) {
+                              if (!orderInfo?.hat_embroidery_enabled) {
+                                toast({ title: 'خدمة تطريز القبعات غير مفعّلة لهذا الطلب', variant: 'destructive' });
+                                return;
+                              }
+
+                              const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+                              if (orderInfo.hat_embroidery_count > 0 && currentChosen >= orderInfo.hat_embroidery_count) {
+                                toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
+                                return;
+                              }
+                            }
+
+                            updateStudent(student.id, 'hatEmbroideryId', v);
+                            if (isNone) updateStudent(student.id, 'hatExtraText', '');
+                          }}
+                          disabled={isSubmitted || !orderInfo?.hat_embroidery_enabled}
+                        >
+                          <SelectTrigger className="h-8 text-xs w-[120px]">
+                            <SelectValue placeholder="بدون تطريز" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {hatEmbroideries.map(h => (
+                              <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {(() => {
+                          const hat = hatEmbroideries.find(h => h.id === student.hatEmbroideryId);
+                          const needsText = !!hat?.has_extra_text && student.hatEmbroideryId && student.hatEmbroideryId !== noEmbroideryId;
+                          if (!needsText) return null;
+                          return (
+                            <Input
+                              value={student.hatExtraText}
+                              onChange={e => updateStudent(student.id, 'hatExtraText', e.target.value)}
+                              placeholder="نص إضافي"
+                              className="h-8 text-xs w-[120px]"
+                              disabled={isSubmitted}
+                            />
+                          );
+                        })()}
                       </div>
                     </td>
                     {showLogo && (
