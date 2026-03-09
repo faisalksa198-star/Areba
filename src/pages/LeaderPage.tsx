@@ -172,10 +172,11 @@ export default function LeaderPage() {
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
+        abaya_design_id, sleeve_style_id,
         custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
         custom_hat_color, custom_hat_color_degree,
-        abaya_designs(name), sleeve_styles(name),
-        ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, abaya_designs(name), sleeve_styles(name))
+        abaya_designs:abaya_design_id(name), sleeve_styles:sleeve_style_id(name),
+        ready_kits:kit_id(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, sleeve_color, abaya_designs:abaya_design_id(name), sleeve_styles:sleeve_style_id(name))
       `)
       .eq('id', orderId!)
       .maybeSingle();
