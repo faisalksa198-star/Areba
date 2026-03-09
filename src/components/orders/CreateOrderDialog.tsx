@@ -229,8 +229,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
     setSaving(true);
     try {
-      // Upload color image if exists
-      let colorImageUrl: string | null = null;
+      // Upload color image if exists (new file only)
+      let colorImageUrl: string | null = colorImagePreview || null;
       if (colorImage) {
         const ext = colorImage.name.split('.').pop();
         const path = `orders/colors/${crypto.randomUUID()}.${ext}`;
@@ -241,44 +241,74 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
-       const orderNumber = generateOrderNumber();
-       const { data: orderData, error: orderErr } = await supabase
-         .from('orders')
-         .insert({
-           order_number: orderNumber,
-           employee_id: userId,
-           leader_name: leaderName.trim() || null,
-           leader_phone: leaderPhone.trim() || null,
-           student_count: parseInt(studentCount) || null,
-           order_type: orderType,
-           kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-           custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
-           custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
-           custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
-           custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
-           custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
-           custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
-           color_image_url: colorImageUrl,
-           abaya_design_id: abayaDesignId || null,
-           sleeve_style_id: sleeveStyleId || null,
-           sleeve_color: sleeveColor || null,
-           logo_embroidery_enabled: logoEmbroideryEnabled,
-           logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
-           back_embroidery_enabled: backEmbroideryEnabled,
-           back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
-           hat_embroidery_enabled: hatEmbroideryEnabled,
-           hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
-           status: 'pending_data' as const,
-         } as any)
-         .select('id')
-         .single();
+      const orderPayload = {
+        leader_name: leaderName.trim() || null,
+        leader_phone: leaderPhone.trim() || null,
+        student_count: parseInt(studentCount) || null,
+        order_type: orderType,
+        kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
+        custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
+        custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
+        custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
+        custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
+        custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
+        custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
+        color_image_url: colorImageUrl,
+        abaya_design_id: abayaDesignId || null,
+        sleeve_style_id: sleeveStyleId || null,
+        sleeve_color: sleeveColor || null,
+        logo_embroidery_enabled: logoEmbroideryEnabled,
+        logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
+        back_embroidery_enabled: backEmbroideryEnabled,
+        back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
+        hat_embroidery_enabled: hatEmbroideryEnabled,
+        hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
+      } as any;
 
-      if (orderErr) throw orderErr;
+      let finalOrderId: string;
+
+      if (isEditMode && editOrderId) {
+        // Update existing order
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update(orderPayload)
+          .eq('id', editOrderId);
+        if (updateErr) throw updateErr;
+        finalOrderId = editOrderId;
+
+        // Replace scarf designs
+        await supabase.from('order_scarf_designs').delete().eq('order_id', editOrderId);
+      } else {
+        // Create new order
+        const orderNumber = generateOrderNumber();
+        const { data: orderData, error: orderErr } = await supabase
+          .from('orders')
+          .insert({
+            ...orderPayload,
+            order_number: orderNumber,
+            employee_id: userId,
+            status: 'pending_data' as const,
+          })
+          .select('id')
+          .single();
+        if (orderErr) throw orderErr;
+        finalOrderId = orderData.id;
+
+        // Update links
+        await supabase
+          .from('orders')
+          .update({
+            leader_link: finalOrderId,
+            registration_link: finalOrderId,
+            tracking_link: finalOrderId,
+          })
+          .eq('id', finalOrderId);
+      }
 
       // Save scarf designs
       if (scarfDesigns.length > 0) {
         const scarfRows = scarfDesigns.map((s, i) => ({
-          order_id: orderData.id,
+          order_id: finalOrderId,
           scarf_style_id: s.scarf_style_id || null,
           date_type_id: s.date_type_id || null,
           scarf_method_id: s.scarf_method_id || null,
@@ -290,22 +320,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         await supabase.from('order_scarf_designs').insert(scarfRows as any);
       }
 
-      // Update links
-      await supabase
-        .from('orders')
-        .update({
-          leader_link: orderData.id,
-          registration_link: orderData.id,
-          tracking_link: orderData.id,
-        })
-        .eq('id', orderData.id);
-
-      toast({ title: `تم إنشاء الطلب ${orderNumber} بنجاح ✓` });
+      toast({ title: isEditMode ? 'تم تحديث الطلب بنجاح ✓' : `تم إنشاء الطلب بنجاح ✓` });
       resetForm();
       onOpenChange(false);
-      onCreated(orderData.id);
+      onCreated(finalOrderId);
     } catch (err: any) {
-      toast({ title: 'خطأ في إنشاء الطلب', description: err.message, variant: 'destructive' });
+      toast({ title: 'خطأ في حفظ الطلب', description: err.message, variant: 'destructive' });
     }
     setSaving(false);
   };
