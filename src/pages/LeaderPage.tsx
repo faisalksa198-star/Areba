@@ -212,8 +212,8 @@ export default function LeaderPage() {
         .from('order_scarf_designs')
         .select(`
           id, sort_order, embroidery_color,
-          scarf_style:scarf_styles!scarf_style_id(name, image_url),
-          date_type:date_types!date_type_id(name, image_url),
+          scarf_style:scarf_styles!order_scarf_designs_scarf_style_id_fkey(name, image_url),
+          date_type:date_types!order_scarf_designs_date_type_id_fkey(name, image_url),
           scarf_methods!scarf_method_id(name),
           embroidery_directions!embroidery_direction_id(name),
           fonts!font_id(name)
