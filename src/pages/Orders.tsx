@@ -294,19 +294,24 @@ export default function Orders() {
   };
 
   const handleDeleteOrder = async () => {
-    if (!deleteOrderId) return;
     setDeleting(true);
-    // Delete related records first
-    await supabase.from('students').delete().eq('order_id', deleteOrderId);
-    await supabase.from('order_scarf_designs').delete().eq('order_id', deleteOrderId);
-    const { error } = await supabase.from('orders').delete().eq('id', deleteOrderId);
-    if (error) {
-      toast({ title: 'خطأ في حذف الطلب', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'تم حذف الطلب بنجاح ✓' });
-      loadOrders();
-      loadTotalStudents();
+
+    const idsToDelete = deleteOrderId === '__bulk__'
+      ? Array.from(selectedOrderIds)
+      : deleteOrderId ? [deleteOrderId] : [];
+
+    if (idsToDelete.length === 0) { setDeleting(false); return; }
+
+    for (const id of idsToDelete) {
+      await supabase.from('students').delete().eq('order_id', id);
+      await supabase.from('order_scarf_designs').delete().eq('order_id', id);
+      await supabase.from('orders').delete().eq('id', id);
     }
+
+    toast({ title: `تم حذف ${idsToDelete.length} طلب بنجاح ✓` });
+    if (deleteOrderId === '__bulk__') setSelectedOrderIds(new Set());
+    loadOrders();
+    loadTotalStudents();
     setDeleting(false);
     setShowDeleteDialog(false);
     setDeleteOrderId(null);
@@ -409,6 +414,18 @@ export default function Orders() {
             <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير جماعي
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={() => {
+                setDeleteOrderId('__bulk__');
+                setShowDeleteDialog(true);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              حذف المحدد
             </Button>
           </div>
         )}
