@@ -903,6 +903,15 @@ export default function LeaderPage() {
                               />
                             </td>
                           )}
+                          {showPurple && (
+                            <td className="px-2 py-2.5 text-center">
+                              <Checkbox
+                                checked={student.hasPurplePackage}
+                                onCheckedChange={() => togglePurple(student.id)}
+                                disabled={isSubmitted}
+                              />
+                            </td>
+                          )}
                           <td className="px-2 py-2.5 text-center">
                             <button
                               onClick={() => removeRow(student.id)}
