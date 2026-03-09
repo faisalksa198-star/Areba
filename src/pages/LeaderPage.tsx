@@ -155,12 +155,13 @@ export default function LeaderPage() {
   }, [orderId]);
 
   const loadCities = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('cities')
       .select('id, name')
       .eq('is_active', true)
       .order('name');
 
+    console.log('[Cities] data:', data, 'error:', error);
     setCities((data as City[]) || []);
   };
 
