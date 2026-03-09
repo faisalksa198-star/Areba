@@ -8,11 +8,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown } from 'lucide-react';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
-const HAT_OPTIONS = ['بدون', 'بونيه', 'طاقية'];
 
 interface ScarfDesign {
   id: string;
@@ -24,7 +24,14 @@ interface ScarfDesign {
   font_name?: string;
   embroidery_color?: string;
   scarf_style_image?: string | null;
-  date_type_id?: string;
+  date_type_image?: string | null;
+}
+
+interface HatEmbroideryOption {
+  id: string;
+  name: string;
+  has_extra_text: boolean;
+  image_url?: string | null;
 }
 
 interface OrderInfo {
@@ -33,6 +40,8 @@ interface OrderInfo {
   logo_embroidery_count: number;
   back_embroidery_enabled: boolean;
   back_embroidery_count: number;
+  hat_embroidery_enabled: boolean;
+  hat_embroidery_count: number;
   data_submitted: boolean;
 }
 
@@ -56,21 +65,23 @@ interface StudentRow {
   name: string;
   size: string;
   scarfDesignId: string;
-  hatChoice: string;
+  hatEmbroideryId: string;
+  hatExtraText: string;
   hasLogoEmbroidery: boolean;
   backEmbroideryText: string;
   nameError: string;
   similarWarning: string;
 }
 
-function createEmptyRow(serial: number, defaultScarfId: string): StudentRow {
+function createEmptyRow(serial: number, defaultScarfId: string, noEmbroideryId: string): StudentRow {
   return {
     id: crypto.randomUUID(),
     serialNumber: serial,
     name: '',
     size: '',
     scarfDesignId: defaultScarfId,
-    hatChoice: '',
+    hatEmbroideryId: noEmbroideryId,
+    hatExtraText: '',
     hasLogoEmbroidery: false,
     backEmbroideryText: '',
     nameError: '',
