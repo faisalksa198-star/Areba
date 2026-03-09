@@ -12,6 +12,7 @@ import Orders from "./pages/Orders";
 import LeaderPage from "./pages/LeaderPage";
 import OrderStatus from "./pages/OrderStatus";
 import StudentRegister from "./pages/StudentRegister";
+import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/data-center" element={<DataCenter />} />
             <Route path="/kits" element={<Kits />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/employees" element={<Employees />} />
             <Route path="/order/:orderId/leader" element={<LeaderPage />} />
             <Route path="/order/:orderId/register" element={<StudentRegister />} />
             <Route path="/order/:orderId/status" element={<OrderStatus />} />
