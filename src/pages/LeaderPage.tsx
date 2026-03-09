@@ -188,7 +188,9 @@ export default function LeaderPage() {
     }
 
     const o = order as any;
+    console.log('Order data:', JSON.stringify(o, null, 2));
     const kit = o.ready_kits;
+    const isKit = o.order_type === 'ready_kit';
     const info: OrderInfo = {
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
@@ -200,9 +202,9 @@ export default function LeaderPage() {
       data_submitted: o.data_submitted || false,
       order_type: o.order_type || 'ready_kit',
       kit_name: kit?.name || '',
-      abaya_design_name: (o.order_type === 'ready_kit' ? kit?.abaya_designs?.name : o.abaya_designs?.name) || '',
-      sleeve_style_name: (o.order_type === 'ready_kit' ? kit?.sleeve_styles?.name : o.sleeve_styles?.name) || '',
-      sleeve_color: o.sleeve_color || '',
+      abaya_design_name: (isKit ? kit?.abaya_designs?.name : o.abaya_designs?.name) || '',
+      sleeve_style_name: (isKit ? kit?.sleeve_styles?.name : o.sleeve_styles?.name) || '',
+      sleeve_color: (isKit ? (kit?.sleeve_color || '') : (o.sleeve_color || '')),
       custom_abaya_color: o.custom_abaya_color || '',
       custom_abaya_color_degree: o.custom_abaya_color_degree || '',
       custom_scarf_color: o.custom_scarf_color || '',
