@@ -139,14 +139,14 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setLoading(true);
     let query = supabase
       .from('orders')
-      .select('*')
+      .select('*, profiles!orders_employee_id_fkey(full_name)')
       .order('created_at', { ascending: false });
-    // "My Orders" mode or Staff always filter by employee_id
-    if (myOrdersOnly || (!isAdmin && user)) {
-      if (user) query = query.eq('employee_id', user.id);
+    // "My Orders" mode only filters by employee_id
+    if (myOrdersOnly && user) {
+      query = query.eq('employee_id', user.id);
     }
     const { data } = await query;
-    setOrders((data as OrderRow[]) || []);
+    setOrders((data as unknown as OrderRow[]) || []);
     setLoading(false);
   };
 
