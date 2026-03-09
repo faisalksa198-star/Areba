@@ -637,6 +637,35 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                     </div>
                   )}
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Switch checked={purplePackageEnabled} onCheckedChange={setPurplePackageEnabled} />
+                    <span className="text-sm text-foreground">بكج Purple</span>
+                  </div>
+                  {purplePackageEnabled && (
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground">العدد:</label>
+                      <Input
+                        value={purplePackageCount}
+                        onChange={e => {
+                          const max = parseInt(studentCount) || 0;
+                          const val = parseInt(e.target.value) || 0;
+                          if (val > max) {
+                            setPurplePackageCount(String(max));
+                          } else {
+                            setPurplePackageCount(e.target.value);
+                          }
+                        }}
+                        placeholder="العدد"
+                        type="number"
+                        min="1"
+                        max={parseInt(studentCount) || undefined}
+                        className="w-20 h-8 text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
