@@ -294,6 +294,115 @@ export default function Orders() {
     loadTotalStudents();
   };
 
+  const openEditDialog = (order: OrderRow) => {
+    setEditingOrder(order);
+    setEditForm({
+      leader_name: order.leader_name || '',
+      leader_phone: order.leader_phone || '',
+      status: order.status,
+      notes: '',
+    });
+  };
+
+  const handleEditSave = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from('orders')
+      .update({
+        leader_name: editForm.leader_name.trim() || null,
+        leader_phone: editForm.leader_phone.trim() || null,
+        status: editForm.status as any,
+        notes: editForm.notes.trim() || null,
+      } as any)
+      .eq('id', editingOrder.id);
+    if (error) {
+      toast({ title: 'خطأ في التعديل', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم التعديل بنجاح ✓' });
+      setEditingOrder(null);
+      loadOrders();
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!deletingOrderId) return;
+    await supabase.from('students').delete().eq('order_id', deletingOrderId);
+    await supabase.from('order_scarf_designs').delete().eq('order_id', deletingOrderId);
+    const { error } = await supabase.from('orders').delete().eq('id', deletingOrderId);
+    if (error) {
+      toast({ title: 'خطأ في الحذف', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم حذف الطلب ✓' });
+      loadOrders();
+      loadTotalStudents();
+    }
+    setDeletingOrderId(null);
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const ids = Array.from(selectedOrderIds);
+    await supabase.from('students').delete().in('order_id', ids);
+    await supabase.from('order_scarf_designs').delete().in('order_id', ids);
+    const { error } = await supabase.from('orders').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'خطأ في الحذف الجماعي', variant: 'destructive' });
+    } else {
+      toast({ title: `تم حذف ${ids.length} طلب ✓` });
+      setSelectedOrderIds(new Set());
+      loadOrders();
+      loadTotalStudents();
+    }
+    setBulkDeleting(false);
+    setShowBulkDeleteConfirm(false);
+  };
+
+  const exportBulkCSV = async () => {
+    if (selectedOrderIds.size === 0) return;
+    setBulkExporting(true);
+    const ids = Array.from(selectedOrderIds);
+    const [ordersRes, studentsRes] = await Promise.all([
+      supabase.from('orders').select('*').in('id', ids),
+      supabase.from('students').select('*').in('order_id', ids).order('serial_number'),
+    ]);
+    const ordersData = ordersRes.data || [];
+    const studentsData = studentsRes.data || [];
+
+    // Build CSV
+    const headers = ['رقم الطلب', 'اسم القائدة', 'رقم الجوال', 'الحالة', 'عدد الطالبات', 'م', 'اسم الطالبة', 'المقاس'];
+    const rows: string[][] = [];
+    ordersData.forEach(order => {
+      const orderStudents = studentsData.filter(s => s.order_id === order.id);
+      if (orderStudents.length === 0) {
+        rows.push([order.order_number, order.leader_name || '', order.leader_phone || '', order.status, String(order.student_count || 0), '', '', '']);
+      } else {
+        orderStudents.forEach((s, i) => {
+          rows.push([
+            i === 0 ? order.order_number : '',
+            i === 0 ? (order.leader_name || '') : '',
+            i === 0 ? (order.leader_phone || '') : '',
+            i === 0 ? order.status : '',
+            i === 0 ? String(order.student_count || 0) : '',
+            String(s.serial_number),
+            s.name || '',
+            s.size || '',
+          ]);
+        });
+      }
+    });
+
+    const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBulkExporting(false);
+    setSelectedOrderIds(new Set());
+  };
+
   const statsCards = [
     { label: 'إجمالي الطلبات', value: stats.total, icon: ClipboardList, color: 'text-primary' },
     { label: 'بانتظار البيانات', value: stats.pending, icon: Clock, color: 'text-warning' },
