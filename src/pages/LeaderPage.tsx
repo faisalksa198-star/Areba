@@ -467,6 +467,9 @@ export default function LeaderPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      {/* Order Info Header */}
+      <OrderInfoHeader orderId={orderId!} />
+
       {/* Header */}
       <div className="sticky top-0 z-30 bg-card border-b border-border shadow-sm">
         <div className="px-4 py-3">
