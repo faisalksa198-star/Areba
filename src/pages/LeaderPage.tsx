@@ -169,6 +169,8 @@ export default function LeaderPage() {
       logo_embroidery_count: o.logo_embroidery_count || 0,
       back_embroidery_enabled: o.back_embroidery_enabled || false,
       back_embroidery_count: o.back_embroidery_count || 0,
+      hat_embroidery_enabled: o.hat_embroidery_enabled || false,
+      hat_embroidery_count: o.hat_embroidery_count || 0,
       data_submitted: o.data_submitted || false,
     };
     setOrderInfo(info);
