@@ -737,11 +737,17 @@ export default function LeaderPage() {
                 </div>
               </div>
 
-              {/* Add Row */}
-              {!isSubmitted && (
-                <div className="p-3 border-t border-border">
+              {/* Add Rows Buttons */}
+              {!isSubmitted && students.length < maxStudents && (
+                <div className="p-3 border-t border-border flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={addRow} className="gap-1">
                     <Plus className="h-3.5 w-3.5" /> إضافة صف
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={addFiveRows} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> إضافة 5 صفوف
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={addAllRows} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> إضافة جميع الصفوف
                   </Button>
                 </div>
               )}
