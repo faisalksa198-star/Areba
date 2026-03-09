@@ -722,83 +722,93 @@ export default function LeaderPage() {
       {/* Shipping Section */}
       <div className="px-3 pt-4 pb-28">
         <Card className="border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Truck className="h-4 w-4 text-primary" />
-              بيانات الشحن
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
-                <Input
-                  value={shipping.recipient_name}
-                  onChange={e => updateShipping('recipient_name', e.target.value)}
-                  placeholder="اسم المستلم"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
-                <Input
-                  value={shipping.recipient_phone}
-                  onChange={e => updateShipping('recipient_phone', e.target.value)}
-                  placeholder="05XXXXXXXX"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">المدينة *</label>
-                <Select
-                  value={shipping.shipping_city_id}
-                  onValueChange={v => updateShipping('shipping_city_id', v)}
-                  disabled={isSubmitted}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue placeholder="اختر المدينة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">الحي *</label>
-                <Input
-                  value={shipping.district}
-                  onChange={e => updateShipping('district', e.target.value)}
-                  placeholder="اسم الحي"
-                  className="h-9 text-sm"
-                  disabled={isSubmitted}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
-              <Input
-                value={shipping.address_details}
-                onChange={e => updateShipping('address_details', e.target.value)}
-                placeholder="الشارع، رقم المبنى، علامة مميزة..."
-                className="h-9 text-sm"
-                disabled={isSubmitted}
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
-              <Input
-                value={shipping.national_address}
-                onChange={e => updateShipping('national_address', e.target.value)}
-                placeholder="العنوان الوطني"
-                className="h-9 text-sm"
-                disabled={isSubmitted}
-              />
-            </div>
-          </CardContent>
+          <Collapsible open={shippingOpen} onOpenChange={setShippingOpen}>
+            <CardHeader className="pb-3">
+              <CollapsibleTrigger asChild>
+                <button className="w-full flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Truck className="h-4 w-4 text-primary" />
+                    بيانات الشحن
+                  </CardTitle>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${shippingOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </CollapsibleTrigger>
+            </CardHeader>
+
+            <CollapsibleContent>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">اسم المستلم *</label>
+                    <Input
+                      value={shipping.recipient_name}
+                      onChange={e => updateShipping('recipient_name', e.target.value)}
+                      placeholder="اسم المستلم"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">رقم الجوال *</label>
+                    <Input
+                      value={shipping.recipient_phone}
+                      onChange={e => updateShipping('recipient_phone', e.target.value)}
+                      placeholder="05XXXXXXXX"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">المدينة *</label>
+                    <Select
+                      value={shipping.shipping_city_id}
+                      onValueChange={v => updateShipping('shipping_city_id', v)}
+                      disabled={isSubmitted}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue placeholder="اختر المدينة" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cities.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">الحي *</label>
+                    <Input
+                      value={shipping.district}
+                      onChange={e => updateShipping('district', e.target.value)}
+                      placeholder="اسم الحي"
+                      className="h-9 text-sm"
+                      disabled={isSubmitted}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">تفاصيل العنوان *</label>
+                  <Input
+                    value={shipping.address_details}
+                    onChange={e => updateShipping('address_details', e.target.value)}
+                    placeholder="الشارع، رقم المبنى، علامة مميزة..."
+                    className="h-9 text-sm"
+                    disabled={isSubmitted}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">العنوان الوطني (اختياري)</label>
+                  <Input
+                    value={shipping.national_address}
+                    onChange={e => updateShipping('national_address', e.target.value)}
+                    placeholder="العنوان الوطني"
+                    className="h-9 text-sm"
+                    disabled={isSubmitted}
+                  />
+                </div>
+              </CardContent>
+            </CollapsibleContent>
+          </Collapsible>
         </Card>
       </div>
 
