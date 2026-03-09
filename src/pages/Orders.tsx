@@ -410,6 +410,18 @@ export default function Orders() {
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير جماعي
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+              onClick={() => {
+                setDeleteOrderId('__bulk__');
+                setShowDeleteDialog(true);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              حذف المحدد
+            </Button>
           </div>
         )}
 
