@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Save, Loader2, School } from 'lucide-react';
+import ScarfCard from '@/components/orders/ScarfCard';
+import OrderInfoHeader from '@/components/orders/OrderInfoHeader';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
 
