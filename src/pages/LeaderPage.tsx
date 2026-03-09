@@ -174,7 +174,8 @@ export default function LeaderPage() {
         data_submitted, leader_phone, order_type, kit_id, sleeve_color,
         custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
         custom_hat_color, custom_hat_color_degree,
-        abaya_designs(name), sleeve_styles(name), ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree)
+        abaya_designs(name), sleeve_styles(name),
+        ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree, abaya_designs(name), sleeve_styles(name))
       `)
       .eq('id', orderId!)
       .maybeSingle();
@@ -198,8 +199,8 @@ export default function LeaderPage() {
       data_submitted: o.data_submitted || false,
       order_type: o.order_type || 'ready_kit',
       kit_name: kit?.name || '',
-      abaya_design_name: o.abaya_designs?.name || '',
-      sleeve_style_name: o.sleeve_styles?.name || '',
+      abaya_design_name: (o.order_type === 'ready_kit' ? kit?.abaya_designs?.name : o.abaya_designs?.name) || '',
+      sleeve_style_name: (o.order_type === 'ready_kit' ? kit?.sleeve_styles?.name : o.sleeve_styles?.name) || '',
       sleeve_color: o.sleeve_color || '',
       custom_abaya_color: o.custom_abaya_color || '',
       custom_abaya_color_degree: o.custom_abaya_color_degree || '',
@@ -227,22 +228,25 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load cities + hat embroideries + scarf designs + existing students
+    // Load cities + hat embroideries + scarf designs (only for custom) + existing students
+    const isCustomOrder = o.order_type === 'custom_detail';
     const [citiesRes, hatsRes, scarfsRes, studentsRes] = await Promise.all([
       supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
       supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
-      supabase
-        .from('order_scarf_designs')
-        .select(`
-          id, sort_order, embroidery_color,
-          scarf_styles(name),
-          date_types(name),
-          scarf_methods(name),
-          embroidery_directions(name),
-          fonts(name)
-        `)
-        .eq('order_id', orderId!)
-        .order('sort_order'),
+      isCustomOrder
+        ? supabase
+            .from('order_scarf_designs')
+            .select(`
+              id, sort_order, embroidery_color,
+              scarf_styles(name),
+              date_types(name),
+              scarf_methods(name),
+              embroidery_directions(name),
+              fonts(name)
+            `)
+            .eq('order_id', orderId!)
+            .order('sort_order')
+        : Promise.resolve({ data: [], error: null }),
       supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
     ]);
 
