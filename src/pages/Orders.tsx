@@ -12,16 +12,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -47,8 +37,6 @@ import {
   Clock,
   Users,
   Package,
-  Pencil,
-  Trash2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 
@@ -88,13 +76,6 @@ export default function Orders() {
   const [generatedLinks, setGeneratedLinks] = useState<OrderLinks | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [totalStudents, setTotalStudents] = useState(0);
-
-  // Edit & Delete
-  const [editOrderId, setEditOrderId] = useState<string | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -293,35 +274,6 @@ export default function Orders() {
     loadTotalStudents();
   };
 
-  const handleDeleteOrder = async () => {
-    setDeleting(true);
-
-    const idsToDelete = deleteOrderId === '__bulk__'
-      ? Array.from(selectedOrderIds)
-      : deleteOrderId ? [deleteOrderId] : [];
-
-    if (idsToDelete.length === 0) { setDeleting(false); return; }
-
-    for (const id of idsToDelete) {
-      await supabase.from('students').delete().eq('order_id', id);
-      await supabase.from('order_scarf_designs').delete().eq('order_id', id);
-      await supabase.from('orders').delete().eq('id', id);
-    }
-
-    toast({ title: `تم حذف ${idsToDelete.length} طلب بنجاح ✓` });
-    if (deleteOrderId === '__bulk__') setSelectedOrderIds(new Set());
-    loadOrders();
-    loadTotalStudents();
-    setDeleting(false);
-    setShowDeleteDialog(false);
-    setDeleteOrderId(null);
-  };
-
-  const handleEditOrder = (orderId: string) => {
-    setEditOrderId(orderId);
-    setShowEditDialog(true);
-  };
-
   const statsCards = [
     { label: 'إجمالي الطلبات', value: stats.total, icon: ClipboardList, color: 'text-primary' },
     { label: 'بانتظار البيانات', value: stats.pending, icon: Clock, color: 'text-warning' },
@@ -415,18 +367,6 @@ export default function Orders() {
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير جماعي
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1 text-destructive border-destructive/30 hover:bg-destructive/10"
-              onClick={() => {
-                setDeleteOrderId('__bulk__');
-                setShowDeleteDialog(true);
-              }}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              حذف المحدد
-            </Button>
           </div>
         )}
 
@@ -474,7 +414,7 @@ export default function Orders() {
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
                           {order.student_count && <span>• {order.student_count} طالبة</span>}
                         </div>
-                        <div className="flex flex-wrap gap-2 mt-3">
+                        <div className="flex gap-2 mt-3">
                           <Button
                             variant="outline"
                             size="sm"
@@ -486,15 +426,6 @@ export default function Orders() {
                           >
                             <Link className="h-3 w-3" />
                             الروابط
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => handleEditOrder(order.id)}
-                          >
-                            <Pencil className="h-3 w-3" />
-                            تعديل
                           </Button>
                           <Button
                             variant="outline"
@@ -513,18 +444,6 @@ export default function Orders() {
                           >
                             <ExternalLink className="h-3 w-3" />
                             متابعة
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1 text-xs text-destructive hover:text-destructive"
-                            onClick={() => {
-                              setDeleteOrderId(order.id);
-                              setShowDeleteDialog(true);
-                            }}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            حذف
                           </Button>
                         </div>
                       </div>
@@ -593,48 +512,6 @@ export default function Orders() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Edit Order Dialog */}
-      {user && editOrderId && (
-        <CreateOrderDialog
-          open={showEditDialog}
-          onOpenChange={(open) => {
-            setShowEditDialog(open);
-            if (!open) setEditOrderId(null);
-          }}
-          userId={user.id}
-          onCreated={() => {
-            loadOrders();
-            loadTotalStudents();
-            setShowEditDialog(false);
-            setEditOrderId(null);
-          }}
-          editOrderId={editOrderId}
-        />
-      )}
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>هل أنت متأكد من حذف هذا الطلب؟</AlertDialogTitle>
-            <AlertDialogDescription>
-              سيتم حذف الطلب وجميع بيانات الطالبات المرتبطة به نهائياً. لا يمكن التراجع عن هذا الإجراء.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteOrder}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? <Loader2 className="h-4 w-4 animate-spin ml-1" /> : null}
-              حذف نهائي
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </DashboardLayout>
   );
 }
@@ -657,20 +534,26 @@ function LinkCard({
   onCopy: () => void;
 }) {
   return (
-    <div className={`rounded-xl p-3 transition-all bg-gradient-to-br ${accentClass || 'from-muted/50 to-muted/20'} ring-1 hover:shadow-md`}>
+    <div className={`rounded-xl p-3.5 space-y-2.5 transition-all bg-gradient-to-br ${accentClass || 'from-muted/50 to-muted/20'} ring-1 hover:shadow-md`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <span className="text-lg">{icon}</span>
-          <p className="text-sm font-bold text-foreground">{label}</p>
+          <div>
+            <p className="text-sm font-bold text-foreground">{label}</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
+          </div>
         </div>
         <Button
           variant={copied ? 'default' : 'outline'}
           size="icon"
           onClick={onCopy}
-          className={`h-9 w-9 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
+          className={`h-8 w-8 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
         >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </Button>
+      </div>
+      <div className="flex items-center rounded-lg bg-background/60 backdrop-blur-sm border border-border/30 px-3 py-2">
+        <p className="text-[10px] text-muted-foreground truncate flex-1 font-mono" dir="ltr">{url}</p>
       </div>
     </div>
   );

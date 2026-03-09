@@ -49,13 +49,11 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   userId: string;
   onCreated: (orderId: string) => void;
-  editOrderId?: string | null;
 }
 
-export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated, editOrderId }: Props) {
+export default function CreateOrderDialog({ open, onOpenChange, userId, onCreated }: Props) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const isEditMode = !!editOrderId;
 
   // Basic fields
   const [leaderName, setLeaderName] = useState('');
@@ -87,8 +85,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [logoEmbroideryCount, setLogoEmbroideryCount] = useState('');
   const [backEmbroideryEnabled, setBackEmbroideryEnabled] = useState(false);
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
-  const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
-  const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
 
   // Master data
   const [kits, setKits] = useState<MasterItem[]>([]);
@@ -121,57 +117,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setEmbroideryDirections(embR.data || []);
       setFonts(fontR.data || []);
     });
-
-    // Load existing order data for edit mode
-    if (editOrderId) {
-      loadEditData(editOrderId);
-    }
-  }, [open, editOrderId]);
-
-  const loadEditData = async (orderId: string) => {
-    const [orderRes, scarfsRes] = await Promise.all([
-      supabase.from('orders').select('*').eq('id', orderId).single(),
-      supabase.from('order_scarf_designs').select('*').eq('order_id', orderId).order('sort_order'),
-    ]);
-
-    if (!orderRes.data) return;
-    const o = orderRes.data as any;
-
-    setLeaderName(o.leader_name || '');
-    setLeaderPhone(o.leader_phone || '');
-    setStudentCount(String(o.student_count || ''));
-    setOrderType(o.order_type === 'custom' ? 'custom' : 'ready_kit');
-    setSelectedKit(o.kit_id || '');
-    setCustomAbayaColor(o.custom_abaya_color || '');
-    setCustomAbayaColorDegree(o.custom_abaya_color_degree || '');
-    setCustomScarfColor(o.custom_scarf_color || '');
-    setCustomScarfColorDegree(o.custom_scarf_color_degree || '');
-    setCustomHatColor(o.custom_hat_color || '');
-    setCustomHatColorDegree(o.custom_hat_color_degree || '');
-    setAbayaDesignId(o.abaya_design_id || '');
-    setSleeveStyleId(o.sleeve_style_id || '');
-    setSleeveColor(o.sleeve_color || '');
-    setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
-    setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
-    setBackEmbroideryEnabled(o.back_embroidery_enabled || false);
-    setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
-    setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
-    setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
-    if (o.color_image_url) setColorImagePreview(o.color_image_url);
-
-    const scarfs = (scarfsRes.data as any[]) || [];
-    if (scarfs.length > 0) {
-      setScarfDesigns(scarfs.map((s: any) => ({
-        localId: s.id,
-        scarf_style_id: s.scarf_style_id || '',
-        date_type_id: s.date_type_id || '',
-        scarf_method_id: s.scarf_method_id || '',
-        embroidery_direction_id: s.embroidery_direction_id || '',
-        font_id: s.font_id || '',
-        embroidery_color: s.embroidery_color || '',
-      })));
-    }
-  };
+  }, [open]);
 
   const resetForm = () => {
     setLeaderName('');
@@ -195,8 +141,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setLogoEmbroideryCount('');
     setBackEmbroideryEnabled(false);
     setBackEmbroideryCount('');
-    setHatEmbroideryEnabled(false);
-    setHatEmbroideryCount('');
   };
 
   const handleColorImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,8 +173,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
     setSaving(true);
     try {
-      // Upload color image if exists (new file only)
-      let colorImageUrl: string | null = colorImagePreview || null;
+      // Upload color image if exists
+      let colorImageUrl: string | null = null;
       if (colorImage) {
         const ext = colorImage.name.split('.').pop();
         const path = `orders/colors/${crypto.randomUUID()}.${ext}`;
@@ -241,74 +185,42 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
-      const orderPayload = {
-        leader_name: leaderName.trim() || null,
-        leader_phone: leaderPhone.trim() || null,
-        student_count: parseInt(studentCount) || null,
-        order_type: orderType,
-        kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-        custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
-        custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
-        custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
-        custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
-        custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
-        custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
-        color_image_url: colorImageUrl,
-        abaya_design_id: abayaDesignId || null,
-        sleeve_style_id: sleeveStyleId || null,
-        sleeve_color: sleeveColor || null,
-        logo_embroidery_enabled: logoEmbroideryEnabled,
-        logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
-        back_embroidery_enabled: backEmbroideryEnabled,
-        back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
-        hat_embroidery_enabled: hatEmbroideryEnabled,
-        hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
-      } as any;
+      const orderNumber = generateOrderNumber();
+      const { data: orderData, error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          employee_id: userId,
+          leader_name: leaderName.trim() || null,
+          leader_phone: leaderPhone.trim() || null,
+          student_count: parseInt(studentCount) || null,
+          order_type: orderType,
+          kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
+          custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
+          custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
+          custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
+          custom_scarf_color_degree: orderType === 'custom' ? customScarfColorDegree || null : null,
+          custom_hat_color: orderType === 'custom' ? customHatColor || null : null,
+          custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
+          color_image_url: colorImageUrl,
+          abaya_design_id: abayaDesignId || null,
+          sleeve_style_id: sleeveStyleId || null,
+          sleeve_color: sleeveColor || null,
+          logo_embroidery_enabled: logoEmbroideryEnabled,
+          logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
+          back_embroidery_enabled: backEmbroideryEnabled,
+          back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
+          status: 'pending_data' as const,
+        } as any)
+        .select('id')
+        .single();
 
-      let finalOrderId: string;
-
-      if (isEditMode && editOrderId) {
-        // Update existing order
-        const { error: updateErr } = await supabase
-          .from('orders')
-          .update(orderPayload)
-          .eq('id', editOrderId);
-        if (updateErr) throw updateErr;
-        finalOrderId = editOrderId;
-
-        // Replace scarf designs
-        await supabase.from('order_scarf_designs').delete().eq('order_id', editOrderId);
-      } else {
-        // Create new order
-        const orderNumber = generateOrderNumber();
-        const { data: orderData, error: orderErr } = await supabase
-          .from('orders')
-          .insert({
-            ...orderPayload,
-            order_number: orderNumber,
-            employee_id: userId,
-            status: 'pending_data' as const,
-          })
-          .select('id')
-          .single();
-        if (orderErr) throw orderErr;
-        finalOrderId = orderData.id;
-
-        // Update links
-        await supabase
-          .from('orders')
-          .update({
-            leader_link: finalOrderId,
-            registration_link: finalOrderId,
-            tracking_link: finalOrderId,
-          })
-          .eq('id', finalOrderId);
-      }
+      if (orderErr) throw orderErr;
 
       // Save scarf designs
       if (scarfDesigns.length > 0) {
         const scarfRows = scarfDesigns.map((s, i) => ({
-          order_id: finalOrderId,
+          order_id: orderData.id,
           scarf_style_id: s.scarf_style_id || null,
           date_type_id: s.date_type_id || null,
           scarf_method_id: s.scarf_method_id || null,
@@ -320,12 +232,22 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         await supabase.from('order_scarf_designs').insert(scarfRows as any);
       }
 
-      toast({ title: isEditMode ? 'تم تحديث الطلب بنجاح ✓' : `تم إنشاء الطلب بنجاح ✓` });
+      // Update links
+      await supabase
+        .from('orders')
+        .update({
+          leader_link: orderData.id,
+          registration_link: orderData.id,
+          tracking_link: orderData.id,
+        })
+        .eq('id', orderData.id);
+
+      toast({ title: `تم إنشاء الطلب ${orderNumber} بنجاح ✓` });
       resetForm();
       onOpenChange(false);
-      onCreated(finalOrderId);
+      onCreated(orderData.id);
     } catch (err: any) {
-      toast({ title: 'خطأ في حفظ الطلب', description: err.message, variant: 'destructive' });
+      toast({ title: 'خطأ في إنشاء الطلب', description: err.message, variant: 'destructive' });
     }
     setSaving(false);
   };
@@ -343,7 +265,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'تعديل الطلب' : 'إنشاء طلب جديد'}</DialogTitle>
+          <DialogTitle>إنشاء طلب جديد</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 mt-2">
           {/* Basic Info */}
@@ -571,7 +493,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 )}
               </div>
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
@@ -591,32 +512,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 )}
               </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch checked={hatEmbroideryEnabled} onCheckedChange={setHatEmbroideryEnabled} />
-                  <span className="text-sm text-foreground">تطريز قبعة</span>
-                </div>
-                {hatEmbroideryEnabled && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-xs text-muted-foreground">العدد:</label>
-                    <Input
-                      value={hatEmbroideryCount}
-                      onChange={e => setHatEmbroideryCount(e.target.value)}
-                      placeholder="الكل"
-                      type="number"
-                      min="1"
-                      className="w-20 h-8 text-xs"
-                    />
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
           <Button onClick={handleSubmit} disabled={saving} className="w-full gap-1.5">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {saving ? 'جارٍ الحفظ...' : (isEditMode ? 'حفظ التعديلات' : 'حفظ وإرسال الطلب')}
+            {saving ? 'جارٍ الإنشاء...' : 'حفظ وإرسال الطلب'}
           </Button>
         </div>
       </DialogContent>

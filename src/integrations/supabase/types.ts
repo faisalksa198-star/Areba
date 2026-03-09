@@ -105,7 +105,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          image_url: string | null
           is_active: boolean
           name: string
           updated_at: string
@@ -113,7 +112,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          image_url?: string | null
           is_active?: boolean
           name: string
           updated_at?: string
@@ -121,7 +119,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          image_url?: string | null
           is_active?: boolean
           name?: string
           updated_at?: string
@@ -178,36 +175,6 @@ export type Database = {
           is_active?: boolean
           name?: string
           preview_url?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      hat_embroideries: {
-        Row: {
-          created_at: string
-          has_extra_text: boolean
-          id: string
-          image_url: string | null
-          is_active: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          has_extra_text?: boolean
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          has_extra_text?: boolean
-          id?: string
-          image_url?: string | null
-          is_active?: boolean
-          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -324,7 +291,6 @@ export type Database = {
       orders: {
         Row: {
           abaya_design_id: string | null
-          address_details: string | null
           back_embroidery_count: number | null
           back_embroidery_enabled: boolean | null
           city_id: string | null
@@ -336,11 +302,7 @@ export type Database = {
           custom_hat_color_degree: string | null
           custom_scarf_color: string | null
           custom_scarf_color_degree: string | null
-          data_submitted: boolean | null
-          district: string | null
           employee_id: string
-          hat_embroidery_count: number | null
-          hat_embroidery_enabled: boolean | null
           id: string
           kit_id: string | null
           leader_link: string | null
@@ -348,15 +310,11 @@ export type Database = {
           leader_phone: string | null
           logo_embroidery_count: number | null
           logo_embroidery_enabled: boolean | null
-          national_address: string | null
           notes: string | null
           order_number: string
           order_type: string | null
-          recipient_name: string | null
-          recipient_phone: string | null
           registration_link: string | null
           school_name: string | null
-          shipping_city_id: string | null
           sleeve_color: string | null
           sleeve_style_id: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -366,7 +324,6 @@ export type Database = {
         }
         Insert: {
           abaya_design_id?: string | null
-          address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
           city_id?: string | null
@@ -378,11 +335,7 @@ export type Database = {
           custom_hat_color_degree?: string | null
           custom_scarf_color?: string | null
           custom_scarf_color_degree?: string | null
-          data_submitted?: boolean | null
-          district?: string | null
           employee_id: string
-          hat_embroidery_count?: number | null
-          hat_embroidery_enabled?: boolean | null
           id?: string
           kit_id?: string | null
           leader_link?: string | null
@@ -390,15 +343,11 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
-          national_address?: string | null
           notes?: string | null
           order_number: string
           order_type?: string | null
-          recipient_name?: string | null
-          recipient_phone?: string | null
           registration_link?: string | null
           school_name?: string | null
-          shipping_city_id?: string | null
           sleeve_color?: string | null
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -408,7 +357,6 @@ export type Database = {
         }
         Update: {
           abaya_design_id?: string | null
-          address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
           city_id?: string | null
@@ -420,11 +368,7 @@ export type Database = {
           custom_hat_color_degree?: string | null
           custom_scarf_color?: string | null
           custom_scarf_color_degree?: string | null
-          data_submitted?: boolean | null
-          district?: string | null
           employee_id?: string
-          hat_embroidery_count?: number | null
-          hat_embroidery_enabled?: boolean | null
           id?: string
           kit_id?: string | null
           leader_link?: string | null
@@ -432,15 +376,11 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
-          national_address?: string | null
           notes?: string | null
           order_number?: string
           order_type?: string | null
-          recipient_name?: string | null
-          recipient_phone?: string | null
           registration_link?: string | null
           school_name?: string | null
-          shipping_city_id?: string | null
           sleeve_color?: string | null
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -468,13 +408,6 @@ export type Database = {
             columns: ["kit_id"]
             isOneToOne: false
             referencedRelation: "ready_kits"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_shipping_city_id_fkey"
-            columns: ["shipping_city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
             referencedColumns: ["id"]
           },
           {
@@ -716,8 +649,6 @@ export type Database = {
           extra_services: string[] | null
           has_logo_embroidery: boolean | null
           hat_choice: string | null
-          hat_embroidery_id: string | null
-          hat_extra_text: string | null
           id: string
           name: string
           order_id: string
@@ -733,8 +664,6 @@ export type Database = {
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
           hat_choice?: string | null
-          hat_embroidery_id?: string | null
-          hat_extra_text?: string | null
           id?: string
           name?: string
           order_id: string
@@ -750,8 +679,6 @@ export type Database = {
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
           hat_choice?: string | null
-          hat_embroidery_id?: string | null
-          hat_extra_text?: string | null
           id?: string
           name?: string
           order_id?: string
@@ -762,13 +689,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "students_hat_embroidery_id_fkey"
-            columns: ["hat_embroidery_id"]
-            isOneToOne: false
-            referencedRelation: "hat_embroideries"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "students_order_id_fkey"
             columns: ["order_id"]

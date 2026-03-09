@@ -4,13 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X,
-  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles,
+  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -20,7 +19,6 @@ interface MasterItem {
   description?: string | null;
   image_url?: string | null;
   is_active: boolean;
-  has_extra_text?: boolean | null;
 }
 
 const CATEGORIES = [
@@ -30,9 +28,8 @@ const CATEGORIES = [
   { key: 'scarf_methods', label: 'طرق الوشاح', icon: Wind, hasImage: true, hasDescription: false },
   { key: 'embroidery_directions', label: 'اتجاه التطريز', icon: Compass, hasImage: true, hasDescription: false },
   { key: 'fonts', label: 'الخطوط', icon: Type, hasImage: false, hasDescription: false },
-  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: true, hasDescription: false },
+  { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: false, hasDescription: false },
   { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true, hasDescription: false },
-  { key: 'hat_embroideries', label: 'تطريز القبعات', icon: Sparkles, hasImage: true, hasDescription: false },
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
 ] as const;
 
@@ -49,7 +46,6 @@ export default function DataCenter() {
   const [formDescription, setFormDescription] = useState('');
   const [formImage, setFormImage] = useState<File | null>(null);
   const [formImagePreview, setFormImagePreview] = useState('');
-  const [formHasExtraText, setFormHasExtraText] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const activeCat = CATEGORIES.find(c => c.key === activeTab)!;
@@ -74,7 +70,6 @@ export default function DataCenter() {
     setFormDescription('');
     setFormImage(null);
     setFormImagePreview('');
-    setFormHasExtraText(false);
     setShowForm(true);
   };
 
@@ -84,7 +79,6 @@ export default function DataCenter() {
     setFormDescription(item.description || '');
     setFormImage(null);
     setFormImagePreview(item.image_url || '');
-    setFormHasExtraText(!!item.has_extra_text);
     setShowForm(true);
   };
 
@@ -109,7 +103,7 @@ export default function DataCenter() {
 
   const handleSave = async () => {
     if (!formName.trim()) {
-      toast({ title: activeTab === 'hat_embroideries' ? 'يرجى إدخال رقم التطريز' : 'يرجى إدخال الاسم', variant: 'destructive' });
+      toast({ title: 'يرجى إدخال الاسم', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -126,7 +120,6 @@ export default function DataCenter() {
     const record: any = { name: formName.trim() };
     if (activeCat.hasImage) record.image_url = imageUrl;
     if (activeCat.hasDescription) record.description = formDescription.trim() || null;
-    if (activeTab === 'hat_embroideries') record.has_extra_text = formHasExtraText;
 
     let error;
     if (editingItem) {
@@ -224,9 +217,6 @@ export default function DataCenter() {
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="font-semibold text-sm text-foreground">{item.name}</p>
-                                {activeTab === 'hat_embroideries' && item.has_extra_text && (
-                                  <Badge variant="outline" className="mt-1 text-[10px]">يحتاج نص إضافي</Badge>
-                                )}
                                 {(item as any).description && (
                                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                     {(item as any).description}
@@ -271,18 +261,9 @@ export default function DataCenter() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">
-                {activeTab === 'hat_embroideries' ? 'رقم التطريز *' : 'الاسم *'}
-              </label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder={activeTab === 'hat_embroideries' ? 'مثال: 12' : 'أدخل الاسم'} />
+              <label className="text-sm font-medium mb-1.5 block">الاسم *</label>
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="أدخل الاسم" />
             </div>
-
-            {activeTab === 'hat_embroideries' && (
-              <div className="flex items-center gap-2">
-                <Checkbox checked={formHasExtraText} onCheckedChange={v => setFormHasExtraText(!!v)} />
-                <span className="text-sm text-foreground">نص إضافي</span>
-              </div>
-            )}
 
             {activeCat.hasDescription && (
               <div>
