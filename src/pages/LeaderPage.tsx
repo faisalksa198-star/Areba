@@ -310,6 +310,7 @@ export default function LeaderPage() {
         hatExtraText: s.hat_extra_text || '',
         hasLogoEmbroidery: s.has_logo_embroidery || false,
         backEmbroideryText: s.back_embroidery_text || '',
+        hasPurplePackage: s.has_purple_package || false,
         nameError: '',
         similarWarning: '',
       })));
