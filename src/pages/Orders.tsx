@@ -120,8 +120,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   }, []);
 
   useEffect(() => {
-    if (userRole !== null) loadOrders();
-  }, [userRole, myOrdersOnly]);
+    loadOrders();
+  }, [myOrdersOnly, user]);
 
   const loadUserRole = async () => {
     if (!user) return;
