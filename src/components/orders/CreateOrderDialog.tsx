@@ -343,7 +343,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle>إنشاء طلب جديد</DialogTitle>
+          <DialogTitle>{isEditMode ? 'تعديل الطلب' : 'إنشاء طلب جديد'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-5 mt-2">
           {/* Basic Info */}
