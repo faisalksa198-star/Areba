@@ -71,7 +71,7 @@ interface OrderRow {
   order_type: string | null;
   created_at: string;
   employee_id: string;
-  profiles: { full_name: string } | null;
+  employee_name?: string;
 }
 
 const statusLabels: Record<string, { label: string; className: string }> = {
