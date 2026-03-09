@@ -111,10 +111,25 @@ export default function Orders() {
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
+    loadUserRole();
     loadOrders();
     loadKits();
     loadTotalStudents();
   }, []);
+
+  useEffect(() => {
+    if (userRole !== null) loadOrders();
+  }, [userRole]);
+
+  const loadUserRole = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    setUserRole(data?.role || 'customer_service');
+  };
 
   const loadOrders = async () => {
     setLoading(true);
