@@ -616,7 +616,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
           <Button onClick={handleSubmit} disabled={saving} className="w-full gap-1.5">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {saving ? 'جارٍ الإنشاء...' : 'حفظ وإرسال الطلب'}
+            {saving ? 'جارٍ الحفظ...' : (isEditMode ? 'حفظ التعديلات' : 'حفظ وإرسال الطلب')}
           </Button>
         </div>
       </DialogContent>
