@@ -41,6 +41,23 @@ interface OrderInfo {
   hat_embroidery_enabled: boolean;
   hat_embroidery_count: number;
   data_submitted: boolean;
+  order_type: string;
+  kit_name: string;
+  abaya_design_name: string;
+  sleeve_style_name: string;
+  sleeve_color: string;
+  custom_abaya_color: string;
+  custom_abaya_color_degree: string;
+  custom_scarf_color: string;
+  custom_scarf_color_degree: string;
+  custom_hat_color: string;
+  custom_hat_color_degree: string;
+  kit_abaya_color: string;
+  kit_abaya_color_degree: string;
+  kit_scarf_color: string;
+  kit_scarf_color_degree: string;
+  kit_hat_color: string;
+  kit_hat_color_degree: string;
 }
 
 interface ShippingInfo {
@@ -147,10 +164,18 @@ export default function LeaderPage() {
   }, [orderId]);
 
   const loadData = async () => {
-    // Load order info with shipping + leader_phone
+    // Load order info with shipping + leader_phone + order details
     const { data: order } = await supabase
       .from('orders')
-      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted, leader_phone')
+      .select(`
+        student_count, logo_embroidery_enabled, logo_embroidery_count, 
+        back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
+        recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
+        data_submitted, leader_phone, order_type, kit_id, sleeve_color,
+        custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
+        custom_hat_color, custom_hat_color_degree,
+        abaya_designs(name), sleeve_styles(name), ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree)
+      `)
       .eq('id', orderId!)
       .maybeSingle();
 
@@ -161,6 +186,7 @@ export default function LeaderPage() {
     }
 
     const o = order as any;
+    const kit = o.ready_kits;
     const info: OrderInfo = {
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
@@ -170,6 +196,23 @@ export default function LeaderPage() {
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
       data_submitted: o.data_submitted || false,
+      order_type: o.order_type || 'ready_kit',
+      kit_name: kit?.name || '',
+      abaya_design_name: o.abaya_designs?.name || '',
+      sleeve_style_name: o.sleeve_styles?.name || '',
+      sleeve_color: o.sleeve_color || '',
+      custom_abaya_color: o.custom_abaya_color || '',
+      custom_abaya_color_degree: o.custom_abaya_color_degree || '',
+      custom_scarf_color: o.custom_scarf_color || '',
+      custom_scarf_color_degree: o.custom_scarf_color_degree || '',
+      custom_hat_color: o.custom_hat_color || '',
+      custom_hat_color_degree: o.custom_hat_color_degree || '',
+      kit_abaya_color: kit?.abaya_color || '',
+      kit_abaya_color_degree: kit?.abaya_color_degree || '',
+      kit_scarf_color: kit?.scarf_color || '',
+      kit_scarf_color_degree: kit?.scarf_color_degree || '',
+      kit_hat_color: kit?.hat_color || '',
+      kit_hat_color_degree: kit?.hat_color_degree || '',
     };
     setOrderInfo(info);
     setMaxStudents(info.student_count);
@@ -519,6 +562,96 @@ export default function LeaderPage() {
               </ul>
             </AlertDescription>
           </Alert>
+        </div>
+      )}
+
+      {/* Order Details Accordion */}
+      {orderInfo && (
+        <div className="pt-3 w-[90%] mx-auto">
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+                <span className="text-sm font-medium text-foreground">بيانات الطلب</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 p-4 rounded-xl border border-border bg-card shadow-sm space-y-3">
+                {/* Order Type */}
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">نوع الطلب:</span>
+                  <Badge variant="secondary">
+                    {orderInfo.order_type === 'ready_kit' ? 'طقم جاهز' : 'تفصيل جديد'}
+                  </Badge>
+                </div>
+
+                {/* Kit name if ready_kit */}
+                {orderInfo.order_type === 'ready_kit' && orderInfo.kit_name && (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">نوع الطقم:</span>
+                    <span className="font-medium text-foreground">{orderInfo.kit_name}</span>
+                  </div>
+                )}
+
+                {/* Colors */}
+                {(() => {
+                  const isKit = orderInfo.order_type === 'ready_kit';
+                  const abayaColor = isKit ? orderInfo.kit_abaya_color : orderInfo.custom_abaya_color;
+                  const abayaDegree = isKit ? orderInfo.kit_abaya_color_degree : orderInfo.custom_abaya_color_degree;
+                  const scarfColor = isKit ? orderInfo.kit_scarf_color : orderInfo.custom_scarf_color;
+                  const scarfDegree = isKit ? orderInfo.kit_scarf_color_degree : orderInfo.custom_scarf_color_degree;
+                  const hatColor = isKit ? orderInfo.kit_hat_color : orderInfo.custom_hat_color;
+                  const hatDegree = isKit ? orderInfo.kit_hat_color_degree : orderInfo.custom_hat_color_degree;
+                  return (
+                    <div className="space-y-2 border-t border-border pt-3">
+                      <p className="text-xs font-semibold text-muted-foreground">الألوان</p>
+                      {(abayaColor || abayaDegree) && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">لون العباية:</span>
+                          <span className="font-medium text-foreground">{abayaColor}{abayaDegree ? ` - ${abayaDegree}` : ''}</span>
+                        </div>
+                      )}
+                      {(scarfColor || scarfDegree) && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">لون الوشاح:</span>
+                          <span className="font-medium text-foreground">{scarfColor}{scarfDegree ? ` - ${scarfDegree}` : ''}</span>
+                        </div>
+                      )}
+                      {(hatColor || hatDegree) && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">لون القبعة:</span>
+                          <span className="font-medium text-foreground">{hatColor}{hatDegree ? ` - ${hatDegree}` : ''}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Abaya details */}
+                <div className="space-y-2 border-t border-border pt-3">
+                  <p className="text-xs font-semibold text-muted-foreground">تفاصيل العباية</p>
+                  {orderInfo.abaya_design_name && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">شكل العباية:</span>
+                      <span className="font-medium text-foreground">{orderInfo.abaya_design_name}</span>
+                    </div>
+                  )}
+                  {orderInfo.sleeve_style_name && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">طرف الكم:</span>
+                      <span className="font-medium text-foreground">{orderInfo.sleeve_style_name}</span>
+                    </div>
+                  )}
+                  {orderInfo.sleeve_color && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">لون طرف الكم:</span>
+                      <span className="font-medium text-foreground">{orderInfo.sleeve_color}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       )}
 
