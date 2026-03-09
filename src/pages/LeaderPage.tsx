@@ -33,6 +33,8 @@ interface HatEmbroideryOption {
 }
 
 interface OrderInfo {
+  leader_name: string;
+  order_number: string;
   student_count: number;
   logo_embroidery_enabled: boolean;
   logo_embroidery_count: number;
