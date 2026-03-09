@@ -286,12 +286,16 @@ export default function LeaderPage() {
         <div className="px-3 pt-3">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[160px] p-2.5 rounded-lg border border-border bg-card flex-shrink-0">
-                <div className="flex items-center gap-2 mb-1.5">
-                  {scarf.scarf_style_image && (
-                    <img src={scarf.scarf_style_image} className="w-8 h-8 rounded object-cover" />
-                  )}
+              <div key={scarf.id} className="min-w-[180px] p-3 rounded-lg border border-border bg-card flex-shrink-0">
+                <div className="flex items-center gap-2 mb-2">
                   <Badge variant="secondary" className="text-[10px]">وشاح {idx + 1}</Badge>
+                </div>
+                <div className="flex gap-2 mb-2">
+                  {scarf.scarf_style_image && (
+                    <div className="w-14 h-14 rounded-lg border border-border overflow-hidden bg-muted/30 shrink-0">
+                      <img src={scarf.scarf_style_image} className="w-full h-full object-contain" alt="تصميم الوشاح" />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-0.5 text-[10px] text-muted-foreground">
                   {scarf.scarf_style_name && <p>التصميم: {scarf.scarf_style_name}</p>}
