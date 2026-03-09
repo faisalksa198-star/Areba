@@ -12,6 +12,7 @@ import Orders from "./pages/Orders";
 import LeaderPage from "./pages/LeaderPage";
 import OrderStatus from "./pages/OrderStatus";
 import StudentRegister from "./pages/StudentRegister";
+import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
