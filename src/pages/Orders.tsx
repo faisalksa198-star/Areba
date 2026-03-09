@@ -534,6 +534,20 @@ export default function Orders() {
                           <Badge variant="outline" className={status.className}>
                             {status.label}
                           </Badge>
+                          <Select
+                            value={order.status}
+                            onValueChange={v => handleStatusChange(order.id, v)}
+                          >
+                            <SelectTrigger className="h-7 w-[130px] text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                              <SelectItem value="completed">مكتمل</SelectItem>
+                              <SelectItem value="cancelled">ملغي</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {order.leader_name && <span>القائدة: {order.leader_name}</span>}
