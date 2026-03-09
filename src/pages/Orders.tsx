@@ -595,6 +595,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                             <p className="font-bold text-foreground text-sm truncate">{order.order_number}</p>
                             <p className="text-muted-foreground text-[11px]">
                               {(order as any).order_type === 'custom' ? 'تفصيل جديد' : 'طقم جاهز'}
+                              {' · '}
+                              <span className="text-primary/70">{order.employee_name || 'غير معروف'}</span>
                             </p>
                           </div>
                         </div>
