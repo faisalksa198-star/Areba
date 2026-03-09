@@ -514,38 +514,26 @@ export default function LeaderPage() {
 
       {/* Scarf Design Cards */}
       {scarfDesigns.length > 0 && (
-        <div className="px-3 pt-3">
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {scarfDesigns.map((scarf, idx) => (
-              <div key={scarf.id} className="min-w-[240px] rounded-xl border border-border bg-card shadow-sm flex-shrink-0 overflow-hidden">
-                <div className="px-3 py-2 border-b border-border bg-muted/20">
-                  <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
-                </div>
-                <div className="p-3">
-                  <div className="flex gap-2 mb-3">
-                    {scarf.scarf_style_image && (
-                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
-                        <img src={scarf.scarf_style_image} alt="تصميم الوشاح" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
-                      </div>
-                    )}
-                    {scarf.date_type_image && (
-                      <div className="flex-1 rounded-lg border border-border overflow-hidden bg-muted/10">
-                        <img src={scarf.date_type_image} alt="نوع التاريخ" style={{ width: '100%', height: '100px', objectFit: 'contain' }} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-                    {scarf.scarf_style_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التصميم:</span> {scarf.scarf_style_name}</p>}
-                    {scarf.date_type_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">التاريخ:</span> {scarf.date_type_name}</p>}
-                    {scarf.scarf_method_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الطرف:</span> {scarf.scarf_method_name}</p>}
-                    {scarf.embroidery_color && <p className="text-muted-foreground"><span className="font-medium text-foreground">اللون:</span> {scarf.embroidery_color}</p>}
-                    {scarf.embroidery_direction_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الاتجاه:</span> {scarf.embroidery_direction_name}</p>}
-                    {scarf.font_name && <p className="text-muted-foreground"><span className="font-medium text-foreground">الخط:</span> {scarf.font_name}</p>}
-                  </div>
-                </div>
+        <div className="px-3 pt-3 space-y-3">
+          {scarfDesigns.map((scarf, idx) => (
+            <div key={scarf.id} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="px-3 py-2 border-b border-border bg-muted/20">
+                <Badge variant="secondary" className="text-xs">وشاح {idx + 1}</Badge>
               </div>
-            ))}
-          </div>
+              <div className="p-3">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-border">
+                    {scarf.scarf_style_name && <tr><td className="py-1.5 font-medium text-foreground w-1/3">تصميم الوشاح</td><td className="py-1.5 text-muted-foreground">{scarf.scarf_style_name}</td></tr>}
+                    {scarf.date_type_name && <tr><td className="py-1.5 font-medium text-foreground">نوع التاريخ</td><td className="py-1.5 text-muted-foreground">{scarf.date_type_name}</td></tr>}
+                    {scarf.scarf_method_name && <tr><td className="py-1.5 font-medium text-foreground">طرف الوشاح</td><td className="py-1.5 text-muted-foreground">{scarf.scarf_method_name}</td></tr>}
+                    {scarf.embroidery_direction_name && <tr><td className="py-1.5 font-medium text-foreground">اتجاه التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.embroidery_direction_name}</td></tr>}
+                    {scarf.font_name && <tr><td className="py-1.5 font-medium text-foreground">خط التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.font_name}</td></tr>}
+                    {scarf.embroidery_color && <tr><td className="py-1.5 font-medium text-foreground">لون التطريز</td><td className="py-1.5 text-muted-foreground">{scarf.embroidery_color}</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
