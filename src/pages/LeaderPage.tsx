@@ -548,6 +548,48 @@ export default function LeaderPage() {
 
   // Lock page when status is not pending_data
   const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+
+  const generatePDF = async () => {
+    if (!orderId) return;
+    const { data: studentsData } = await supabase.from('students').select('*').eq('order_id', orderId).order('serial_number');
+    const rows = studentsData || [];
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    // Use built-in font (supports basic Latin)
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(16);
+    doc.text(`Order: ${orderInfo?.order_number || ''}`, 105, 20, { align: 'center' });
+    doc.setFontSize(11);
+    doc.text(`Leader: ${orderInfo?.leader_name || ''}`, 105, 30, { align: 'center' });
+    doc.text(`Students: ${rows.length} / ${orderInfo?.student_count || 0}`, 105, 38, { align: 'center' });
+
+    // Table
+    let y = 50;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('#', 190, y, { align: 'right' });
+    doc.text('Name', 170, y, { align: 'right' });
+    doc.text('Size', 100, y, { align: 'right' });
+    doc.text('Logo', 70, y, { align: 'right' });
+    doc.text('Purple', 40, y, { align: 'right' });
+    y += 2;
+    doc.line(15, y, 195, y);
+    y += 5;
+
+    doc.setFont('helvetica', 'normal');
+    rows.forEach((s: any, i: number) => {
+      if (y > 280) { doc.addPage(); y = 20; }
+      doc.text(String(s.serial_number || i + 1), 190, y, { align: 'right' });
+      doc.text(s.name || '', 170, y, { align: 'right' });
+      doc.text(s.size || '-', 100, y, { align: 'right' });
+      doc.text(s.has_logo_embroidery ? 'Yes' : 'No', 70, y, { align: 'right' });
+      doc.text(s.has_purple_package ? 'Yes' : 'No', 40, y, { align: 'right' });
+      y += 6;
+    });
+
+    doc.save(`order-${orderInfo?.order_number || orderId}.pdf`);
+  };
+
   if (isLocked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
@@ -558,6 +600,13 @@ export default function LeaderPage() {
             </div>
             <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
             <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+            <button
+              onClick={generatePDF}
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline cursor-pointer"
+            >
+              <Download className="h-4 w-4" />
+              لتحميل تقرير طلبكم PDF اضغط هنا
+            </button>
           </CardContent>
         </Card>
       </div>
