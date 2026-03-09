@@ -34,7 +34,7 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="px-4 pb-4 mb-2 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="متجر Areba" className="h-9 w-9 rounded-xl object-contain" />
+              <img src="/logo.svg" alt="متجر Areba" className="h-9 w-9 rounded-xl object-contain brightness-0 invert" />
               <div>
                 <h2 className="text-sm font-bold text-sidebar-foreground">متجر Areba</h2>
                 <p className="text-[10px] text-sidebar-foreground/50">إدارة الطلبات</p>

@@ -476,19 +476,42 @@ export default function Orders() {
           )}
         </div>
 
-        {/* Bulk Actions */}
+        {/* Bulk Actions Toolbar */}
         {selectedOrderIds.size > 0 && (
-          <div className="flex items-center gap-3 p-2 rounded-lg bg-muted border border-border flex-wrap">
-            <span className="text-sm text-muted-foreground">تم تحديد {selectedOrderIds.size} طلب</span>
-            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 flex-wrap">
+            <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+              تم تحديد {selectedOrderIds.size} طلب
+            </Badge>
+            <div className="h-5 w-px bg-border" />
+            <Select onValueChange={async (v) => {
+              const ids = Array.from(selectedOrderIds);
+              for (const id of ids) {
+                await supabase.from('orders').update({ status: v } as any).eq('id', id);
+              }
+              toast({ title: `تم تغيير حالة ${ids.length} طلب ✓` });
+              setSelectedOrderIds(new Set());
+              loadOrders();
+            }}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="تغيير الحالة إلى..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                <SelectItem value="completed">مكتمل</SelectItem>
+                <SelectItem value="cancelled">ملغي</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="h-5 w-px bg-border" />
+            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1">
+            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
               تصدير JSON
             </Button>
-            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1">
+            <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               حذف جماعي
             </Button>
@@ -515,85 +538,85 @@ export default function Orders() {
               const status = statusLabels[order.status] || statusLabels.pending_data;
               const links = generateLinks(order.id);
               return (
-                <Card key={order.id} className="border-border/50">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
+                <Card key={order.id} className="border-border/50 hover:shadow-sm transition-shadow">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex items-center gap-3">
                       <Checkbox
                         checked={selectedOrderIds.has(order.id)}
                         onCheckedChange={() => toggleSelectOrder(order.id)}
-                        className="mt-1"
                       />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-bold text-foreground text-sm">{order.order_number}</p>
-                            <p className="text-muted-foreground text-xs">
+                      {/* Order Info */}
+                      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="min-w-0">
+                            <p className="font-bold text-foreground text-sm truncate">{order.order_number}</p>
+                            <p className="text-muted-foreground text-[11px]">
                               {(order as any).order_type === 'custom' ? 'تفصيل جديد' : 'طقم جاهز'}
                             </p>
                           </div>
-                          <Badge variant="outline" className={status.className}>
-                            {status.label}
-                          </Badge>
-                          <Select
-                            value={order.status}
-                            onValueChange={v => handleStatusChange(order.id, v)}
-                          >
-                            <SelectTrigger className="h-7 w-[130px] text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
-                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                              <SelectItem value="completed">مكتمل</SelectItem>
-                              <SelectItem value="cancelled">ملغي</SelectItem>
-                            </SelectContent>
-                          </Select>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {order.leader_name && <span>القائدة: {order.leader_name}</span>}
-                          {order.student_count && <span>• {order.student_count} طالبة</span>}
-                        </div>
-                        <div className="flex gap-2 mt-3 flex-wrap">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs flex-1"
-                            onClick={() => {
-                              setGeneratedLinks(links);
-                              setShowLinks(true);
-                            }}
-                          >
-                            <Link className="h-3 w-3" />
-                            الروابط
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => exportOrderJSON(order.id)}
-                          >
-                            <FileJson className="h-3 w-3" />
-                            تصدير
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-1 text-xs"
-                            onClick={() => setEditingOrderId(order.id)}
-                          >
-                            <Pencil className="h-3 w-3" />
-                            تعديل
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="gap-1 text-xs text-destructive hover:text-destructive"
-                            onClick={() => setDeletingOrderId(order.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            حذف
-                          </Button>
-                        </div>
+                        {order.leader_name && (
+                          <span className="text-xs text-muted-foreground truncate">القائدة: {order.leader_name}</span>
+                        )}
+                        {order.student_count ? (
+                          <span className="text-xs text-muted-foreground">{order.student_count} طالبة</span>
+                        ) : null}
+                        <Select
+                          value={order.status}
+                          onValueChange={v => handleStatusChange(order.id, v)}
+                        >
+                          <SelectTrigger className="h-7 w-[130px] text-xs shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                            <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                            <SelectItem value="completed">مكتمل</SelectItem>
+                            <SelectItem value="cancelled">ملغي</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {/* Action Buttons - unified row */}
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 h-8 w-[72px] text-xs"
+                          onClick={() => {
+                            setGeneratedLinks(links);
+                            setShowLinks(true);
+                          }}
+                        >
+                          <Link className="h-3.5 w-3.5" />
+                          الروابط
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 h-8 w-[72px] text-xs"
+                          onClick={() => exportOrderJSON(order.id)}
+                        >
+                          <FileJson className="h-3.5 w-3.5" />
+                          تصدير
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5 h-8 w-[72px] text-xs"
+                          onClick={() => setEditingOrderId(order.id)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          تعديل
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5 h-8 w-[72px] text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeletingOrderId(order.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          حذف
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
