@@ -179,6 +179,36 @@ export type Database = {
         }
         Relationships: []
       }
+      hat_embroideries: {
+        Row: {
+          created_at: string
+          has_extra_text: boolean
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          has_extra_text?: boolean
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          has_extra_text?: boolean
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hat_styles: {
         Row: {
           created_at: string
@@ -306,6 +336,8 @@ export type Database = {
           data_submitted: boolean | null
           district: string | null
           employee_id: string
+          hat_embroidery_count: number | null
+          hat_embroidery_enabled: boolean | null
           id: string
           kit_id: string | null
           leader_link: string | null
@@ -346,6 +378,8 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id: string
+          hat_embroidery_count?: number | null
+          hat_embroidery_enabled?: boolean | null
           id?: string
           kit_id?: string | null
           leader_link?: string | null
@@ -386,6 +420,8 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id?: string
+          hat_embroidery_count?: number | null
+          hat_embroidery_enabled?: boolean | null
           id?: string
           kit_id?: string | null
           leader_link?: string | null
@@ -677,6 +713,8 @@ export type Database = {
           extra_services: string[] | null
           has_logo_embroidery: boolean | null
           hat_choice: string | null
+          hat_embroidery_id: string | null
+          hat_extra_text: string | null
           id: string
           name: string
           order_id: string
@@ -692,6 +730,8 @@ export type Database = {
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
           hat_choice?: string | null
+          hat_embroidery_id?: string | null
+          hat_extra_text?: string | null
           id?: string
           name?: string
           order_id: string
@@ -707,6 +747,8 @@ export type Database = {
           extra_services?: string[] | null
           has_logo_embroidery?: boolean | null
           hat_choice?: string | null
+          hat_embroidery_id?: string | null
+          hat_extra_text?: string | null
           id?: string
           name?: string
           order_id?: string
@@ -717,6 +759,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "students_hat_embroidery_id_fkey"
+            columns: ["hat_embroidery_id"]
+            isOneToOne: false
+            referencedRelation: "hat_embroideries"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "students_order_id_fkey"
             columns: ["order_id"]
