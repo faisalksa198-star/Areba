@@ -76,7 +76,7 @@ export default function StudentRegister() {
     const [orderRes, countRes] = await Promise.all([
       supabase
         .from('orders')
-        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count')
+        .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, status, data_submitted')
         .eq('id', orderId!)
         .maybeSingle(),
       supabase.from('students').select('has_logo_embroidery, back_embroidery_text, hat_embroidery_id').eq('order_id', orderId!),

@@ -170,7 +170,7 @@ export default function LeaderPage() {
     const { data: order } = await supabase
       .from('orders')
       .select(`
-        leader_name, order_number,
+        leader_name, order_number, status,
         student_count, logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
