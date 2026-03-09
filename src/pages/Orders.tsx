@@ -540,14 +540,25 @@ function LinkCard({
           <span className="text-lg">{icon}</span>
           <p className="text-sm font-bold text-foreground">{label}</p>
         </div>
-        <Button
-          variant={copied ? 'default' : 'outline'}
-          size="icon"
-          onClick={onCopy}
-          className={`h-9 w-9 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
-        >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-        </Button>
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => window.open(url, '_blank')}
+            className="h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm"
+            title="فتح في تبويب جديد"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={copied ? 'default' : 'outline'}
+            size="icon"
+            onClick={onCopy}
+            className={`h-9 w-9 shrink-0 rounded-lg transition-all shadow-sm ${copied ? 'bg-emerald-500 hover:bg-emerald-500 text-white border-0' : 'bg-background/80 backdrop-blur-sm'}`}
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );
