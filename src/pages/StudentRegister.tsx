@@ -237,8 +237,11 @@ export default function StudentRegister() {
   const isFull = existingCount >= maxStudents;
 
   return (
-    <div className="min-h-screen bg-background p-4" dir="rtl">
-      <div className="max-w-md mx-auto space-y-4 pt-4">
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Order Info Header */}
+      <OrderInfoHeader orderId={orderId!} />
+
+      <div className="max-w-md mx-auto space-y-4 p-4 pt-4">
         {/* Header */}
         <div className="text-center space-y-1">
           <div className="inline-flex items-center gap-2 text-primary">
