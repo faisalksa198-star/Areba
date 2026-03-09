@@ -287,11 +287,11 @@ export default function LeaderPage() {
   const addRow = useCallback(() => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
-      const row = createEmptyRow(prev.length + 1, defaultScarfId);
+      const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
       if (logoIsAll) row.hasLogoEmbroidery = true;
       return [...prev, row];
     });
-  }, [scarfDesigns, logoIsAll]);
+  }, [scarfDesigns, logoIsAll, noEmbroideryId]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
@@ -320,11 +320,27 @@ export default function LeaderPage() {
       errors.push('يجب إدخال بيانات طالبة واحدة على الأقل');
     }
 
-    filledStudents.forEach((s, idx) => {
+    filledStudents.forEach((s) => {
       if (!s.size) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار المقاس`);
-      if (!s.hatChoice) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار القبعة`);
       if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
+
+      const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
+      const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+      if (!isNone && hat?.has_extra_text && !s.hatExtraText.trim()) {
+        errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
+      }
+      if (!orderInfo?.hat_embroidery_enabled && !isNone) {
+        errors.push(`الطالبة رقم ${s.serialNumber}: خدمة تطريز القبعات غير مفعّلة لهذا الطلب`);
+      }
     });
+
+    // Hat embroidery limit
+    if (orderInfo?.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0) {
+      const chosen = students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+      if (chosen > orderInfo.hat_embroidery_count) {
+        errors.push(`تم اختيار تطريز القبعات لأكثر من العدد المسموح (${chosen} / ${orderInfo.hat_embroidery_count})`);
+      }
+    }
 
     // Shipping validation
     if (!shipping.recipient_name.trim()) errors.push('يجب إدخال اسم المستلم');
@@ -344,17 +360,23 @@ export default function LeaderPage() {
     // Delete existing students and insert new ones
     await supabase.from('students').delete().eq('order_id', orderId);
 
-    const rows = students.filter(s => s.name.trim()).map(s => ({
-      order_id: orderId,
-      serial_number: s.serialNumber,
-      name: s.name.trim(),
-      size: s.size || null,
-      scarf_design_id: s.scarfDesignId || null,
-      hat_choice: s.hatChoice || null,
-      has_logo_embroidery: s.hasLogoEmbroidery,
-      back_embroidery_text: s.backEmbroideryText.trim() || null,
-      extra_services: [],
-    }));
+    const rows = students.filter(s => s.name.trim()).map(s => {
+      const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
+      const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+      return {
+        order_id: orderId,
+        serial_number: s.serialNumber,
+        name: s.name.trim(),
+        size: s.size || null,
+        scarf_design_id: s.scarfDesignId || null,
+        hat_choice: null,
+        hat_embroidery_id: isNone ? null : s.hatEmbroideryId,
+        hat_extra_text: !isNone ? (s.hatExtraText.trim() || null) : null,
+        has_logo_embroidery: s.hasLogoEmbroidery,
+        back_embroidery_text: s.backEmbroideryText.trim() || null,
+        extra_services: [],
+      };
+    });
 
     if (rows.length > 0) {
       const { error: studentsError } = await supabase.from('students').insert(rows as any);
