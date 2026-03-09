@@ -620,6 +620,12 @@ export default function LeaderPage() {
 
                   return (
                     <>
+                      {/* Leader & Order number */}
+                      <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
+                        {orderInfo.leader_name && <DataCell label="اسم القائدة" value={orderInfo.leader_name} />}
+                        <DataCell label="رقم الطلب" value={orderInfo.order_number} />
+                      </div>
+
                       {/* Row 1: Order type + kit/abaya info */}
                       <div className="grid grid-cols-2 gap-4">
                         <DataCell label="نوع الطلب" value={isKit ? 'طقم جاهز' : 'تفصيل جديد'} />
