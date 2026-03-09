@@ -157,11 +157,12 @@ export default function LeaderPage() {
   const loadCities = async () => {
     const { data, error } = await supabase
       .from('cities')
-      .select('id, name')
+      .select('*')
       .order('name');
 
+    console.log(data);
     console.log('[Cities] data:', data, 'error:', error);
-    setCities((data as City[]) || []);
+    setCities(((data as any[]) || []).map((c) => ({ id: c.id, name: c.name })) as City[]);
   };
 
   const loadData = async () => {
