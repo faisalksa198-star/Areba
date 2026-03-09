@@ -139,9 +139,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    // Staff (customer_service) only sees their own orders
-    if (!isAdmin && user) {
-      query = query.eq('employee_id', user.id);
+    // "My Orders" mode or Staff always filter by employee_id
+    if (myOrdersOnly || (!isAdmin && user)) {
+      if (user) query = query.eq('employee_id', user.id);
     }
     const { data } = await query;
     setOrders((data as OrderRow[]) || []);

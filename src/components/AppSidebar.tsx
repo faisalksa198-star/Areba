@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +21,7 @@ const menuItems = [
   { title: 'مركز البيانات', url: '/data-center', icon: Database },
   { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
   { title: 'الطلبات', url: '/orders', icon: ShoppingCart },
+  { title: 'طلباتي', url: '/my-orders', icon: ClipboardList },
 ];
 
 export function AppSidebar() {
