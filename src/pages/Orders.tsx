@@ -89,6 +89,13 @@ export default function Orders() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [totalStudents, setTotalStudents] = useState(0);
 
+  // Edit & Delete
+  const [editOrderId, setEditOrderId] = useState<string | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [deleteOrderId, setDeleteOrderId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
