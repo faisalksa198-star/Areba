@@ -468,7 +468,7 @@ export default function LeaderPage() {
           <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
             <Badge variant="secondary" className="gap-1">
               <Users className="h-3 w-3" />
-              {students.filter(s => s.name.trim()).length} / {maxStudents}
+              إجمالي الطالبات المسجلات: {students.filter(s => s.name.trim()).length} من {maxStudents}
             </Badge>
             {showLogo && (
               <Badge variant="outline" className="gap-1">
@@ -478,6 +478,11 @@ export default function LeaderPage() {
             {showBack && (
               <Badge variant="outline" className="gap-1">
                 تطريز خلفي: {backCount} / {orderInfo!.back_embroidery_count || 'الكل'}
+              </Badge>
+            )}
+            {orderInfo?.hat_embroidery_enabled && (
+              <Badge variant="outline" className="gap-1">
+                تطريز قبعات: {students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length} / {orderInfo!.hat_embroidery_count || 'الكل'}
               </Badge>
             )}
             {isSubmitted && (
