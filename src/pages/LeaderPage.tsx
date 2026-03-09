@@ -164,10 +164,18 @@ export default function LeaderPage() {
   }, [orderId]);
 
   const loadData = async () => {
-    // Load order info with shipping + leader_phone
+    // Load order info with shipping + leader_phone + order details
     const { data: order } = await supabase
       .from('orders')
-      .select('student_count, logo_embroidery_enabled, logo_embroidery_count, back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count, recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, data_submitted, leader_phone')
+      .select(`
+        student_count, logo_embroidery_enabled, logo_embroidery_count, 
+        back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
+        recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
+        data_submitted, leader_phone, order_type, kit_id, sleeve_color,
+        custom_abaya_color, custom_abaya_color_degree, custom_scarf_color, custom_scarf_color_degree,
+        custom_hat_color, custom_hat_color_degree,
+        abaya_designs(name), sleeve_styles(name), ready_kits(name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree)
+      `)
       .eq('id', orderId!)
       .maybeSingle();
 
@@ -178,6 +186,7 @@ export default function LeaderPage() {
     }
 
     const o = order as any;
+    const kit = o.ready_kits;
     const info: OrderInfo = {
       student_count: o.student_count || 30,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
@@ -187,6 +196,23 @@ export default function LeaderPage() {
       hat_embroidery_enabled: o.hat_embroidery_enabled || false,
       hat_embroidery_count: o.hat_embroidery_count || 0,
       data_submitted: o.data_submitted || false,
+      order_type: o.order_type || 'ready_kit',
+      kit_name: kit?.name || '',
+      abaya_design_name: o.abaya_designs?.name || '',
+      sleeve_style_name: o.sleeve_styles?.name || '',
+      sleeve_color: o.sleeve_color || '',
+      custom_abaya_color: o.custom_abaya_color || '',
+      custom_abaya_color_degree: o.custom_abaya_color_degree || '',
+      custom_scarf_color: o.custom_scarf_color || '',
+      custom_scarf_color_degree: o.custom_scarf_color_degree || '',
+      custom_hat_color: o.custom_hat_color || '',
+      custom_hat_color_degree: o.custom_hat_color_degree || '',
+      kit_abaya_color: kit?.abaya_color || '',
+      kit_abaya_color_degree: kit?.abaya_color_degree || '',
+      kit_scarf_color: kit?.scarf_color || '',
+      kit_scarf_color_degree: kit?.scarf_color_degree || '',
+      kit_hat_color: kit?.hat_color || '',
+      kit_hat_color_degree: kit?.hat_color_degree || '',
     };
     setOrderInfo(info);
     setMaxStudents(info.student_count);
