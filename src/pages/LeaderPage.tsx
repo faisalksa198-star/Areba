@@ -287,11 +287,15 @@ export default function LeaderPage() {
   const addRow = useCallback(() => {
     const defaultScarfId = scarfDesigns[0]?.id || '';
     setStudents(prev => {
+      if (prev.length >= maxStudents) {
+        toast({ title: `لا يمكن إضافة أكثر من ${maxStudents} صف`, variant: 'destructive' });
+        return prev;
+      }
       const row = createEmptyRow(prev.length + 1, defaultScarfId, noEmbroideryId);
       if (logoIsAll) row.hasLogoEmbroidery = true;
       return [...prev, row];
     });
-  }, [scarfDesigns, logoIsAll, noEmbroideryId]);
+  }, [scarfDesigns, logoIsAll, noEmbroideryId, maxStudents, toast]);
 
   const removeRow = useCallback((id: string) => {
     setStudents(prev => prev.filter(s => s.id !== id).map((s, i) => ({ ...s, serialNumber: i + 1 })));
