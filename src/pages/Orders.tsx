@@ -139,7 +139,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setLoading(true);
     let query = supabase
       .from('orders')
-      .select('*, profiles!orders_employee_id_fkey(full_name)')
+      .select('*, profiles!inner(full_name)')
       .order('created_at', { ascending: false });
     // "My Orders" mode only filters by employee_id
     if (myOrdersOnly && user) {
