@@ -239,6 +239,7 @@ export default function LeaderPage() {
     setNoEmbroideryId(noneId);
 
     const parsedScarfs: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
+    parsedScarfs.forEach((scarf) => console.log('[LeaderPage][Scarf]', scarf));
     setScarfDesigns(parsedScarfs);
 
     const defaultScarfId = parsedScarfs[0]?.id || '';

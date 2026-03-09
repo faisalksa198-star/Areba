@@ -153,6 +153,7 @@ export default function StudentRegister() {
 
     // Scarf designs
     const parsed: ScarfDesign[] = ((scarfsRes.data as any[]) || []).map(mapOrderScarfDesign);
+    parsed.forEach((scarf) => console.log('[StudentRegister][Scarf]', scarf));
     setScarfDesigns(parsed);
     if (parsed.length > 0) setScarfDesignId(parsed[0].id);
 
