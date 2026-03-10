@@ -430,44 +430,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
     const ids = Array.from(selectedOrderIds);
-    const [ordersRes, studentsRes] = await Promise.all([
-      supabase.from('orders').select('*').in('id', ids),
-      supabase.from('students').select('*').in('order_id', ids).order('serial_number'),
-    ]);
-    const ordersData = ordersRes.data || [];
-    const studentsData = studentsRes.data || [];
-
-    // Build CSV
-    const headers = ['رقم الطلب', 'اسم القائدة', 'رقم الجوال', 'الحالة', 'عدد الطالبات', 'م', 'اسم الطالبة', 'المقاس'];
-    const rows: string[][] = [];
-    ordersData.forEach(order => {
-      const orderStudents = studentsData.filter(s => s.order_id === order.id);
-      if (orderStudents.length === 0) {
-        rows.push([order.order_number, order.leader_name || '', order.leader_phone || '', order.status, String(order.student_count || 0), '', '', '']);
-      } else {
-        orderStudents.forEach((s, i) => {
-          rows.push([
-            i === 0 ? order.order_number : '',
-            i === 0 ? (order.leader_name || '') : '',
-            i === 0 ? (order.leader_phone || '') : '',
-            i === 0 ? order.status : '',
-            i === 0 ? String(order.student_count || 0) : '',
-            String(s.serial_number),
-            s.name || '',
-            s.size || '',
-          ]);
-        });
-      }
-    });
-
-    const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const csv = await exportOrdersCsv(ids);
+    downloadCsv(csv, `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
     setBulkExporting(false);
     setSelectedOrderIds(new Set());
   };
