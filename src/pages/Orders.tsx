@@ -117,6 +117,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const [viewingOrder, setViewingOrder] = useState<any | null>(null);
   const [viewingStudents, setViewingStudents] = useState<any[]>([]);
+  const [shippingOrderId, setShippingOrderId] = useState<string | null>(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [savingShipment, setSavingShipment] = useState(false);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
