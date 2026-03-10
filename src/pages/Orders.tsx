@@ -762,6 +762,41 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                             {order.status === 'in_progress' ? 'لا يمكن التعديل أثناء التنفيذ' : 'تعديل'}
                           </TooltipContent>
                         </Tooltip>
+                        {/* Ship - only for in_progress or completed */}
+                        {(order.status === 'in_progress' || order.status === 'completed') && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                onClick={() => {
+                                  setShippingOrderId(order.id);
+                                  setTrackingNumber((order as any).tracking_number || '');
+                                }}
+                              >
+                                <Truck className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>تأكيد الشحن</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {/* Complete - only for shipped */}
+                        {order.status === 'shipped' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleCompleteOrder(order.id)}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>إنهاء الطلب</TooltipContent>
+                          </Tooltip>
+                        )}
                         {/* Delete - only for pending_data or under_review */}
                         {(order.status === 'pending_data' || order.status === 'under_review') && isAdmin && (
                           <Tooltip>
