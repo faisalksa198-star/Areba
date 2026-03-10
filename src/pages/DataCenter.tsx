@@ -9,11 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Plus, Pencil, Trash2, Loader2, ImagePlus, X,
-  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign,
+  Plus, Pencil, Trash2, Loader2, ImagePlus, X, ArrowRight,
+  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign, Tag,
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PricingRulesTab from '@/components/PricingRulesTab';
+import AddonPricesTab from '@/components/AddonPricesTab';
 
 interface MasterItem {
   id: string;
@@ -36,13 +36,14 @@ const CATEGORIES = [
   { key: 'hat_embroideries', label: 'تطريز القبعات', icon: Sparkles, hasImage: true, hasDescription: false },
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
   { key: 'pricing_rules', label: 'التسعيرة', icon: DollarSign, hasImage: false, hasDescription: false },
+  { key: 'addon_prices', label: 'أسعار الإضافات', icon: Tag, hasImage: false, hasDescription: false },
 ] as const;
 
 type CategoryKey = typeof CATEGORIES[number]['key'];
 
 export default function DataCenter() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<CategoryKey>('abaya_designs');
+  const [activeSection, setActiveSection] = useState<CategoryKey | null>(null);
   const [items, setItems] = useState<MasterItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -54,17 +55,18 @@ export default function DataCenter() {
   const [formHasExtraText, setFormHasExtraText] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const activeCat = CATEGORIES.find(c => c.key === activeTab)!;
+  const activeCat = CATEGORIES.find(c => c.key === activeSection);
 
   const loadItems = useCallback(async () => {
+    if (!activeSection || activeSection === 'pricing_rules' || activeSection === 'addon_prices') return;
     setLoading(true);
     const { data } = await supabase
-      .from(activeTab)
+      .from(activeSection)
       .select('*')
       .order('created_at', { ascending: false });
     setItems((data as unknown as MasterItem[]) || []);
     setLoading(false);
-  }, [activeTab]);
+  }, [activeSection]);
 
   useEffect(() => {
     loadItems();
@@ -99,7 +101,7 @@ export default function DataCenter() {
 
   const uploadImage = async (file: File): Promise<string | null> => {
     const ext = file.name.split('.').pop();
-    const path = `${activeTab}/${crypto.randomUUID()}.${ext}`;
+    const path = `${activeSection}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from('images').upload(path, file);
     if (error) {
       toast({ title: 'خطأ في رفع الصورة', description: error.message, variant: 'destructive' });
@@ -110,8 +112,9 @@ export default function DataCenter() {
   };
 
   const handleSave = async () => {
+    if (!activeSection || !activeCat) return;
     if (!formName.trim()) {
-      toast({ title: activeTab === 'hat_embroideries' ? 'يرجى إدخال رقم التطريز' : 'يرجى إدخال الاسم', variant: 'destructive' });
+      toast({ title: activeSection === 'hat_embroideries' ? 'يرجى إدخال رقم التطريز' : 'يرجى إدخال الاسم', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -128,13 +131,13 @@ export default function DataCenter() {
     const record: any = { name: formName.trim() };
     if (activeCat.hasImage) record.image_url = imageUrl;
     if (activeCat.hasDescription) record.description = formDescription.trim() || null;
-    if (activeTab === 'hat_embroideries') record.has_extra_text = formHasExtraText;
+    if (activeSection === 'hat_embroideries') record.has_extra_text = formHasExtraText;
 
     let error;
     if (editingItem) {
-      ({ error } = await supabase.from(activeTab as any).update(record).eq('id', editingItem.id));
+      ({ error } = await supabase.from(activeSection as any).update(record).eq('id', editingItem.id));
     } else {
-      ({ error } = await supabase.from(activeTab as any).insert(record));
+      ({ error } = await supabase.from(activeSection as any).insert(record));
     }
 
     if (error) {
@@ -148,7 +151,8 @@ export default function DataCenter() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from(activeTab as any).delete().eq('id', id);
+    if (!activeSection) return;
+    const { error } = await supabase.from(activeSection as any).delete().eq('id', id);
     if (error) {
       toast({ title: 'خطأ في الحذف', description: error.message, variant: 'destructive' });
     } else {
@@ -158,148 +162,164 @@ export default function DataCenter() {
   };
 
   const toggleActive = async (item: MasterItem) => {
-    await supabase.from(activeTab as any).update({ is_active: !item.is_active }).eq('id', item.id);
+    if (!activeSection) return;
+    await supabase.from(activeSection as any).update({ is_active: !item.is_active }).eq('id', item.id);
     loadItems();
   };
 
-  return (
-    <DashboardLayout>
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
+  // Grid view (no active section selected)
+  if (!activeSection) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-5">
           <div>
             <h1 className="text-2xl font-bold text-foreground">مركز البيانات</h1>
             <p className="text-muted-foreground text-sm mt-1">إدارة البيانات الأساسية للنظام</p>
           </div>
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" dir="rtl">
+            {CATEGORIES.map(cat => (
+              <Card
+                key={cat.key}
+                className="cursor-pointer hover:border-primary/50 hover:shadow-sm transition-all"
+                onClick={() => setActiveSection(cat.key)}
+              >
+                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <cat.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="font-semibold text-sm text-foreground">{cat.label}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Detail view for a specific section
+  return (
+    <DashboardLayout>
+      <div className="space-y-5" dir="rtl">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => setActiveSection(null)} className="gap-1">
+            <ArrowRight className="h-4 w-4" />
+            رجوع
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">{activeCat?.label}</h1>
+          </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as CategoryKey)} dir="rtl">
-          <div className="overflow-x-auto -mx-1 px-1">
-            <TabsList className="inline-flex h-auto gap-1 bg-muted/50 p-1 rounded-xl flex-nowrap">
-              {CATEGORIES.map(cat => (
-                <TabsTrigger
-                  key={cat.key}
-                  value={cat.key}
-                  className="gap-1.5 text-xs px-3 py-2 whitespace-nowrap rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
-                >
-                  <cat.icon className="h-3.5 w-3.5" />
-                  {cat.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+        {activeSection === 'pricing_rules' ? (
+          <PricingRulesTab />
+        ) : activeSection === 'addon_prices' ? (
+          <AddonPricesTab />
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div />
+              <Button size="sm" onClick={openCreate} className="gap-1">
+                <Plus className="h-3.5 w-3.5" />
+                إضافة
+              </Button>
+            </div>
 
-          {CATEGORIES.map(cat => (
-            <TabsContent key={cat.key} value={cat.key} className="mt-4">
-              {cat.key === 'pricing_rules' ? (
-                <PricingRulesTab />
-              ) : (
-              <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-foreground">{cat.label}</h2>
-                <Button size="sm" onClick={openCreate} className="gap-1">
-                  <Plus className="h-3.5 w-3.5" />
-                  إضافة
-                </Button>
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-
-              {loading ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : items.length === 0 ? (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <cat.icon className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                    <p className="text-muted-foreground text-sm">لا توجد عناصر بعد</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map(item => (
-                    <Card key={item.id} className={`border-border/50 transition-opacity ${!item.is_active ? 'opacity-50' : ''}`}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          {cat.hasImage && item.image_url && (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-14 h-14 rounded-lg object-cover border border-border/50 shrink-0"
-                            />
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <p className="font-semibold text-sm text-foreground">{item.name}</p>
-                                {activeTab === 'hat_embroideries' && item.has_extra_text && (
-                                  <Badge variant="outline" className="mt-1 text-[10px]">يحتاج نص إضافي</Badge>
-                                )}
-                                {(item as any).description && (
-                                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                                    {(item as any).description}
-                                  </p>
-                                )}
-                              </div>
-                              <Badge
-                                variant={item.is_active ? 'secondary' : 'outline'}
-                                className="cursor-pointer text-[10px] shrink-0"
-                                onClick={() => toggleActive(item)}
-                              >
-                                {item.is_active ? 'مفعّل' : 'معطّل'}
-                              </Badge>
+            ) : items.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  {activeCat && <activeCat.icon className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />}
+                  <p className="text-muted-foreground text-sm">لا توجد عناصر بعد</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                {items.map(item => (
+                  <Card key={item.id} className={`border-border/50 transition-opacity ${!item.is_active ? 'opacity-50' : ''}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        {activeCat?.hasImage && item.image_url && (
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-14 h-14 rounded-lg object-cover border border-border/50 shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-sm text-foreground">{item.name}</p>
+                              {activeSection === 'hat_embroideries' && item.has_extra_text && (
+                                <Badge variant="outline" className="mt-1 text-[10px]">يحتاج نص إضافي</Badge>
+                              )}
+                              {(item as any).description && (
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                  {(item as any).description}
+                                </p>
+                              )}
                             </div>
-                            <div className="flex gap-1 mt-2">
-                              <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="h-7 px-2 text-xs gap-1">
-                                <Pencil className="h-3 w-3" />
-                                تعديل
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="h-7 px-2 text-xs gap-1 text-destructive hover:text-destructive">
-                                <Trash2 className="h-3 w-3" />
-                                حذف
-                              </Button>
-                            </div>
+                            <Badge
+                              variant={item.is_active ? 'secondary' : 'outline'}
+                              className="cursor-pointer text-[10px] shrink-0"
+                              onClick={() => toggleActive(item)}
+                            >
+                              {item.is_active ? 'مفعّل' : 'معطّل'}
+                            </Badge>
+                          </div>
+                          <div className="flex gap-1 mt-2">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="h-7 px-2 text-xs gap-1">
+                              <Pencil className="h-3 w-3" />
+                              تعديل
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="h-7 px-2 text-xs gap-1 text-destructive hover:text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                              حذف
+                            </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-              </>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-sm" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{editingItem ? `تعديل: ${editingItem.name}` : `إضافة ${activeCat.label}`}</DialogTitle>
+            <DialogTitle>{editingItem ? `تعديل: ${editingItem.name}` : `إضافة ${activeCat?.label}`}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <label className="text-sm font-medium mb-1.5 block">
-                {activeTab === 'hat_embroideries' ? 'رقم التطريز *' : 'الاسم *'}
+                {activeSection === 'hat_embroideries' ? 'رقم التطريز *' : 'الاسم *'}
               </label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder={activeTab === 'hat_embroideries' ? 'مثال: 12' : 'أدخل الاسم'} />
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder={activeSection === 'hat_embroideries' ? 'مثال: 12' : 'أدخل الاسم'} />
             </div>
 
-            {activeTab === 'hat_embroideries' && (
+            {activeSection === 'hat_embroideries' && (
               <div className="flex items-center gap-2">
                 <Checkbox checked={formHasExtraText} onCheckedChange={v => setFormHasExtraText(!!v)} />
                 <span className="text-sm text-foreground">نص إضافي</span>
               </div>
             )}
 
-            {activeCat.hasDescription && (
+            {activeCat?.hasDescription && (
               <div>
                 <label className="text-sm font-medium mb-1.5 block">الوصف</label>
                 <Input value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder="وصف مختصر (اختياري)" />
               </div>
             )}
 
-            {activeCat.hasImage && (
+            {activeCat?.hasImage && (
               <div>
                 <label className="text-sm font-medium mb-1.5 block">الصورة</label>
                 {formImagePreview ? (

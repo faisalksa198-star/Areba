@@ -12,8 +12,15 @@ interface PricingRule {
   price_per_kit: number;
 }
 
+interface AddonPrice {
+  key: string;
+  name: string;
+  price: number;
+}
+
 export default function PublicCalculator() {
   const [rules, setRules] = useState<PricingRule[]>([]);
+  const [addons, setAddons] = useState<Record<string, AddonPrice>>({});
   const [loading, setLoading] = useState(true);
 
   const [kitCount, setKitCount] = useState('');
@@ -26,15 +33,19 @@ export default function PublicCalculator() {
   const [purpleCount, setPurpleCount] = useState('');
 
   useEffect(() => {
-    supabase
-      .from('pricing_rules')
-      .select('*')
-      .order('min_quantity', { ascending: true })
-      .then(({ data }) => {
-        setRules((data as unknown as PricingRule[]) || []);
-        setLoading(false);
-      });
+    Promise.all([
+      supabase.from('pricing_rules').select('*').order('min_quantity', { ascending: true }),
+      supabase.from('addon_prices' as any).select('*'),
+    ]).then(([rulesRes, addonsRes]) => {
+      setRules((rulesRes.data as unknown as PricingRule[]) || []);
+      const addonMap: Record<string, AddonPrice> = {};
+      ((addonsRes.data as unknown as AddonPrice[]) || []).forEach(a => { addonMap[a.key] = a; });
+      setAddons(addonMap);
+      setLoading(false);
+    });
   }, []);
+
+  const getAddonPrice = (key: string, fallback: number) => addons[key]?.price ?? fallback;
 
   const qty = parseInt(kitCount) || 0;
   const enabled = qty > 0;
@@ -47,14 +58,23 @@ export default function PublicCalculator() {
 
   const basePrice = unitPrice * qty;
   const abayaTotal = (parseFloat(abayaExtra) || 0) * qty;
-  const scarfQitan = (parseInt(scarfQitanCount) || 0) * 2;
-  const scarfDecorated = (parseInt(scarfDecoratedCount) || 0) * 2;
-  const backEmb = (parseInt(backEmbroideryCount) || 0) * 20;
-  const logo = (parseInt(logoCount) || 0) * 20;
-  const hatEmb = (parseInt(hatEmbroideryCount) || 0) * 20;
-  const purple = (parseInt(purpleCount) || 0) * 25;
+  const scarfQitanPrice = getAddonPrice('scarf_qitan', 2);
+  const scarfDecoratedPrice = getAddonPrice('scarf_decorated', 2);
+  const backEmbPrice = getAddonPrice('back_embroidery', 20);
+  const logoPrice = getAddonPrice('logo_embroidery', 20);
+  const hatEmbPrice = getAddonPrice('hat_embroidery', 20);
+  const purplePrice = getAddonPrice('purple_package', 25);
+
+  const scarfQitan = (parseInt(scarfQitanCount) || 0) * scarfQitanPrice;
+  const scarfDecorated = (parseInt(scarfDecoratedCount) || 0) * scarfDecoratedPrice;
+  const backEmb = (parseInt(backEmbroideryCount) || 0) * backEmbPrice;
+  const logo = (parseInt(logoCount) || 0) * logoPrice;
+  const hatEmb = (parseInt(hatEmbroideryCount) || 0) * hatEmbPrice;
+  const purple = (parseInt(purpleCount) || 0) * purplePrice;
 
   const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple;
+
+  const fmt = (n: number) => n.toLocaleString('en-US');
 
   if (loading) {
     return (
@@ -66,7 +86,6 @@ export default function PublicCalculator() {
 
   return (
     <div className="space-y-4" dir="rtl">
-      {/* Kit count - always enabled */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">عدد الأطقم</CardTitle>
@@ -82,7 +101,7 @@ export default function PublicCalculator() {
           />
           {enabled && unitPrice > 0 && (
             <p className="text-sm text-muted-foreground mt-2">
-              سعر الطقم الواحد: <span className="font-semibold text-foreground">{unitPrice} ريال</span>
+              سعر الطقم الواحد: <span className="font-semibold text-foreground">{fmt(unitPrice)} ريال</span>
             </p>
           )}
           {enabled && unitPrice === 0 && (
@@ -91,7 +110,6 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
-      {/* Extras - disabled until kit count entered */}
       <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">الإضافات</CardTitle>
@@ -100,7 +118,7 @@ export default function PublicCalculator() {
           <div>
             <Label className="text-sm">إضافات العباية (بالريال)</Label>
             <Input type="number" min="0" step="0.01" placeholder="0" value={abayaExtra} onChange={e => setAbayaExtra(e.target.value)} disabled={!enabled} />
-            {enabled && abayaTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {abayaTotal} ريال</p>}
+            {enabled && abayaTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(abayaTotal)} ريال</p>}
           </div>
 
           <Separator />
@@ -109,12 +127,12 @@ export default function PublicCalculator() {
             <div>
               <Label className="text-sm">أوشحة بقيطان</Label>
               <Input type="number" min="0" placeholder="0" value={scarfQitanCount} onChange={e => setScarfQitanCount(e.target.value)} disabled={!enabled} />
-              {enabled && scarfQitan > 0 && <p className="text-xs text-muted-foreground mt-1">× 2 = {scarfQitan} ريال</p>}
+              {enabled && scarfQitan > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(scarfQitanPrice)} = {fmt(scarfQitan)} ريال</p>}
             </div>
             <div>
               <Label className="text-sm">أوشحة بخط مزخرف</Label>
               <Input type="number" min="0" placeholder="0" value={scarfDecoratedCount} onChange={e => setScarfDecoratedCount(e.target.value)} disabled={!enabled} />
-              {enabled && scarfDecorated > 0 && <p className="text-xs text-muted-foreground mt-1">× 2 = {scarfDecorated} ريال</p>}
+              {enabled && scarfDecorated > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(scarfDecoratedPrice)} = {fmt(scarfDecorated)} ريال</p>}
             </div>
           </div>
 
@@ -124,12 +142,12 @@ export default function PublicCalculator() {
             <div>
               <Label className="text-sm">تطريز في الخلف</Label>
               <Input type="number" min="0" placeholder="0" value={backEmbroideryCount} onChange={e => setBackEmbroideryCount(e.target.value)} disabled={!enabled} />
-              {enabled && backEmb > 0 && <p className="text-xs text-muted-foreground mt-1">× 20 = {backEmb} ريال</p>}
+              {enabled && backEmb > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(backEmbPrice)} = {fmt(backEmb)} ريال</p>}
             </div>
             <div>
               <Label className="text-sm">إضافة شعار</Label>
               <Input type="number" min="0" placeholder="0" value={logoCount} onChange={e => setLogoCount(e.target.value)} disabled={!enabled} />
-              {enabled && logo > 0 && <p className="text-xs text-muted-foreground mt-1">× 20 = {logo} ريال</p>}
+              {enabled && logo > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(logoPrice)} = {fmt(logo)} ريال</p>}
             </div>
           </div>
 
@@ -137,23 +155,22 @@ export default function PublicCalculator() {
             <div>
               <Label className="text-sm">تطريز قبعة</Label>
               <Input type="number" min="0" placeholder="0" value={hatEmbroideryCount} onChange={e => setHatEmbroideryCount(e.target.value)} disabled={!enabled} />
-              {enabled && hatEmb > 0 && <p className="text-xs text-muted-foreground mt-1">× 20 = {hatEmb} ريال</p>}
+              {enabled && hatEmb > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(hatEmbPrice)} = {fmt(hatEmb)} ريال</p>}
             </div>
             <div>
               <Label className="text-sm">بكج Purple</Label>
               <Input type="number" min="0" placeholder="0" value={purpleCount} onChange={e => setPurpleCount(e.target.value)} disabled={!enabled} />
-              {enabled && purple > 0 && <p className="text-xs text-muted-foreground mt-1">× 25 = {purple} ريال</p>}
+              {enabled && purple > 0 && <p className="text-xs text-muted-foreground mt-1">× {fmt(purplePrice)} = {fmt(purple)} ريال</p>}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Total */}
       <Card className="border-primary/30 bg-primary/5">
         <CardContent className="py-6 text-center">
           <p className="text-sm text-muted-foreground mb-1">المجموع النهائي</p>
           <p className="text-4xl font-bold text-primary">
-            {enabled ? total.toLocaleString('ar-SA') : '—'}
+            {enabled ? fmt(total) : '—'}
           </p>
           <p className="text-sm text-muted-foreground mt-1">ريال سعودي</p>
         </CardContent>

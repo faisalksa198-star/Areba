@@ -9,7 +9,7 @@ export default function Calculator() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
 
-  const publicUrl = `${window.location.origin}/calculator`;
+  const publicUrl = `${window.location.origin}/public-calculator`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(publicUrl);
