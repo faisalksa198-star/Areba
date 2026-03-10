@@ -441,6 +441,15 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                     if (kit.scarf_method_id) {
                       setScarfDesigns(prev => prev.map(s => ({ ...s, scarf_method_id: kit.scarf_method_id })));
                     }
+                    if (kit.date_type_id) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, date_type_id: kit.date_type_id })));
+                    }
+                    if (kit.embroidery_direction_id) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, embroidery_direction_id: kit.embroidery_direction_id })));
+                    }
+                    if (kit.embroidery_color) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, embroidery_color: kit.embroidery_color })));
+                    }
                   }
                 }}>
                   <SelectTrigger><SelectValue placeholder="اختر الطقم" /></SelectTrigger>
