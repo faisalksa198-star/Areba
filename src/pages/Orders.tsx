@@ -1112,6 +1112,10 @@ function LinkCard({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }}
             className="inline-flex items-center justify-center h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-input hover:bg-accent transition-colors"
             title="فتح في تبويب جديد"
           >
