@@ -76,6 +76,7 @@ interface OrderRow {
 
 const statusLabels: Record<string, { label: string; className: string }> = {
   pending_data: { label: 'بانتظار البيانات', className: 'bg-warning/10 text-warning border-warning/20' },
+  under_review: { label: 'بانتظار المراجعة', className: 'bg-blue-100 text-blue-700 border-blue-200' },
   in_progress: { label: 'قيد التنفيذ', className: 'bg-info/10 text-info border-info/20' },
   completed: { label: 'مكتمل', className: 'bg-success/10 text-success border-success/20' },
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
@@ -515,6 +516,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
             <SelectContent>
               <SelectItem value="all">كل الحالات</SelectItem>
               <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+              <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
               <SelectItem value="completed">مكتمل</SelectItem>
               <SelectItem value="cancelled">ملغي</SelectItem>
@@ -556,6 +558,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
                 <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
                 <SelectItem value="completed">مكتمل</SelectItem>
                 <SelectItem value="cancelled">ملغي</SelectItem>
@@ -632,6 +635,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+                              <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
                               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
                               <SelectItem value="completed">مكتمل</SelectItem>
                               <SelectItem value="cancelled">ملغي</SelectItem>

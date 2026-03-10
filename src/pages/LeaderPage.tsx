@@ -515,17 +515,17 @@ export default function LeaderPage() {
     // Save everything first
     await handleSave();
 
-    // Mark as submitted (keep status as pending_data for review)
+    // Mark as submitted and change status to under_review
     const { error } = await supabase
       .from('orders')
-      .update({ data_submitted: true } as any)
+      .update({ data_submitted: true, status: 'under_review' } as any)
       .eq('id', orderId);
 
     if (error) {
       toast({ title: 'خطأ في إرسال البيانات', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'تم إرسال البيانات بنجاح ✓' });
-      setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'pending_data' } : prev);
+      setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'under_review' } : prev);
     }
     setSubmitting(false);
   };
