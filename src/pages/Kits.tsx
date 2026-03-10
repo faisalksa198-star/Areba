@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Pencil, Trash2, Loader2, Package, Eye, ImagePlus, X } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface SelectOption { id: string; name: string; }
 
