@@ -232,23 +232,36 @@ export default function StudentRegister() {
 
   // Lock page when status is not pending_data
   if (orderInfo && orderInfo.status !== 'pending_data') {
+    const isInProgress = orderInfo.status === 'in_progress';
+    const isCompleted = orderInfo.status === 'completed';
+    const showPdf = isInProgress || isCompleted;
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <School className="h-7 w-7 text-muted-foreground" />
+          <CardContent className="p-8 text-center space-y-5">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <School className="h-7 w-7 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
-            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
-            <a
-              href={`${window.location.origin}/order/${orderId}/leader`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              لتحميل تقرير طلبكم PDF اضغط هنا
-            </a>
+            {showPdf ? (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم استلام طلبكم وجاري تنفيذه</h2>
+                <p className="text-sm text-muted-foreground">يمكنكم تحميل تقرير الطلب من الرابط أدناه</p>
+                <a
+                  href={`${window.location.origin}/order/${orderId}/leader`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  تحميل تقرير طلبكم PDF
+                </a>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
+                <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
