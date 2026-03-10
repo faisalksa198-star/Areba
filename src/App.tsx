@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/order/:orderId/leader" element={<LeaderPage />} />
             <Route path="/order/:orderId/register" element={<StudentRegister />} />
             <Route path="/order/:orderId/status" element={<OrderStatus />} />
+            <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
