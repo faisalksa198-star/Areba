@@ -688,6 +688,27 @@ export type Database = {
         }
         Relationships: []
       }
+      short_links: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          original_url: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          original_url: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          original_url?: string
+        }
+        Relationships: []
+      }
       sleeve_styles: {
         Row: {
           created_at: string
