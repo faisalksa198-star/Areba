@@ -51,8 +51,11 @@ import {
   Package,
   Pencil,
   Trash2,
+  Eye,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface OrderLinks {
   leaderLink: string;
