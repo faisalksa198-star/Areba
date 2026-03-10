@@ -166,15 +166,51 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
-      <Card className="border-primary/30 bg-primary/5">
-        <CardContent className="py-6 text-center">
-          <p className="text-sm text-muted-foreground mb-1">المجموع النهائي</p>
-          <p className="text-4xl font-bold text-primary">
+      <Card className="border-primary/40 bg-primary/5 shadow-md">
+        <CardContent className="py-8 text-center">
+          <p className="text-sm text-muted-foreground mb-2">المجموع النهائي</p>
+          <p className="text-5xl font-extrabold text-primary drop-shadow-sm">
             {enabled ? fmt(total) : '—'}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">ريال سعودي</p>
+          <p className="text-sm text-muted-foreground mt-2">ريال سعودي</p>
         </CardContent>
       </Card>
+
+      {enabled && total > 0 && (() => {
+        const lines: { label: string; detail: string; result: number }[] = [];
+        if (basePrice > 0) lines.push({ label: 'الأطقم', detail: `${fmt(qty)} × ${fmt(unitPrice)} ريال`, result: basePrice });
+        if (abayaTotal > 0) lines.push({ label: 'إضافات العبايات', detail: `${fmt(parseFloat(abayaExtra) || 0)} ريال × ${fmt(qty)}`, result: abayaTotal });
+        if (scarfQitan > 0) lines.push({ label: 'أوشحة بقيطان', detail: `${fmt(parseInt(scarfQitanCount) || 0)} أوشحة × ${fmt(scarfQitanPrice)} ريال`, result: scarfQitan });
+        if (scarfDecorated > 0) lines.push({ label: 'أوشحة بخط مزخرف', detail: `${fmt(parseInt(scarfDecoratedCount) || 0)} أوشحة × ${fmt(scarfDecoratedPrice)} ريال`, result: scarfDecorated });
+        if (backEmb > 0) lines.push({ label: 'تطريز خلفي', detail: `${fmt(parseInt(backEmbroideryCount) || 0)} تطريز × ${fmt(backEmbPrice)} ريال`, result: backEmb });
+        if (logo > 0) lines.push({ label: 'إضافة شعار', detail: `${fmt(parseInt(logoCount) || 0)} شعار × ${fmt(logoPrice)} ريال`, result: logo });
+        if (hatEmb > 0) lines.push({ label: 'تطريز قبعة', detail: `${fmt(parseInt(hatEmbroideryCount) || 0)} قبعات × ${fmt(hatEmbPrice)} ريال`, result: hatEmb });
+        if (purple > 0) lines.push({ label: 'بكج Purple', detail: `${fmt(parseInt(purpleCount) || 0)} بكج × ${fmt(purplePrice)} ريال`, result: purple });
+
+        return lines.length > 0 ? (
+          <Card className="border-muted">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">ملخص الحساب</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-0">
+              {lines.map((line, i) => (
+                <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-b-0">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium text-foreground">{line.label}</p>
+                    <p className="text-xs text-muted-foreground">{line.detail}</p>
+                  </div>
+                  <p className="text-sm font-semibold text-foreground whitespace-nowrap">{fmt(line.result)} ريال</p>
+                </div>
+              ))}
+              <Separator className="my-2" />
+              <div className="flex items-center justify-between pt-2">
+                <p className="text-sm font-bold text-foreground">الإجمالي</p>
+                <p className="text-lg font-extrabold text-primary">{fmt(total)} ريال</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null;
+      })()}
     </div>
   );
 }
