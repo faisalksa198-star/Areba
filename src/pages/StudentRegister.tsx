@@ -324,9 +324,12 @@ export default function StudentRegister() {
         )}
 
         {isFull ? (
-          <Card className="border-warning/30 bg-warning/5">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-warning font-medium">تم اكتمال العدد المطلوب من الطالبات</p>
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <School className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-foreground">تم اكتمال العدد المطلوب وجاري مراجعة طلبكم</p>
             </CardContent>
           </Card>
         ) : (
