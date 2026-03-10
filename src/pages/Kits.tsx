@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Pencil, Trash2, Loader2, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Package, Eye, ImagePlus, X } from 'lucide-react';
 
 interface SelectOption { id: string; name: string; }
 
@@ -17,6 +17,7 @@ interface KitRow {
   name: string;
   is_active: boolean;
   price: number | null;
+  image_url: string | null;
   abaya_design_id: string | null;
   sleeve_style_id: string | null;
   scarf_style_id: string | null;
@@ -39,6 +40,7 @@ export default function Kits() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingKit, setEditingKit] = useState<KitRow | null>(null);
+  const [previewKit, setPreviewKit] = useState<KitRow | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Master data
@@ -47,17 +49,18 @@ export default function Kits() {
   const [scarfStyles, setScarfStyles] = useState<SelectOption[]>([]);
   const [scarfMethods, setScarfMethods] = useState<SelectOption[]>([]);
   const [fonts, setFonts] = useState<SelectOption[]>([]);
-  const [hatStyles, setHatStyles] = useState<SelectOption[]>([]);
 
   // Form state
   const [f, setF] = useState({
-    name: '', price: '',
+    name: '',
     abaya_design_id: '', sleeve_style_id: '', scarf_style_id: '',
-    scarf_method_id: '', font_id: '', hat_style_id: '',
+    scarf_method_id: '', font_id: '',
     scarf_color: '', scarf_color_degree: '', sleeve_color: '',
     abaya_color: '', abaya_color_degree: '',
-    hat_color: '', hat_color_degree: '', default_scarf_design: '',
+    hat_color: '', hat_color_degree: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
 
   const setField = (key: string, val: string) => setF(prev => ({ ...prev, [key]: val }));
 
@@ -74,32 +77,32 @@ export default function Kits() {
   };
 
   const loadMasterData = async () => {
-    const [a, sl, sc, sm, fo, hs] = await Promise.all([
+    const [a, sl, sc, sm, fo] = await Promise.all([
       supabase.from('abaya_designs').select('id, name').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name').eq('is_active', true),
       supabase.from('scarf_styles').select('id, name').eq('is_active', true),
       supabase.from('scarf_methods').select('id, name').eq('is_active', true),
       supabase.from('fonts').select('id, name').eq('is_active', true),
-      supabase.from('hat_styles').select('id, name').eq('is_active', true),
     ]);
     setAbayaDesigns(a.data || []);
     setSleeveStyles(sl.data || []);
     setScarfStyles(sc.data || []);
     setScarfMethods(sm.data || []);
     setFonts(fo.data || []);
-    setHatStyles(hs.data || []);
   };
 
   const openCreate = () => {
     setEditingKit(null);
     setF({
-      name: '', price: '',
+      name: '',
       abaya_design_id: '', sleeve_style_id: '', scarf_style_id: '',
-      scarf_method_id: '', font_id: '', hat_style_id: '',
+      scarf_method_id: '', font_id: '',
       scarf_color: '', scarf_color_degree: '', sleeve_color: '',
       abaya_color: '', abaya_color_degree: '',
-      hat_color: '', hat_color_degree: '', default_scarf_design: '',
+      hat_color: '', hat_color_degree: '',
     });
+    setImageFile(null);
+    setImagePreview('');
     setShowForm(true);
   };
 
@@ -107,13 +110,11 @@ export default function Kits() {
     setEditingKit(kit);
     setF({
       name: kit.name,
-      price: kit.price?.toString() || '',
       abaya_design_id: kit.abaya_design_id || '',
       sleeve_style_id: kit.sleeve_style_id || '',
       scarf_style_id: kit.scarf_style_id || '',
       scarf_method_id: kit.scarf_method_id || '',
       font_id: kit.font_id || '',
-      hat_style_id: kit.hat_style_id || '',
       scarf_color: kit.scarf_color || '',
       scarf_color_degree: kit.scarf_color_degree || '',
       sleeve_color: kit.sleeve_color || '',
@@ -121,9 +122,17 @@ export default function Kits() {
       abaya_color_degree: kit.abaya_color_degree || '',
       hat_color: kit.hat_color || '',
       hat_color_degree: kit.hat_color_degree || '',
-      default_scarf_design: kit.default_scarf_design || '',
     });
+    setImageFile(null);
+    setImagePreview(kit.image_url || '');
     setShowForm(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSave = async () => {
@@ -133,15 +142,25 @@ export default function Kits() {
     }
     setSaving(true);
 
+    let imageUrl: string | null = imagePreview || null;
+    if (imageFile) {
+      const ext = imageFile.name.split('.').pop();
+      const path = `kits/${crypto.randomUUID()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('images').upload(path, imageFile);
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from('images').getPublicUrl(path);
+        imageUrl = urlData.publicUrl;
+      }
+    }
+
     const record: any = {
       name: f.name.trim(),
-      price: f.price ? parseFloat(f.price) : null,
+      image_url: imageUrl,
       abaya_design_id: f.abaya_design_id || null,
       sleeve_style_id: f.sleeve_style_id || null,
       scarf_style_id: f.scarf_style_id || null,
       scarf_method_id: f.scarf_method_id || null,
       font_id: f.font_id || null,
-      hat_style_id: f.hat_style_id || null,
       scarf_color: f.scarf_color || null,
       scarf_color_degree: f.scarf_color_degree || null,
       sleeve_color: f.sleeve_color || null,
@@ -149,7 +168,6 @@ export default function Kits() {
       abaya_color_degree: f.abaya_color_degree || null,
       hat_color: f.hat_color || null,
       hat_color_degree: f.hat_color_degree || null,
-      default_scarf_design: f.default_scarf_design || null,
     };
 
     let error;
@@ -207,28 +225,31 @@ export default function Kits() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
             {kits.map(kit => (
-              <Card key={kit.id} className={`border-border/50 ${!kit.is_active ? 'opacity-50' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-bold text-foreground">{kit.name}</p>
-                      {kit.price && <p className="text-sm text-muted-foreground">{kit.price} ر.س</p>}
+              <Card key={kit.id} className={`overflow-hidden border-border/50 ${!kit.is_active ? 'opacity-50' : ''}`}>
+                <div className="aspect-video relative bg-muted">
+                  {kit.image_url ? (
+                    <img src={kit.image_url} alt={kit.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="h-12 w-12 text-muted-foreground/20" />
                     </div>
-                    <Badge variant={kit.is_active ? 'secondary' : 'outline'} className="text-[10px]">
-                      {kit.is_active ? 'مفعّل' : 'معطّل'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                    <span>التصميم: <strong className="text-foreground">{findName(abayaDesigns, kit.abaya_design_id)}</strong></span>
-                    <span>الكم: <strong className="text-foreground">{findName(sleeveStyles, kit.sleeve_style_id)}</strong></span>
-                    <span>الوشاح: <strong className="text-foreground">{findName(scarfStyles, kit.scarf_style_id)}</strong></span>
-                    <span>الخط: <strong className="text-foreground">{findName(fonts, kit.font_id)}</strong></span>
-                    {kit.abaya_color && <span>لون العباية: <strong className="text-foreground">{kit.abaya_color}</strong></span>}
-                    {kit.scarf_color && <span>لون الوشاح: <strong className="text-foreground">{kit.scarf_color}</strong></span>}
-                  </div>
-                  <div className="flex gap-1 mt-3">
+                  )}
+                  <Badge
+                    variant={kit.is_active ? 'secondary' : 'outline'}
+                    className="absolute top-2 left-2 text-[10px]"
+                  >
+                    {kit.is_active ? 'مفعّل' : 'معطّل'}
+                  </Badge>
+                </div>
+                <CardContent className="p-3">
+                  <p className="font-bold text-foreground text-sm mb-2">{kit.name}</p>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => setPreviewKit(kit)} className="h-7 px-2 text-xs gap-1">
+                      <Eye className="h-3 w-3" />
+                      استعراض
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(kit)} className="h-7 px-2 text-xs gap-1">
                       <Pencil className="h-3 w-3" />
                       تعديل
@@ -245,6 +266,33 @@ export default function Kits() {
         )}
       </div>
 
+      {/* Preview Dialog */}
+      <Dialog open={!!previewKit} onOpenChange={() => setPreviewKit(null)}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الطقم: {previewKit?.name}</DialogTitle>
+          </DialogHeader>
+          {previewKit && (
+            <div className="space-y-3 mt-2">
+              {previewKit.image_url && (
+                <img src={previewKit.image_url} alt={previewKit.name} className="w-full aspect-video object-cover rounded-lg" />
+              )}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
+                <span>التصميم: <strong className="text-foreground">{findName(abayaDesigns, previewKit.abaya_design_id)}</strong></span>
+                <span>الكم: <strong className="text-foreground">{findName(sleeveStyles, previewKit.sleeve_style_id)}</strong></span>
+                <span>الوشاح: <strong className="text-foreground">{findName(scarfStyles, previewKit.scarf_style_id)}</strong></span>
+                <span>أطراف الوشاح: <strong className="text-foreground">{findName(scarfMethods, previewKit.scarf_method_id)}</strong></span>
+                <span>خط التطريز: <strong className="text-foreground">{findName(fonts, previewKit.font_id)}</strong></span>
+                {previewKit.abaya_color && <span>لون العباية: <strong className="text-foreground">{previewKit.abaya_color} {previewKit.abaya_color_degree || ''}</strong></span>}
+                {previewKit.scarf_color && <span>لون الوشاح: <strong className="text-foreground">{previewKit.scarf_color} {previewKit.scarf_color_degree || ''}</strong></span>}
+                {previewKit.hat_color && <span>لون القبعة: <strong className="text-foreground">{previewKit.hat_color} {previewKit.hat_color_degree || ''}</strong></span>}
+                {previewKit.sleeve_color && <span>لون طرف الكم: <strong className="text-foreground">{previewKit.sleeve_color}</strong></span>}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Kit Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" dir="rtl">
@@ -252,15 +300,29 @@ export default function Kits() {
             <DialogTitle>{editingKit ? `تعديل: ${editingKit.name}` : 'إنشاء طقم جديد'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
-                <label className="text-sm font-medium mb-1 block">اسم الطقم *</label>
-                <Input value={f.name} onChange={e => setField('name', e.target.value)} placeholder="مثال: طقم الرونق" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">السعر</label>
-                <Input value={f.price} onChange={e => setField('price', e.target.value)} placeholder="0.00" type="number" />
-              </div>
+            {/* Name */}
+            <div>
+              <label className="text-sm font-medium mb-1 block">اسم الطقم *</label>
+              <Input value={f.name} onChange={e => setField('name', e.target.value)} placeholder="مثال: طقم الرونق" />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="text-sm font-medium mb-1 block">صورة الطقم</label>
+              {imagePreview ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
+                  <img src={imagePreview} className="w-full h-full object-cover" />
+                  <button onClick={() => { setImageFile(null); setImagePreview(''); }} className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full aspect-video rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                  <ImagePlus className="h-8 w-8 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">اضغط لرفع صورة</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                </label>
+              )}
             </div>
 
             <h3 className="text-sm font-bold text-foreground border-b border-border pb-1">العناصر الأساسية</h3>
@@ -269,9 +331,8 @@ export default function Kits() {
               <FormSelect label="تصميم العباية" value={f.abaya_design_id} options={abayaDesigns} onChange={v => setField('abaya_design_id', v)} />
               <FormSelect label="طرف الكم" value={f.sleeve_style_id} options={sleeveStyles} onChange={v => setField('sleeve_style_id', v)} />
               <FormSelect label="شكل الوشاح" value={f.scarf_style_id} options={scarfStyles} onChange={v => setField('scarf_style_id', v)} />
-              <FormSelect label="طريقة الوشاح" value={f.scarf_method_id} options={scarfMethods} onChange={v => setField('scarf_method_id', v)} />
-              <FormSelect label="الخط" value={f.font_id} options={fonts} onChange={v => setField('font_id', v)} />
-              <FormSelect label="شكل القبعة" value={f.hat_style_id} options={hatStyles} onChange={v => setField('hat_style_id', v)} />
+              <FormSelect label="أطراف الوشاح" value={f.scarf_method_id} options={scarfMethods} onChange={v => setField('scarf_method_id', v)} />
+              <FormSelect label="خط التطريز" value={f.font_id} options={fonts} onChange={v => setField('font_id', v)} />
             </div>
 
             <h3 className="text-sm font-bold text-foreground border-b border-border pb-1">الألوان</h3>
@@ -284,10 +345,6 @@ export default function Kits() {
               <div>
                 <label className="text-xs font-medium mb-1 block">درجة لون العباية</label>
                 <Input value={f.abaya_color_degree} onChange={e => setField('abaya_color_degree', e.target.value)} placeholder="مثال: غامق" />
-              </div>
-              <div>
-                <label className="text-xs font-medium mb-1 block">لون الكم</label>
-                <Input value={f.sleeve_color} onChange={e => setField('sleeve_color', e.target.value)} placeholder="لون طرف الكم" />
               </div>
               <div>
                 <label className="text-xs font-medium mb-1 block">لون الوشاح</label>
@@ -305,9 +362,9 @@ export default function Kits() {
                 <label className="text-xs font-medium mb-1 block">درجة لون القبعة</label>
                 <Input value={f.hat_color_degree} onChange={e => setField('hat_color_degree', e.target.value)} placeholder="درجة اللون" />
               </div>
-              <div>
-                <label className="text-xs font-medium mb-1 block">تصميم وشاح افتراضي</label>
-                <Input value={f.default_scarf_design} onChange={e => setField('default_scarf_design', e.target.value)} placeholder="وصف التصميم" />
+              <div className="col-span-2">
+                <label className="text-xs font-medium mb-1 block">لون طرف الكم</label>
+                <Input value={f.sleeve_color} onChange={e => setField('sleeve_color', e.target.value)} placeholder="لون طرف الكم" />
               </div>
             </div>
 

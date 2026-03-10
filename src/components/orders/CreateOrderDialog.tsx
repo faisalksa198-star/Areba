@@ -115,7 +115,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
   const loadMasterData = async () => {
     const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR] = await Promise.all([
-      supabase.from('ready_kits').select('id, name').eq('is_active', true),
+      supabase.from('ready_kits').select('*').eq('is_active', true),
       supabase.from('abaya_designs').select('id, name, image_url').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name, image_url').eq('is_active', true),
       supabase.from('scarf_styles').select('id, name, image_url').eq('is_active', true),
