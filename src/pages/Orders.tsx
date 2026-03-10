@@ -853,7 +853,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                 </div>
 
                 {/* Shipping Info */}
-                {(viewingOrder.recipient_name || viewingOrder.address_details) && (
+                {(viewingOrder.recipient_name || viewingOrder.address_details || viewingOrder.tracking_number) && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-bold text-foreground">معلومات الشحن</h3>
                     <Separator />
@@ -862,6 +862,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                       <DetailItem label="رقم المستلم" value={viewingOrder.recipient_phone} />
                       <DetailItem label="العنوان" value={viewingOrder.address_details} />
                       <DetailItem label="العنوان الوطني" value={viewingOrder.national_address} />
+                      {viewingOrder.tracking_number && (
+                        <DetailItem label="رقم الشحنة" value={viewingOrder.tracking_number} />
+                      )}
                     </div>
                   </div>
                 )}
