@@ -112,6 +112,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   // Edit/Delete single
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<any | null>(null);
+  const [viewingStudents, setViewingStudents] = useState<any[]>([]);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
