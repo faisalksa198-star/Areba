@@ -35,6 +35,7 @@ const CATEGORIES = [
   { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true, hasDescription: false },
   { key: 'hat_embroideries', label: 'تطريز القبعات', icon: Sparkles, hasImage: true, hasDescription: false },
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
+  { key: 'pricing_rules', label: 'التسعيرة', icon: DollarSign, hasImage: false, hasDescription: false },
 ] as const;
 
 type CategoryKey = typeof CATEGORIES[number]['key'];
