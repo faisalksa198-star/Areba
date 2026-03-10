@@ -216,12 +216,16 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     return result;
   }, [orders, searchQuery, statusFilter, kitFilter]);
 
-  const generateLinks = (orderId: string): OrderLinks => {
+  const generateLinks = (orderId: string, phone?: string | null): OrderLinks => {
     const base = window.location.origin;
+    const whatsappLink = phone
+      ? `https://wa.me/${phone.replace(/^0/, '966').replace(/[^0-9]/g, '')}`
+      : undefined;
     return {
       leaderLink: `${base}/order/${orderId}/leader`,
       registerLink: `${base}/order/${orderId}/register`,
       statusLink: `${base}/order/${orderId}/status`,
+      whatsappLink,
     };
   };
 
