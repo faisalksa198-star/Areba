@@ -523,21 +523,11 @@ export default function LeaderPage() {
 
     if (error) {
       toast({ title: 'خطأ في إرسال البيانات', description: error.message, variant: 'destructive' });
+      setSubmitting(false);
     } else {
-      toast({ title: 'تم إرسال البيانات بنجاح ✓' });
-      // Re-fetch order data to ensure UI reflects DB state
-      const { data: refreshed } = await supabase
-        .from('orders')
-        .select('status, data_submitted')
-        .eq('id', orderId)
-        .single();
-      if (refreshed) {
-        setOrderInfo(prev => prev ? { ...prev, data_submitted: refreshed.data_submitted ?? true, status: refreshed.status } : prev);
-      } else {
-        setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'under_review' } : prev);
-      }
+      // Force full page reload to read new status from DB
+      window.location.reload();
     }
-    setSubmitting(false);
   };
 
   if (loading) {
