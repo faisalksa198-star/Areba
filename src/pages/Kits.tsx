@@ -16,14 +16,15 @@ interface KitRow {
   id: string;
   name: string;
   is_active: boolean;
-  price: number | null;
   image_url: string | null;
   abaya_design_id: string | null;
   sleeve_style_id: string | null;
   scarf_style_id: string | null;
   scarf_method_id: string | null;
   font_id: string | null;
-  hat_style_id: string | null;
+  date_type_id: string | null;
+  embroidery_direction_id: string | null;
+  embroidery_color: string | null;
   scarf_color: string | null;
   scarf_color_degree: string | null;
   sleeve_color: string | null;
@@ -31,8 +32,14 @@ interface KitRow {
   abaya_color_degree: string | null;
   hat_color: string | null;
   hat_color_degree: string | null;
-  default_scarf_design: string | null;
 }
+
+const EMBROIDERY_COLORS = [
+  { value: 'فضي', label: 'فضي' },
+  { value: 'ذهبي', label: 'ذهبي' },
+  { value: 'أسود', label: 'أسود' },
+  { value: 'أبيض', label: 'أبيض' },
+];
 
 export default function Kits() {
   const { toast } = useToast();
@@ -49,12 +56,15 @@ export default function Kits() {
   const [scarfStyles, setScarfStyles] = useState<SelectOption[]>([]);
   const [scarfMethods, setScarfMethods] = useState<SelectOption[]>([]);
   const [fonts, setFonts] = useState<SelectOption[]>([]);
+  const [dateTypes, setDateTypes] = useState<SelectOption[]>([]);
+  const [embroideryDirections, setEmbroideryDirections] = useState<SelectOption[]>([]);
 
   // Form state
   const [f, setF] = useState({
     name: '',
     abaya_design_id: '', sleeve_style_id: '', scarf_style_id: '',
     scarf_method_id: '', font_id: '',
+    date_type_id: '', embroidery_direction_id: '', embroidery_color: '',
     scarf_color: '', scarf_color_degree: '', sleeve_color: '',
     abaya_color: '', abaya_color_degree: '',
     hat_color: '', hat_color_degree: '',
@@ -77,30 +87,37 @@ export default function Kits() {
   };
 
   const loadMasterData = async () => {
-    const [a, sl, sc, sm, fo] = await Promise.all([
+    const [a, sl, sc, sm, fo, dt, ed] = await Promise.all([
       supabase.from('abaya_designs').select('id, name').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name').eq('is_active', true),
       supabase.from('scarf_styles').select('id, name').eq('is_active', true),
       supabase.from('scarf_methods').select('id, name').eq('is_active', true),
       supabase.from('fonts').select('id, name').eq('is_active', true),
+      supabase.from('date_types').select('id, name').eq('is_active', true),
+      supabase.from('embroidery_directions').select('id, name').eq('is_active', true),
     ]);
     setAbayaDesigns(a.data || []);
     setSleeveStyles(sl.data || []);
     setScarfStyles(sc.data || []);
     setScarfMethods(sm.data || []);
     setFonts(fo.data || []);
+    setDateTypes(dt.data || []);
+    setEmbroideryDirections(ed.data || []);
+  };
+
+  const emptyForm = {
+    name: '',
+    abaya_design_id: '', sleeve_style_id: '', scarf_style_id: '',
+    scarf_method_id: '', font_id: '',
+    date_type_id: '', embroidery_direction_id: '', embroidery_color: '',
+    scarf_color: '', scarf_color_degree: '', sleeve_color: '',
+    abaya_color: '', abaya_color_degree: '',
+    hat_color: '', hat_color_degree: '',
   };
 
   const openCreate = () => {
     setEditingKit(null);
-    setF({
-      name: '',
-      abaya_design_id: '', sleeve_style_id: '', scarf_style_id: '',
-      scarf_method_id: '', font_id: '',
-      scarf_color: '', scarf_color_degree: '', sleeve_color: '',
-      abaya_color: '', abaya_color_degree: '',
-      hat_color: '', hat_color_degree: '',
-    });
+    setF(emptyForm);
     setImageFile(null);
     setImagePreview('');
     setShowForm(true);
@@ -115,6 +132,9 @@ export default function Kits() {
       scarf_style_id: kit.scarf_style_id || '',
       scarf_method_id: kit.scarf_method_id || '',
       font_id: kit.font_id || '',
+      date_type_id: kit.date_type_id || '',
+      embroidery_direction_id: kit.embroidery_direction_id || '',
+      embroidery_color: kit.embroidery_color || '',
       scarf_color: kit.scarf_color || '',
       scarf_color_degree: kit.scarf_color_degree || '',
       sleeve_color: kit.sleeve_color || '',
@@ -161,6 +181,9 @@ export default function Kits() {
       scarf_style_id: f.scarf_style_id || null,
       scarf_method_id: f.scarf_method_id || null,
       font_id: f.font_id || null,
+      date_type_id: f.date_type_id || null,
+      embroidery_direction_id: f.embroidery_direction_id || null,
+      embroidery_color: f.embroidery_color || null,
       scarf_color: f.scarf_color || null,
       scarf_color_degree: f.scarf_color_degree || null,
       sleeve_color: f.sleeve_color || null,
@@ -230,7 +253,7 @@ export default function Kits() {
               <Card key={kit.id} className={`overflow-hidden border-border/50 ${!kit.is_active ? 'opacity-50' : ''}`}>
                 <div className="aspect-video relative bg-muted">
                   {kit.image_url ? (
-                    <img src={kit.image_url} alt={kit.name} className="w-full h-full object-cover" />
+                    <img src={kit.image_url} alt={kit.name} className="w-full h-full object-contain" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package className="h-12 w-12 text-muted-foreground/20" />
@@ -275,7 +298,7 @@ export default function Kits() {
           {previewKit && (
             <div className="space-y-3 mt-2">
               {previewKit.image_url && (
-                <img src={previewKit.image_url} alt={previewKit.name} className="w-full aspect-video object-cover rounded-lg" />
+                <img src={previewKit.image_url} alt={previewKit.name} className="w-full aspect-video object-contain rounded-lg bg-muted" />
               )}
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-muted-foreground">
                 <span>التصميم: <strong className="text-foreground">{findName(abayaDesigns, previewKit.abaya_design_id)}</strong></span>
@@ -283,6 +306,9 @@ export default function Kits() {
                 <span>الوشاح: <strong className="text-foreground">{findName(scarfStyles, previewKit.scarf_style_id)}</strong></span>
                 <span>أطراف الوشاح: <strong className="text-foreground">{findName(scarfMethods, previewKit.scarf_method_id)}</strong></span>
                 <span>خط التطريز: <strong className="text-foreground">{findName(fonts, previewKit.font_id)}</strong></span>
+                <span>نوع التاريخ: <strong className="text-foreground">{findName(dateTypes, previewKit.date_type_id)}</strong></span>
+                <span>اتجاه التطريز: <strong className="text-foreground">{findName(embroideryDirections, previewKit.embroidery_direction_id)}</strong></span>
+                {previewKit.embroidery_color && <span>لون التطريز: <strong className="text-foreground">{previewKit.embroidery_color}</strong></span>}
                 {previewKit.abaya_color && <span>لون العباية: <strong className="text-foreground">{previewKit.abaya_color} {previewKit.abaya_color_degree || ''}</strong></span>}
                 {previewKit.scarf_color && <span>لون الوشاح: <strong className="text-foreground">{previewKit.scarf_color} {previewKit.scarf_color_degree || ''}</strong></span>}
                 {previewKit.hat_color && <span>لون القبعة: <strong className="text-foreground">{previewKit.hat_color} {previewKit.hat_color_degree || ''}</strong></span>}
@@ -310,8 +336,8 @@ export default function Kits() {
             <div>
               <label className="text-sm font-medium mb-1 block">صورة الطقم</label>
               {imagePreview ? (
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
-                  <img src={imagePreview} className="w-full h-full object-cover" />
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border bg-muted">
+                  <img src={imagePreview} className="w-full h-full object-contain" />
                   <button onClick={() => { setImageFile(null); setImagePreview(''); }} className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1">
                     <X className="h-3 w-3" />
                   </button>
@@ -333,6 +359,21 @@ export default function Kits() {
               <FormSelect label="شكل الوشاح" value={f.scarf_style_id} options={scarfStyles} onChange={v => setField('scarf_style_id', v)} />
               <FormSelect label="أطراف الوشاح" value={f.scarf_method_id} options={scarfMethods} onChange={v => setField('scarf_method_id', v)} />
               <FormSelect label="خط التطريز" value={f.font_id} options={fonts} onChange={v => setField('font_id', v)} />
+              <FormSelect label="نوع التاريخ" value={f.date_type_id} options={dateTypes} onChange={v => setField('date_type_id', v)} />
+              <FormSelect label="اتجاه التطريز" value={f.embroidery_direction_id} options={embroideryDirections} onChange={v => setField('embroidery_direction_id', v)} />
+              <div>
+                <label className="text-xs font-medium mb-1 block">لون التطريز</label>
+                <Select value={f.embroidery_color} onValueChange={v => setField('embroidery_color', v)}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="اختر" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EMBROIDERY_COLORS.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <h3 className="text-sm font-bold text-foreground border-b border-border pb-1">الألوان</h3>
