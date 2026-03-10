@@ -14,6 +14,7 @@ import OrderStatus from "./pages/OrderStatus";
 import StudentRegister from "./pages/StudentRegister";
 import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
+import ShortRedirect from "./pages/ShortRedirect";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/order/:orderId/leader" element={<LeaderPage />} />
             <Route path="/order/:orderId/register" element={<StudentRegister />} />
             <Route path="/order/:orderId/status" element={<OrderStatus />} />
+            <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
