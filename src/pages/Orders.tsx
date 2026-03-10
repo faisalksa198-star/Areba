@@ -255,33 +255,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const exportOrderJSON = async (orderId: string) => {
-    const transformed = await transformOrderForExport(orderId);
-    if (!transformed) return;
-    downloadJSON(transformed, `order-${transformed.order_details['رقم الطلب'] || orderId}.json`);
-  };
-
-  const exportBulkJSON = async () => {
-    if (selectedOrderIds.size === 0) {
-      toast({ title: 'اختر طلبات للتصدير', variant: 'destructive' });
-      return;
-    }
-    setBulkExporting(true);
-    const ids = Array.from(selectedOrderIds);
-    const transformed = await transformMultipleOrdersForExport(ids);
-    downloadJSON(transformed, `orders-export-${new Date().toISOString().slice(0, 10)}.json`);
-    setBulkExporting(false);
-    setSelectedOrderIds(new Set());
-  };
-
-  const downloadJSON = (data: any, filename: string) => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportSingleCsv = async (orderId: string, orderNumber: string) => {
+    const csv = await exportOrdersCsv([orderId]);
+    downloadCsv(csv, `order-${orderNumber || orderId}.csv`);
   };
 
   const generateOrderNumber = () => {
