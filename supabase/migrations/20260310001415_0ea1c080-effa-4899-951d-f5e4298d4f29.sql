@@ -1,0 +1,1 @@
+ALTER TABLE public.ready_kits ADD COLUMN IF NOT EXISTS image_url text;

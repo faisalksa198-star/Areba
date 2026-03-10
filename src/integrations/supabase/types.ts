@@ -534,6 +534,7 @@ export type Database = {
           hat_color_degree: string | null
           hat_style_id: string | null
           id: string
+          image_url: string | null
           is_active: boolean
           name: string
           price: number | null
@@ -556,6 +557,7 @@ export type Database = {
           hat_color_degree?: string | null
           hat_style_id?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name: string
           price?: number | null
@@ -578,6 +580,7 @@ export type Database = {
           hat_color_degree?: string | null
           hat_style_id?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean
           name?: string
           price?: number | null
