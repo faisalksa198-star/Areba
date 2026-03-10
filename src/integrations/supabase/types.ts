@@ -375,6 +375,7 @@ export type Database = {
           address_details: string | null
           back_embroidery_count: number | null
           back_embroidery_enabled: boolean | null
+          back_embroidery_image_urls: string[] | null
           city_id: string | null
           color_image_url: string | null
           created_at: string
@@ -396,6 +397,7 @@ export type Database = {
           leader_phone: string | null
           logo_embroidery_count: number | null
           logo_embroidery_enabled: boolean | null
+          logo_embroidery_image_url: string | null
           national_address: string | null
           notes: string | null
           order_number: string
@@ -420,6 +422,7 @@ export type Database = {
           address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
+          back_embroidery_image_urls?: string[] | null
           city_id?: string | null
           color_image_url?: string | null
           created_at?: string
@@ -441,6 +444,7 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
+          logo_embroidery_image_url?: string | null
           national_address?: string | null
           notes?: string | null
           order_number: string
@@ -465,6 +469,7 @@ export type Database = {
           address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
+          back_embroidery_image_urls?: string[] | null
           city_id?: string | null
           color_image_url?: string | null
           created_at?: string
@@ -486,6 +491,7 @@ export type Database = {
           leader_phone?: string | null
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
+          logo_embroidery_image_url?: string | null
           national_address?: string | null
           notes?: string | null
           order_number?: string
