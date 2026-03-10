@@ -556,10 +556,6 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1.5 h-8">
-              {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
-              تصدير JSON
-            </Button>
             <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               حذف جماعي
