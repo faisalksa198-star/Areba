@@ -51,8 +51,11 @@ import {
   Package,
   Pencil,
   Trash2,
+  Eye,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface OrderLinks {
   leaderLink: string;
@@ -109,6 +112,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   // Edit/Delete single
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<any | null>(null);
+  const [viewingStudents, setViewingStudents] = useState<any[]>([]);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
@@ -370,6 +375,16 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setEditingOrderId(null);
     loadOrders();
     loadTotalStudents();
+  };
+
+  const handleViewOrder = async (order: OrderRow) => {
+    setViewingOrder(order);
+    const { data } = await supabase
+      .from('students')
+      .select('*')
+      .eq('order_id', order.id)
+      .order('serial_number');
+    setViewingStudents(data || []);
   };
 
   const handleDeleteOrder = async () => {
@@ -645,6 +660,21 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                       </div>
                       {/* Action Buttons - icon only with tooltips */}
                       <div className="flex items-center gap-1 shrink-0">
+                        {/* View - far right */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleViewOrder(order)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>استعراض</TooltipContent>
+                        </Tooltip>
+                        {/* Links */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -661,6 +691,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>الروابط</TooltipContent>
                         </Tooltip>
+                        {/* Export */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -674,20 +705,25 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>تصدير</TooltipContent>
                         </Tooltip>
+                        {/* Edit - disabled when in_progress */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className={`h-8 w-8 ${order.status === 'in_progress' ? 'opacity-50 cursor-not-allowed text-blue-400' : ''}`}
+                              disabled={order.status === 'in_progress'}
                               onClick={() => setEditingOrderId(order.id)}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تعديل</TooltipContent>
+                          <TooltipContent>
+                            {order.status === 'in_progress' ? 'لا يمكن التعديل أثناء التنفيذ' : 'تعديل'}
+                          </TooltipContent>
                         </Tooltip>
-                        {isAdmin && (
+                        {/* Delete - only for pending_data or under_review */}
+                        {(order.status === 'pending_data' || order.status === 'under_review') && isAdmin && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -711,6 +747,91 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
           </div>
         )}
       </div>
+
+      {/* View Order Details Modal */}
+      <Dialog open={!!viewingOrder} onOpenChange={open => !open && setViewingOrder(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              تفاصيل الطلب {viewingOrder?.order_number}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[65vh] pr-2">
+            {viewingOrder && (
+              <div className="space-y-4">
+                {/* Order Info */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-bold text-foreground">معلومات الطلب</h3>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <DetailItem label="رقم الطلب" value={viewingOrder.order_number} />
+                    <DetailItem label="نوع الطلب" value={viewingOrder.order_type === 'custom' ? 'تفصيل جديد' : 'طقم جاهز'} />
+                    <DetailItem label="الحالة" value={statusLabels[viewingOrder.status]?.label || viewingOrder.status} />
+                    <DetailItem label="عدد الطالبات" value={viewingOrder.student_count || 0} />
+                    <DetailItem label="اسم المدرسة" value={viewingOrder.school_name} />
+                    <DetailItem label="اسم القائدة" value={viewingOrder.leader_name} />
+                    <DetailItem label="رقم القائدة" value={viewingOrder.leader_phone} />
+                    <DetailItem label="الموظف" value={viewingOrder.employee_name} />
+                    <DetailItem label="تاريخ الإنشاء" value={new Date(viewingOrder.created_at).toLocaleDateString('ar-SA')} />
+                  </div>
+                </div>
+
+                {/* Shipping Info */}
+                {(viewingOrder.recipient_name || viewingOrder.address_details) && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">معلومات الشحن</h3>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <DetailItem label="اسم المستلم" value={viewingOrder.recipient_name} />
+                      <DetailItem label="رقم المستلم" value={viewingOrder.recipient_phone} />
+                      <DetailItem label="العنوان" value={viewingOrder.address_details} />
+                      <DetailItem label="العنوان الوطني" value={viewingOrder.national_address} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {viewingOrder.notes && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">ملاحظات</h3>
+                    <Separator />
+                    <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">{viewingOrder.notes}</p>
+                  </div>
+                )}
+
+                {/* Students */}
+                {viewingStudents.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">الطالبات ({viewingStudents.length})</h3>
+                    <Separator />
+                    <div className="rounded-lg border overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-muted/50">
+                            <th className="text-right p-2 font-medium text-muted-foreground">م</th>
+                            <th className="text-right p-2 font-medium text-muted-foreground">الاسم</th>
+                            <th className="text-right p-2 font-medium text-muted-foreground">المقاس</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {viewingStudents.map(s => (
+                            <tr key={s.id} className="border-t border-border/50">
+                              <td className="p-2 text-muted-foreground">{s.serial_number}</td>
+                              <td className="p-2">{s.name || '—'}</td>
+                              <td className="p-2">{s.size || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Order Dialog */}
       {user && (
@@ -858,6 +979,15 @@ function LinkCard({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: any }) {
+  return (
+    <div>
+      <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value || '—'}</p>
     </div>
   );
 }
