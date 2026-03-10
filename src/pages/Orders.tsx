@@ -982,6 +982,17 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                   copied={copiedField === 'status'}
                   onCopy={() => copyToClipboard(generatedLinks.statusLink, 'status')}
                 />
+                {generatedLinks.whatsappLink && (
+                  <LinkCard
+                    label="واتساب القائدة"
+                    description="تواصل مباشر عبر الواتساب"
+                    url={generatedLinks.whatsappLink}
+                    icon="💬"
+                    accentClass="from-emerald-500/15 to-emerald-500/5 ring-emerald-500/20"
+                    copied={copiedField === 'whatsapp'}
+                    onCopy={() => copyToClipboard(generatedLinks.whatsappLink!, 'whatsapp')}
+                  />
+                )}
               </>
             )}
           </div>
