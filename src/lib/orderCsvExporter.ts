@@ -199,9 +199,9 @@ export async function exportOrdersCsv(orderIds: string[]): Promise<string> {
     }
   }
 
-  const csvLines = [HEADERS.map(escCsv).join(',')];
+  const csvLines = [HEADERS.map(escCsv).join(';')];
   for (const row of rows) {
-    csvLines.push(row.map(escCsv).join(','));
+    csvLines.push(row.map(escCsv).join(';'));
   }
 
   return '\uFEFF' + csvLines.join('\n');
