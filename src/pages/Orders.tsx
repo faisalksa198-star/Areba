@@ -982,3 +982,12 @@ function LinkCard({
     </div>
   );
 }
+
+function DetailItem({ label, value }: { label: string; value: any }) {
+  return (
+    <div>
+      <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm font-medium text-foreground">{value || '—'}</p>
+    </div>
+  );
+}
