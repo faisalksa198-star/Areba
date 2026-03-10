@@ -748,6 +748,91 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
         )}
       </div>
 
+      {/* View Order Details Modal */}
+      <Dialog open={!!viewingOrder} onOpenChange={open => !open && setViewingOrder(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh]" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              تفاصيل الطلب {viewingOrder?.order_number}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[65vh] pr-2">
+            {viewingOrder && (
+              <div className="space-y-4">
+                {/* Order Info */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-bold text-foreground">معلومات الطلب</h3>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <DetailItem label="رقم الطلب" value={viewingOrder.order_number} />
+                    <DetailItem label="نوع الطلب" value={viewingOrder.order_type === 'custom' ? 'تفصيل جديد' : 'طقم جاهز'} />
+                    <DetailItem label="الحالة" value={statusLabels[viewingOrder.status]?.label || viewingOrder.status} />
+                    <DetailItem label="عدد الطالبات" value={viewingOrder.student_count || 0} />
+                    <DetailItem label="اسم المدرسة" value={viewingOrder.school_name} />
+                    <DetailItem label="اسم القائدة" value={viewingOrder.leader_name} />
+                    <DetailItem label="رقم القائدة" value={viewingOrder.leader_phone} />
+                    <DetailItem label="الموظف" value={viewingOrder.employee_name} />
+                    <DetailItem label="تاريخ الإنشاء" value={new Date(viewingOrder.created_at).toLocaleDateString('ar-SA')} />
+                  </div>
+                </div>
+
+                {/* Shipping Info */}
+                {(viewingOrder.recipient_name || viewingOrder.address_details) && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">معلومات الشحن</h3>
+                    <Separator />
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <DetailItem label="اسم المستلم" value={viewingOrder.recipient_name} />
+                      <DetailItem label="رقم المستلم" value={viewingOrder.recipient_phone} />
+                      <DetailItem label="العنوان" value={viewingOrder.address_details} />
+                      <DetailItem label="العنوان الوطني" value={viewingOrder.national_address} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {viewingOrder.notes && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">ملاحظات</h3>
+                    <Separator />
+                    <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">{viewingOrder.notes}</p>
+                  </div>
+                )}
+
+                {/* Students */}
+                {viewingStudents.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-bold text-foreground">الطالبات ({viewingStudents.length})</h3>
+                    <Separator />
+                    <div className="rounded-lg border overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-muted/50">
+                            <th className="text-right p-2 font-medium text-muted-foreground">م</th>
+                            <th className="text-right p-2 font-medium text-muted-foreground">الاسم</th>
+                            <th className="text-right p-2 font-medium text-muted-foreground">المقاس</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {viewingStudents.map(s => (
+                            <tr key={s.id} className="border-t border-border/50">
+                              <td className="p-2 text-muted-foreground">{s.serial_number}</td>
+                              <td className="p-2">{s.name || '—'}</td>
+                              <td className="p-2">{s.size || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Order Dialog */}
       {user && (
         <CreateOrderDialog
