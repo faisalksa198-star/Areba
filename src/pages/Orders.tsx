@@ -1104,15 +1104,15 @@ function LinkCard({
           <p className="text-sm font-bold text-foreground">{label}</p>
         </div>
         <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => { window.top?.open(url, '_blank') || (window.top!.location.href = url); }}
-            className="h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm"
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-input hover:bg-accent transition-colors"
             title="فتح في تبويب جديد"
           >
             <ExternalLink className="h-4 w-4" />
-          </Button>
+          </a>
           <Button
             variant={copied ? 'default' : 'outline'}
             size="icon"
