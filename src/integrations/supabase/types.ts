@@ -412,6 +412,7 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           student_count: number | null
           tracking_link: string | null
+          tracking_number: string | null
           updated_at: string
         }
         Insert: {
@@ -456,6 +457,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
           tracking_link?: string | null
+          tracking_number?: string | null
           updated_at?: string
         }
         Update: {
@@ -500,6 +502,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
           tracking_link?: string | null
+          tracking_number?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -962,6 +965,7 @@ export type Database = {
         | "pending_data"
         | "under_review"
         | "in_progress"
+        | "shipped"
         | "completed"
         | "cancelled"
     }
@@ -1096,6 +1100,7 @@ export const Constants = {
         "pending_data",
         "under_review",
         "in_progress",
+        "shipped",
         "completed",
         "cancelled",
       ],
