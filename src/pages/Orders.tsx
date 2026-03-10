@@ -660,6 +660,21 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                       </div>
                       {/* Action Buttons - icon only with tooltips */}
                       <div className="flex items-center gap-1 shrink-0">
+                        {/* View - far right */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleViewOrder(order)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>استعراض</TooltipContent>
+                        </Tooltip>
+                        {/* Links */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -676,6 +691,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>الروابط</TooltipContent>
                         </Tooltip>
+                        {/* Export */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -689,20 +705,25 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>تصدير</TooltipContent>
                         </Tooltip>
+                        {/* Edit - disabled when in_progress */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className={`h-8 w-8 ${order.status === 'in_progress' ? 'opacity-50 cursor-not-allowed text-blue-400' : ''}`}
+                              disabled={order.status === 'in_progress'}
                               onClick={() => setEditingOrderId(order.id)}
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تعديل</TooltipContent>
+                          <TooltipContent>
+                            {order.status === 'in_progress' ? 'لا يمكن التعديل أثناء التنفيذ' : 'تعديل'}
+                          </TooltipContent>
                         </Tooltip>
-                        {isAdmin && (
+                        {/* Delete - only for pending_data or under_review */}
+                        {(order.status === 'pending_data' || order.status === 'under_review') && isAdmin && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
