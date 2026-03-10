@@ -269,12 +269,14 @@ export default function Kits() {
                       <Package className="h-12 w-12 text-muted-foreground/20" />
                     </div>
                   )}
-                  <Badge
-                    variant={kit.is_active ? 'secondary' : 'outline'}
-                    className="absolute top-2 left-2 text-[10px]"
-                  >
-                    {kit.is_active ? 'مفعّل' : 'معطّل'}
-                  </Badge>
+                  <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
+                    <span className="text-[10px] font-medium text-foreground">{kit.is_active ? 'مفعّل' : 'معطّل'}</span>
+                    <Switch
+                      checked={kit.is_active}
+                      onCheckedChange={() => toggleKitActive(kit)}
+                      className="scale-75"
+                    />
+                  </div>
                 </div>
                 <CardContent className="p-3">
                   <p className="font-bold text-foreground text-sm mb-2">{kit.name}</p>

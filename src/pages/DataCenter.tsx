@@ -287,6 +287,12 @@ export default function DataCenter() {
                             </Badge>
                           </div>
                           <div className="flex gap-1 mt-2">
+                            <Button variant="ghost" size="icon" onClick={() => moveSortOrder(item, 'up')} className="h-7 w-7" disabled={items.indexOf(item) === 0}>
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => moveSortOrder(item, 'down')} className="h-7 w-7" disabled={items.indexOf(item) === items.length - 1}>
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
                             <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="h-7 px-2 text-xs gap-1">
                               <Pencil className="h-3 w-3" />
                               تعديل
