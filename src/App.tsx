@@ -14,6 +14,7 @@ import OrderStatus from "./pages/OrderStatus";
 import StudentRegister from "./pages/StudentRegister";
 import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
+import ShortRedirect from "./pages/ShortRedirect";
 
 const queryClient = new QueryClient();
 
