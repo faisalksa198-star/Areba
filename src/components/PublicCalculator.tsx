@@ -188,11 +188,18 @@ export default function PublicCalculator() {
         if (purple > 0) lines.push({ label: 'بكج Purple', detail: `${fmt(parseInt(purpleCount) || 0)} بكج × ${fmt(purplePrice)} ريال`, result: purple });
 
         return lines.length > 0 ? (
-          <Card className="border-muted">
-            <CardHeader className="pb-2">
+          <Card className="border-muted relative overflow-hidden">
+            <img
+              src="/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 m-auto w-3/4 max-h-[80%] object-contain opacity-[0.07] -rotate-12 pointer-events-none select-none"
+              style={{ zIndex: 0 }}
+            />
+            <CardHeader className="pb-2 relative z-10">
               <CardTitle className="text-base">ملخص الحساب</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-0">
+            <CardContent className="space-y-0 relative z-10">
               {lines.map((line, i) => (
                 <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-b-0">
                   <div className="space-y-0.5">
