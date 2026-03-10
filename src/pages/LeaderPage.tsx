@@ -546,8 +546,8 @@ export default function LeaderPage() {
     );
   }
 
-  // Lock page when status is not pending_data
-  const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+  // Lock page when data is submitted or status is not pending_data
+  const isLocked = orderInfo && (orderInfo.data_submitted || orderInfo.status !== 'pending_data');
 
   const generatePDF = async () => {
     if (!orderId) return;
