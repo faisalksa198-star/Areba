@@ -83,7 +83,8 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   pending_data: { label: 'بانتظار البيانات', className: 'bg-warning/10 text-warning border-warning/20' },
   under_review: { label: 'بانتظار المراجعة', className: 'bg-blue-100 text-blue-700 border-blue-200' },
   in_progress: { label: 'قيد التنفيذ', className: 'bg-info/10 text-info border-info/20' },
-  completed: { label: 'مكتمل', className: 'bg-success/10 text-success border-success/20' },
+  shipped: { label: 'تم الشحن', className: 'bg-purple-100 text-purple-700 border-purple-200' },
+  completed: { label: 'منتهي', className: 'bg-success/10 text-success border-success/20' },
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
