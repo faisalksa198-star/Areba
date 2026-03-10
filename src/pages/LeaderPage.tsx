@@ -518,14 +518,24 @@ export default function LeaderPage() {
     // Mark as submitted and change status to under_review
     const { error } = await supabase
       .from('orders')
-      .update({ data_submitted: true, status: 'under_review' } as any)
+      .update({ data_submitted: true, status: 'under_review' as any })
       .eq('id', orderId);
 
     if (error) {
       toast({ title: 'خطأ في إرسال البيانات', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'تم إرسال البيانات بنجاح ✓' });
-      setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'under_review' } : prev);
+      // Re-fetch order data to ensure UI reflects DB state
+      const { data: refreshed } = await supabase
+        .from('orders')
+        .select('status, data_submitted')
+        .eq('id', orderId)
+        .single();
+      if (refreshed) {
+        setOrderInfo(prev => prev ? { ...prev, data_submitted: refreshed.data_submitted ?? true, status: refreshed.status } : prev);
+      } else {
+        setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'under_review' } : prev);
+      }
     }
     setSubmitting(false);
   };
