@@ -515,17 +515,17 @@ export default function LeaderPage() {
     // Save everything first
     await handleSave();
 
-    // Mark as submitted
+    // Mark as submitted (keep status as pending_data for review)
     const { error } = await supabase
       .from('orders')
-      .update({ data_submitted: true, status: 'in_progress' } as any)
+      .update({ data_submitted: true } as any)
       .eq('id', orderId);
 
     if (error) {
       toast({ title: 'خطأ في إرسال البيانات', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'تم إرسال البيانات بنجاح ✓' });
-      setOrderInfo(prev => prev ? { ...prev, data_submitted: true } : prev);
+      setOrderInfo(prev => prev ? { ...prev, data_submitted: true, status: 'pending_data' } : prev);
     }
     setSubmitting(false);
   };
@@ -546,8 +546,8 @@ export default function LeaderPage() {
     );
   }
 
-  // Lock page when status is not pending_data
-  const isLocked = orderInfo && orderInfo.status !== 'pending_data';
+  // Lock page when data is submitted or status is not pending_data
+  const isLocked = orderInfo && (orderInfo.data_submitted || orderInfo.status !== 'pending_data');
 
   const generatePDF = async () => {
     if (!orderId) return;
@@ -591,22 +591,37 @@ export default function LeaderPage() {
   };
 
   if (isLocked) {
+    const isInProgress = orderInfo?.status === 'in_progress';
+    const isCompleted = orderInfo?.status === 'completed';
+    const showPdf = isInProgress || isCompleted;
+
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center" dir="rtl">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="p-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <Send className="h-7 w-7 text-muted-foreground" />
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <Card className="max-w-md w-full">
+          <CardContent className="p-8 text-center space-y-5">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              {showPdf ? (
+                <Truck className="h-7 w-7 text-primary" />
+              ) : (
+                <Send className="h-7 w-7 text-primary" />
+              )}
             </div>
-            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
-            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
-            <button
-              onClick={generatePDF}
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline cursor-pointer"
-            >
-              <Download className="h-4 w-4" />
-              لتحميل تقرير طلبكم PDF اضغط هنا
-            </button>
+
+            {showPdf ? (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم استلام طلبكم وجاري تنفيذه</h2>
+                <p className="text-sm text-muted-foreground">يمكنكم تحميل تقرير الطلب من الزر أدناه</p>
+                <Button onClick={generatePDF} className="gap-2">
+                  <Download className="h-4 w-4" />
+                  تحميل تقرير طلبكم PDF
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم إرسال البيانات بنجاح</h2>
+                <p className="text-sm text-muted-foreground">سيتم مراجعة الطلب وتجهيز التقرير لكم</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

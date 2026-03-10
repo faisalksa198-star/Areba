@@ -232,23 +232,36 @@ export default function StudentRegister() {
 
   // Lock page when status is not pending_data
   if (orderInfo && orderInfo.status !== 'pending_data') {
+    const isInProgress = orderInfo.status === 'in_progress';
+    const isCompleted = orderInfo.status === 'completed';
+    const showPdf = isInProgress || isCompleted;
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <Card className="max-w-md w-full">
-          <CardContent className="p-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-              <School className="h-7 w-7 text-muted-foreground" />
+          <CardContent className="p-8 text-center space-y-5">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <School className="h-7 w-7 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
-            <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
-            <a
-              href={`${window.location.origin}/order/${orderId}/leader`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              لتحميل تقرير طلبكم PDF اضغط هنا
-            </a>
+            {showPdf ? (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم استلام طلبكم وجاري تنفيذه</h2>
+                <p className="text-sm text-muted-foreground">يمكنكم تحميل تقرير الطلب من الرابط أدناه</p>
+                <a
+                  href={`${window.location.origin}/order/${orderId}/leader`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  تحميل تقرير طلبكم PDF
+                </a>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-bold text-foreground">تم إرسال جميع البيانات</h2>
+                <p className="text-sm text-muted-foreground">لا يمكن إجراء تعديلات إضافية على هذا الطلب</p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -277,8 +290,8 @@ export default function StudentRegister() {
           </p>
         </div>
 
-        {/* Scarf Design Cards - Accordion */}
-        {scarfDesigns.length > 0 && (
+        {/* Scarf Design Cards - Accordion (hidden when full) */}
+        {!isFull && scarfDesigns.length > 0 && (
           <Collapsible>
             <CollapsibleTrigger asChild>
               <button className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
@@ -311,9 +324,12 @@ export default function StudentRegister() {
         )}
 
         {isFull ? (
-          <Card className="border-warning/30 bg-warning/5">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-warning font-medium">تم اكتمال العدد المطلوب من الطالبات</p>
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-6 text-center space-y-3">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <School className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-sm font-medium text-foreground">تم اكتمال العدد المطلوب وجاري مراجعة طلبكم</p>
             </CardContent>
           </Card>
         ) : (
