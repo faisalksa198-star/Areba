@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X,
-  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles,
+  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PricingRulesTab from '@/components/PricingRulesTab';
 
 interface MasterItem {
   id: string;
