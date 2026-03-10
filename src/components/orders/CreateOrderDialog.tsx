@@ -269,6 +269,32 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
+      // Upload logo embroidery file (single)
+      let logoImageUrl: string | null = logoEmbroideryPreview || null;
+      if (logoEmbroideryFile) {
+        const ext = logoEmbroideryFile.name.split('.').pop();
+        const path = `orders/logo-embroidery/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('images').upload(path, logoEmbroideryFile);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('images').getPublicUrl(path);
+          logoImageUrl = urlData.publicUrl;
+        }
+      }
+
+      // Upload back embroidery files (multiple)
+      let backImageUrls: string[] = [...backEmbroideryPreviews.filter(p => p.startsWith('http'))];
+      if (backEmbroideryFiles.length > 0) {
+        for (const file of backEmbroideryFiles) {
+          const ext = file.name.split('.').pop();
+          const path = `orders/back-embroidery/${crypto.randomUUID()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage.from('images').upload(path, file);
+          if (!uploadErr) {
+            const { data: urlData } = supabase.storage.from('images').getPublicUrl(path);
+            backImageUrls.push(urlData.publicUrl);
+          }
+        }
+      }
+
       const orderPayload = {
         leader_name: leaderName.trim() || null,
         leader_phone: leaderPhone.trim() || null,
