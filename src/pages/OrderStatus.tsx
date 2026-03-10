@@ -14,6 +14,7 @@ const STEPS = [
 
 function getStepIndex(status: string): number {
   if (status === 'pending_data') return 0;
+  if (status === 'under_review') return 1;
   if (status === 'in_progress') return 2;
   if (status === 'completed') return 4;
   if (status === 'cancelled') return -1;

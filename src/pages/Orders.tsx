@@ -516,6 +516,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
             <SelectContent>
               <SelectItem value="all">كل الحالات</SelectItem>
               <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
+              <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
               <SelectItem value="completed">مكتمل</SelectItem>
               <SelectItem value="cancelled">ملغي</SelectItem>
