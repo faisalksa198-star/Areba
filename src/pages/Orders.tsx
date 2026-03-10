@@ -426,6 +426,37 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setShowBulkDeleteConfirm(false);
   };
 
+  const handleShipOrder = async () => {
+    if (!shippingOrderId || !trackingNumber.trim()) return;
+    setSavingShipment(true);
+    const { error } = await supabase
+      .from('orders')
+      .update({ tracking_number: trackingNumber.trim(), status: 'shipped' } as any)
+      .eq('id', shippingOrderId);
+    if (error) {
+      toast({ title: 'خطأ في حفظ بيانات الشحن', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم تأكيد الشحن ✓' });
+      loadOrders();
+    }
+    setSavingShipment(false);
+    setShippingOrderId(null);
+    setTrackingNumber('');
+  };
+
+  const handleCompleteOrder = async (orderId: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'completed' } as any)
+      .eq('id', orderId);
+    if (error) {
+      toast({ title: 'خطأ في إنهاء الطلب', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم إنهاء الطلب ✓' });
+      loadOrders();
+    }
+  };
+
   const exportBulkCSV = async () => {
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
