@@ -63,6 +63,7 @@ interface OrderLinks {
   leaderLink: string;
   registerLink: string;
   statusLink: string;
+  whatsappLink?: string;
 }
 
 interface OrderRow {
