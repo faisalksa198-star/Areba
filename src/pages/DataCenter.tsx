@@ -167,6 +167,22 @@ export default function DataCenter() {
     loadItems();
   };
 
+  const moveSortOrder = async (item: MasterItem, direction: 'up' | 'down') => {
+    if (!activeSection) return;
+    const idx = items.findIndex(i => i.id === item.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= items.length) return;
+    const other = items[swapIdx];
+    // Swap sort_order values
+    const itemOrder = (item as any).sort_order ?? idx;
+    const otherOrder = (other as any).sort_order ?? swapIdx;
+    await Promise.all([
+      supabase.from(activeSection as any).update({ sort_order: otherOrder } as any).eq('id', item.id),
+      supabase.from(activeSection as any).update({ sort_order: itemOrder } as any).eq('id', other.id),
+    ]);
+    loadItems();
+  };
+
   // Grid view (no active section selected)
   if (!activeSection) {
     return (
