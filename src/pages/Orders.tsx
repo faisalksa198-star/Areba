@@ -44,7 +44,7 @@ import {
   Search,
   Download,
   Upload,
-  FileJson,
+  
   ClipboardList,
   Clock,
   Users,
@@ -58,7 +58,7 @@ import {
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { transformOrderForExport, transformMultipleOrdersForExport } from '@/lib/orderExportTransformer';
+import { exportOrdersCsv, downloadCsv } from '@/lib/orderCsvExporter';
 
 interface OrderLinks {
   leaderLink: string;
@@ -255,33 +255,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const exportOrderJSON = async (orderId: string) => {
-    const transformed = await transformOrderForExport(orderId);
-    if (!transformed) return;
-    downloadJSON(transformed, `order-${transformed.order_details['رقم الطلب'] || orderId}.json`);
-  };
-
-  const exportBulkJSON = async () => {
-    if (selectedOrderIds.size === 0) {
-      toast({ title: 'اختر طلبات للتصدير', variant: 'destructive' });
-      return;
-    }
-    setBulkExporting(true);
-    const ids = Array.from(selectedOrderIds);
-    const transformed = await transformMultipleOrdersForExport(ids);
-    downloadJSON(transformed, `orders-export-${new Date().toISOString().slice(0, 10)}.json`);
-    setBulkExporting(false);
-    setSelectedOrderIds(new Set());
-  };
-
-  const downloadJSON = (data: any, filename: string) => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+  const exportSingleCsv = async (orderId: string, orderNumber: string) => {
+    const csv = await exportOrdersCsv([orderId]);
+    downloadCsv(csv, `order-${orderNumber || orderId}.csv`);
   };
 
   const generateOrderNumber = () => {
@@ -454,44 +430,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
     const ids = Array.from(selectedOrderIds);
-    const [ordersRes, studentsRes] = await Promise.all([
-      supabase.from('orders').select('*').in('id', ids),
-      supabase.from('students').select('*').in('order_id', ids).order('serial_number'),
-    ]);
-    const ordersData = ordersRes.data || [];
-    const studentsData = studentsRes.data || [];
-
-    // Build CSV
-    const headers = ['رقم الطلب', 'اسم القائدة', 'رقم الجوال', 'الحالة', 'عدد الطالبات', 'م', 'اسم الطالبة', 'المقاس'];
-    const rows: string[][] = [];
-    ordersData.forEach(order => {
-      const orderStudents = studentsData.filter(s => s.order_id === order.id);
-      if (orderStudents.length === 0) {
-        rows.push([order.order_number, order.leader_name || '', order.leader_phone || '', order.status, String(order.student_count || 0), '', '', '']);
-      } else {
-        orderStudents.forEach((s, i) => {
-          rows.push([
-            i === 0 ? order.order_number : '',
-            i === 0 ? (order.leader_name || '') : '',
-            i === 0 ? (order.leader_phone || '') : '',
-            i === 0 ? order.status : '',
-            i === 0 ? String(order.student_count || 0) : '',
-            String(s.serial_number),
-            s.name || '',
-            s.size || '',
-          ]);
-        });
-      }
-    });
-
-    const csvContent = '\uFEFF' + [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const csv = await exportOrdersCsv(ids);
+    downloadCsv(csv, `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
     setBulkExporting(false);
     setSelectedOrderIds(new Set());
   };
@@ -616,10 +556,6 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
               تصدير CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={exportBulkJSON} disabled={bulkExporting} className="gap-1.5 h-8">
-              {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileJson className="h-3.5 w-3.5" />}
-              تصدير JSON
-            </Button>
             <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
               حذف جماعي
@@ -743,19 +679,19 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>الروابط</TooltipContent>
                         </Tooltip>
-                        {/* Export */}
+                        {/* Export CSV */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => exportOrderJSON(order.id)}
+                              onClick={() => exportSingleCsv(order.id, order.order_number)}
                             >
-                              <FileJson className="h-3.5 w-3.5" />
+                              <Download className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تصدير</TooltipContent>
+                          <TooltipContent>تصدير البيانات</TooltipContent>
                         </Tooltip>
                         {/* Edit - disabled when in_progress */}
                         <Tooltip>
