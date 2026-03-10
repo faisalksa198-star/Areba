@@ -377,6 +377,16 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     loadTotalStudents();
   };
 
+  const handleViewOrder = async (order: OrderRow) => {
+    setViewingOrder(order);
+    const { data } = await supabase
+      .from('students')
+      .select('*')
+      .eq('order_id', order.id)
+      .order('serial_number');
+    setViewingStudents(data || []);
+  };
+
   const handleDeleteOrder = async () => {
     if (!deletingOrderId) return;
     await supabase.from('students').delete().eq('order_id', deletingOrderId);
