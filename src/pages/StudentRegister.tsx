@@ -290,8 +290,8 @@ export default function StudentRegister() {
           </p>
         </div>
 
-        {/* Scarf Design Cards - Accordion */}
-        {scarfDesigns.length > 0 && (
+        {/* Scarf Design Cards - Accordion (hidden when full) */}
+        {!isFull && scarfDesigns.length > 0 && (
           <Collapsible>
             <CollapsibleTrigger asChild>
               <button className="w-full flex items-center justify-between p-3 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
