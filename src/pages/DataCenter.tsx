@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Plus, Pencil, Trash2, Loader2, ImagePlus, X, ArrowRight,
+  Plus, Pencil, Trash2, Loader2, ImagePlus, X, ArrowRight, ArrowUp, ArrowDown,
   Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign, Tag,
 } from 'lucide-react';
 import PricingRulesTab from '@/components/PricingRulesTab';
