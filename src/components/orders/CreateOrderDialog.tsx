@@ -215,8 +215,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
     setLogoEmbroideryCount('');
+    setLogoEmbroideryFile(null);
+    setLogoEmbroideryPreview('');
     setBackEmbroideryEnabled(false);
     setBackEmbroideryCount('');
+    setBackEmbroideryFiles([]);
+    setBackEmbroideryPreviews([]);
     setHatEmbroideryEnabled(false);
     setHatEmbroideryCount('');
     setPurplePackageEnabled(false);
