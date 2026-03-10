@@ -81,7 +81,7 @@ export default function Kits() {
 
   const loadKits = async () => {
     setLoading(true);
-    const { data } = await supabase.from('ready_kits').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase.from('ready_kits').select('*').order('name', { ascending: true });
     setKits((data as KitRow[]) || []);
     setLoading(false);
   };
