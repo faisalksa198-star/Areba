@@ -85,8 +85,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   // Extra services
   const [logoEmbroideryEnabled, setLogoEmbroideryEnabled] = useState(false);
   const [logoEmbroideryCount, setLogoEmbroideryCount] = useState('');
+  const [logoEmbroideryFile, setLogoEmbroideryFile] = useState<File | null>(null);
+  const [logoEmbroideryPreview, setLogoEmbroideryPreview] = useState('');
   const [backEmbroideryEnabled, setBackEmbroideryEnabled] = useState(false);
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
+  const [backEmbroideryFiles, setBackEmbroideryFiles] = useState<File[]>([]);
+  const [backEmbroideryPreviews, setBackEmbroideryPreviews] = useState<string[]>([]);
   const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
@@ -162,8 +166,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setSleeveColor(o.sleeve_color || '');
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
       setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
+      setLogoEmbroideryPreview(o.logo_embroidery_image_url || '');
+      setLogoEmbroideryFile(null);
       setBackEmbroideryEnabled(o.back_embroidery_enabled || false);
       setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
+      setBackEmbroideryPreviews(o.back_embroidery_image_urls || []);
+      setBackEmbroideryFiles([]);
       setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
       setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
       setPurplePackageEnabled(o.purple_package_enabled || false);
@@ -207,8 +215,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
     setLogoEmbroideryCount('');
+    setLogoEmbroideryFile(null);
+    setLogoEmbroideryPreview('');
     setBackEmbroideryEnabled(false);
     setBackEmbroideryCount('');
+    setBackEmbroideryFiles([]);
+    setBackEmbroideryPreviews([]);
     setHatEmbroideryEnabled(false);
     setHatEmbroideryCount('');
     setPurplePackageEnabled(false);
@@ -257,6 +269,32 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         }
       }
 
+      // Upload logo embroidery file (single)
+      let logoImageUrl: string | null = logoEmbroideryPreview || null;
+      if (logoEmbroideryFile) {
+        const ext = logoEmbroideryFile.name.split('.').pop();
+        const path = `orders/logo-embroidery/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('images').upload(path, logoEmbroideryFile);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('images').getPublicUrl(path);
+          logoImageUrl = urlData.publicUrl;
+        }
+      }
+
+      // Upload back embroidery files (multiple)
+      let backImageUrls: string[] = [...backEmbroideryPreviews.filter(p => p.startsWith('http'))];
+      if (backEmbroideryFiles.length > 0) {
+        for (const file of backEmbroideryFiles) {
+          const ext = file.name.split('.').pop();
+          const path = `orders/back-embroidery/${crypto.randomUUID()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage.from('images').upload(path, file);
+          if (!uploadErr) {
+            const { data: urlData } = supabase.storage.from('images').getPublicUrl(path);
+            backImageUrls.push(urlData.publicUrl);
+          }
+        }
+      }
+
       const orderPayload = {
         leader_name: leaderName.trim() || null,
         leader_phone: leaderPhone.trim() || null,
@@ -275,8 +313,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         sleeve_color: sleeveColor || null,
         logo_embroidery_enabled: logoEmbroideryEnabled,
         logo_embroidery_count: logoEmbroideryEnabled ? (parseInt(logoEmbroideryCount) || 0) : 0,
+        logo_embroidery_image_url: logoEmbroideryEnabled ? logoImageUrl : null,
         back_embroidery_enabled: backEmbroideryEnabled,
         back_embroidery_count: backEmbroideryEnabled ? (parseInt(backEmbroideryCount) || 0) : 0,
+        back_embroidery_image_urls: backEmbroideryEnabled ? backImageUrls : [],
         hat_embroidery_enabled: hatEmbroideryEnabled,
         hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
         purple_package_enabled: purplePackageEnabled,
@@ -610,42 +650,111 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
               <p className="text-sm font-semibold text-foreground">الخدمات الإضافية</p>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={logoEmbroideryEnabled} onCheckedChange={setLogoEmbroideryEnabled} />
-                    <span className="text-sm text-foreground">تطريز شعار</span>
+                {/* Logo Embroidery */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={logoEmbroideryEnabled} onCheckedChange={setLogoEmbroideryEnabled} />
+                      <span className="text-sm text-foreground">تطريز شعار</span>
+                    </div>
+                    {logoEmbroideryEnabled && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground">العدد:</label>
+                        <Input
+                          value={logoEmbroideryCount}
+                          onChange={e => setLogoEmbroideryCount(e.target.value)}
+                          placeholder="الكل"
+                          type="number"
+                          min="1"
+                          className="w-20 h-8 text-xs"
+                        />
+                      </div>
+                    )}
                   </div>
                   {logoEmbroideryEnabled && (
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground">العدد:</label>
-                      <Input
-                        value={logoEmbroideryCount}
-                        onChange={e => setLogoEmbroideryCount(e.target.value)}
-                        placeholder="الكل"
-                        type="number"
-                        min="1"
-                        className="w-20 h-8 text-xs"
-                      />
+                    <div className="mt-2 mr-8">
+                      <label className="text-xs text-muted-foreground mb-1 block">صورة الشعار (JPG, PNG, PDF)</label>
+                      {logoEmbroideryPreview ? (
+                        <div className="relative w-20 h-20 inline-block">
+                          {logoEmbroideryPreview.endsWith('.pdf') ? (
+                            <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground border border-border">PDF</div>
+                          ) : (
+                            <img src={logoEmbroideryPreview} className="w-full h-full object-cover rounded-lg border border-border" />
+                          )}
+                          <button onClick={() => { setLogoEmbroideryFile(null); setLogoEmbroideryPreview(''); }} className="absolute -top-1.5 -left-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                          <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                          <input type="file" accept=".jpg,.jpeg,.png,.pdf" className="hidden" onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setLogoEmbroideryFile(file);
+                            setLogoEmbroideryPreview(file.type === 'application/pdf' ? file.name + '.pdf' : URL.createObjectURL(file));
+                          }} />
+                        </label>
+                      )}
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
-                    <span className="text-sm text-foreground">تطريز خلفي</span>
+                {/* Back Embroidery */}
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch checked={backEmbroideryEnabled} onCheckedChange={setBackEmbroideryEnabled} />
+                      <span className="text-sm text-foreground">تطريز خلفي</span>
+                    </div>
+                    {backEmbroideryEnabled && (
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-muted-foreground">العدد:</label>
+                        <Input
+                          value={backEmbroideryCount}
+                          onChange={e => setBackEmbroideryCount(e.target.value)}
+                          placeholder="الكل"
+                          type="number"
+                          min="1"
+                          className="w-20 h-8 text-xs"
+                        />
+                      </div>
+                    )}
                   </div>
                   {backEmbroideryEnabled && (
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground">العدد:</label>
-                      <Input
-                        value={backEmbroideryCount}
-                        onChange={e => setBackEmbroideryCount(e.target.value)}
-                        placeholder="الكل"
-                        type="number"
-                        min="1"
-                        className="w-20 h-8 text-xs"
-                      />
+                    <div className="mt-2 mr-8">
+                      <label className="text-xs text-muted-foreground mb-1 block">صور التطريز الخلفي (JPG, PNG, PDF - متعدد)</label>
+                      <div className="flex flex-wrap gap-2">
+                        {backEmbroideryPreviews.map((preview, idx) => (
+                          <div key={idx} className="relative w-20 h-20">
+                            {preview.endsWith('.pdf') || preview.includes('.pdf') ? (
+                              <div className="w-full h-full rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground border border-border">PDF</div>
+                            ) : (
+                              <img src={preview} className="w-full h-full object-cover rounded-lg border border-border" />
+                            )}
+                            <button onClick={() => {
+                              setBackEmbroideryPreviews(prev => prev.filter((_, i) => i !== idx));
+                              // Only remove from files array if it's a new file (blob URL)
+                              if (preview.startsWith('blob:')) {
+                                const fileIdx = backEmbroideryPreviews.slice(0, idx).filter(p => p.startsWith('blob:')).length;
+                                setBackEmbroideryFiles(prev => prev.filter((_, i) => i !== fileIdx));
+                              }
+                            }} className="absolute -top-1.5 -left-1.5 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        ))}
+                        <label className="flex items-center justify-center w-20 h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/50 transition-colors">
+                          <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                          <input type="file" accept=".jpg,.jpeg,.png,.pdf" multiple className="hidden" onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (!files.length) return;
+                            setBackEmbroideryFiles(prev => [...prev, ...files]);
+                            const newPreviews = files.map(f => f.type === 'application/pdf' ? f.name + '.pdf' : URL.createObjectURL(f));
+                            setBackEmbroideryPreviews(prev => [...prev, ...newPreviews]);
+                          }} />
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>
