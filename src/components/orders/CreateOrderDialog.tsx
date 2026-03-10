@@ -85,8 +85,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   // Extra services
   const [logoEmbroideryEnabled, setLogoEmbroideryEnabled] = useState(false);
   const [logoEmbroideryCount, setLogoEmbroideryCount] = useState('');
+  const [logoEmbroideryFile, setLogoEmbroideryFile] = useState<File | null>(null);
+  const [logoEmbroideryPreview, setLogoEmbroideryPreview] = useState('');
   const [backEmbroideryEnabled, setBackEmbroideryEnabled] = useState(false);
   const [backEmbroideryCount, setBackEmbroideryCount] = useState('');
+  const [backEmbroideryFiles, setBackEmbroideryFiles] = useState<File[]>([]);
+  const [backEmbroideryPreviews, setBackEmbroideryPreviews] = useState<string[]>([]);
   const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
