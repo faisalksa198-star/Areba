@@ -1107,7 +1107,7 @@ function LinkCard({
           <Button
             variant="outline"
             size="icon"
-            onClick={() => window.open(url, '_blank')}
+            onClick={() => { window.top?.open(url, '_blank') || (window.top!.location.href = url); }}
             className="h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm"
             title="فتح في تبويب جديد"
           >
