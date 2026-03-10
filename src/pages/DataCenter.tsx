@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Plus, Pencil, Trash2, Loader2, ImagePlus, X, ArrowRight,
+  Plus, Pencil, Trash2, Loader2, ImagePlus, X, ArrowRight, ArrowUp, ArrowDown,
   Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign, Tag,
 } from 'lucide-react';
 import PricingRulesTab from '@/components/PricingRulesTab';
@@ -28,7 +28,7 @@ const CATEGORIES = [
   { key: 'abaya_designs', label: 'تصاميم العبايات', icon: Crown, hasImage: true, hasDescription: true },
   { key: 'sleeve_styles', label: 'أطراف الكم', icon: Scissors, hasImage: true, hasDescription: false },
   { key: 'scarf_styles', label: 'أشكال الأوشحة', icon: Wind, hasImage: true, hasDescription: false },
-  { key: 'scarf_methods', label: 'طرق الوشاح', icon: Wind, hasImage: true, hasDescription: false },
+  { key: 'scarf_methods', label: 'أطراف الوشاح', icon: Wind, hasImage: true, hasDescription: false },
   { key: 'embroidery_directions', label: 'اتجاه التطريز', icon: Compass, hasImage: true, hasDescription: false },
   { key: 'fonts', label: 'الخطوط', icon: Type, hasImage: false, hasDescription: false },
   { key: 'date_types', label: 'أنواع التواريخ', icon: Calendar, hasImage: true, hasDescription: false },
@@ -63,7 +63,7 @@ export default function DataCenter() {
     const { data } = await supabase
       .from(activeSection)
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('sort_order', { ascending: true });
     setItems((data as unknown as MasterItem[]) || []);
     setLoading(false);
   }, [activeSection]);
@@ -164,6 +164,22 @@ export default function DataCenter() {
   const toggleActive = async (item: MasterItem) => {
     if (!activeSection) return;
     await supabase.from(activeSection as any).update({ is_active: !item.is_active }).eq('id', item.id);
+    loadItems();
+  };
+
+  const moveSortOrder = async (item: MasterItem, direction: 'up' | 'down') => {
+    if (!activeSection) return;
+    const idx = items.findIndex(i => i.id === item.id);
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= items.length) return;
+    const other = items[swapIdx];
+    // Swap sort_order values
+    const itemOrder = (item as any).sort_order ?? idx;
+    const otherOrder = (other as any).sort_order ?? swapIdx;
+    await Promise.all([
+      supabase.from(activeSection as any).update({ sort_order: otherOrder } as any).eq('id', item.id),
+      supabase.from(activeSection as any).update({ sort_order: itemOrder } as any).eq('id', other.id),
+    ]);
     loadItems();
   };
 
@@ -271,6 +287,12 @@ export default function DataCenter() {
                             </Badge>
                           </div>
                           <div className="flex gap-1 mt-2">
+                            <Button variant="ghost" size="icon" onClick={() => moveSortOrder(item, 'up')} className="h-7 w-7" disabled={items.indexOf(item) === 0}>
+                              <ArrowUp className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => moveSortOrder(item, 'down')} className="h-7 w-7" disabled={items.indexOf(item) === items.length - 1}>
+                              <ArrowDown className="h-3 w-3" />
+                            </Button>
                             <Button variant="ghost" size="sm" onClick={() => openEdit(item)} className="h-7 px-2 text-xs gap-1">
                               <Pencil className="h-3 w-3" />
                               تعديل
