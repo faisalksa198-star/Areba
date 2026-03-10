@@ -10,9 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X,
-  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles,
+  Palette, Scissors, Wind, Type, MapPin, Compass, Calendar, Crown, Sparkles, DollarSign,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PricingRulesTab from '@/components/PricingRulesTab';
 
 interface MasterItem {
   id: string;
@@ -34,6 +35,7 @@ const CATEGORIES = [
   { key: 'hat_styles', label: 'أشكال القبعات', icon: Palette, hasImage: true, hasDescription: false },
   { key: 'hat_embroideries', label: 'تطريز القبعات', icon: Sparkles, hasImage: true, hasDescription: false },
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
+  { key: 'pricing_rules', label: 'التسعيرة', icon: DollarSign, hasImage: false, hasDescription: false },
 ] as const;
 
 type CategoryKey = typeof CATEGORIES[number]['key'];
@@ -188,6 +190,10 @@ export default function DataCenter() {
 
           {CATEGORIES.map(cat => (
             <TabsContent key={cat.key} value={cat.key} className="mt-4">
+              {cat.key === 'pricing_rules' ? (
+                <PricingRulesTab />
+              ) : (
+              <>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground">{cat.label}</h2>
                 <Button size="sm" onClick={openCreate} className="gap-1">
@@ -257,6 +263,8 @@ export default function DataCenter() {
                     </Card>
                   ))}
                 </div>
+              )}
+              </>
               )}
             </TabsContent>
           ))}

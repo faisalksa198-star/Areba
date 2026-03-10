@@ -492,6 +492,33 @@ export type Database = {
           },
         ]
       }
+      pricing_rules: {
+        Row: {
+          created_at: string
+          id: string
+          max_quantity: number
+          min_quantity: number
+          price_per_kit: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_quantity: number
+          min_quantity: number
+          price_per_kit: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_quantity?: number
+          min_quantity?: number
+          price_per_kit?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

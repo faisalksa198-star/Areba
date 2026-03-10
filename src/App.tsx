@@ -15,6 +15,8 @@ import StudentRegister from "./pages/StudentRegister";
 import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 import ShortRedirect from "./pages/ShortRedirect";
+import CalculatorPage from "./pages/Calculator";
+import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/order/:orderId/leader" element={<LeaderPage />} />
             <Route path="/order/:orderId/register" element={<StudentRegister />} />
             <Route path="/order/:orderId/status" element={<OrderStatus />} />
+            <Route path="/calculator" element={<CalculatorPage />} />
+            <Route path="/public-calculator" element={<PublicCalculatorPage />} />
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
