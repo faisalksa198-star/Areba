@@ -52,6 +52,8 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Truck,
+  CheckCircle2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -81,7 +83,8 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   pending_data: { label: 'بانتظار البيانات', className: 'bg-warning/10 text-warning border-warning/20' },
   under_review: { label: 'بانتظار المراجعة', className: 'bg-blue-100 text-blue-700 border-blue-200' },
   in_progress: { label: 'قيد التنفيذ', className: 'bg-info/10 text-info border-info/20' },
-  completed: { label: 'مكتمل', className: 'bg-success/10 text-success border-success/20' },
+  shipped: { label: 'تم الشحن', className: 'bg-purple-100 text-purple-700 border-purple-200' },
+  completed: { label: 'منتهي', className: 'bg-success/10 text-success border-success/20' },
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
@@ -114,6 +117,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const [viewingOrder, setViewingOrder] = useState<any | null>(null);
   const [viewingStudents, setViewingStudents] = useState<any[]>([]);
+  const [shippingOrderId, setShippingOrderId] = useState<string | null>(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [savingShipment, setSavingShipment] = useState(false);
 
   // Kits for filter
   const [kits, setKits] = useState<{ id: string; name: string }[]>([]);
@@ -420,6 +426,37 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setShowBulkDeleteConfirm(false);
   };
 
+  const handleShipOrder = async () => {
+    if (!shippingOrderId || !trackingNumber.trim()) return;
+    setSavingShipment(true);
+    const { error } = await supabase
+      .from('orders')
+      .update({ tracking_number: trackingNumber.trim(), status: 'shipped' } as any)
+      .eq('id', shippingOrderId);
+    if (error) {
+      toast({ title: 'خطأ في حفظ بيانات الشحن', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم تأكيد الشحن ✓' });
+      loadOrders();
+    }
+    setSavingShipment(false);
+    setShippingOrderId(null);
+    setTrackingNumber('');
+  };
+
+  const handleCompleteOrder = async (orderId: string) => {
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'completed' } as any)
+      .eq('id', orderId);
+    if (error) {
+      toast({ title: 'خطأ في إنهاء الطلب', variant: 'destructive' });
+    } else {
+      toast({ title: 'تم إنهاء الطلب ✓' });
+      loadOrders();
+    }
+  };
+
   const exportBulkCSV = async () => {
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
@@ -533,7 +570,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
               <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-              <SelectItem value="completed">مكتمل</SelectItem>
+              <SelectItem value="shipped">تم الشحن</SelectItem>
+              <SelectItem value="completed">منتهي</SelectItem>
               <SelectItem value="cancelled">ملغي</SelectItem>
             </SelectContent>
           </Select>
@@ -575,7 +613,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                 <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
                 <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
                 <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                <SelectItem value="completed">مكتمل</SelectItem>
+                <SelectItem value="shipped">تم الشحن</SelectItem>
+                <SelectItem value="completed">منتهي</SelectItem>
                 <SelectItem value="cancelled">ملغي</SelectItem>
               </SelectContent>
             </Select>
@@ -652,7 +691,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
                               <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
                               <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                              <SelectItem value="completed">مكتمل</SelectItem>
+                              <SelectItem value="shipped">تم الشحن</SelectItem>
+                              <SelectItem value="completed">منتهي</SelectItem>
                               <SelectItem value="cancelled">ملغي</SelectItem>
                             </SelectContent>
                           </Select>
@@ -722,6 +762,41 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                             {order.status === 'in_progress' ? 'لا يمكن التعديل أثناء التنفيذ' : 'تعديل'}
                           </TooltipContent>
                         </Tooltip>
+                        {/* Ship - only for in_progress or completed */}
+                        {(order.status === 'in_progress' || order.status === 'completed') && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                                onClick={() => {
+                                  setShippingOrderId(order.id);
+                                  setTrackingNumber((order as any).tracking_number || '');
+                                }}
+                              >
+                                <Truck className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>تأكيد الشحن</TooltipContent>
+                          </Tooltip>
+                        )}
+                        {/* Complete - only for shipped */}
+                        {order.status === 'shipped' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleCompleteOrder(order.id)}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>إنهاء الطلب</TooltipContent>
+                          </Tooltip>
+                        )}
                         {/* Delete - only for pending_data or under_review */}
                         {(order.status === 'pending_data' || order.status === 'under_review') && isAdmin && (
                           <Tooltip>
@@ -778,7 +853,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                 </div>
 
                 {/* Shipping Info */}
-                {(viewingOrder.recipient_name || viewingOrder.address_details) && (
+                {(viewingOrder.recipient_name || viewingOrder.address_details || viewingOrder.tracking_number) && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-bold text-foreground">معلومات الشحن</h3>
                     <Separator />
@@ -787,6 +862,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                       <DetailItem label="رقم المستلم" value={viewingOrder.recipient_phone} />
                       <DetailItem label="العنوان" value={viewingOrder.address_details} />
                       <DetailItem label="العنوان الوطني" value={viewingOrder.national_address} />
+                      {viewingOrder.tracking_number && (
+                        <DetailItem label="رقم الشحنة" value={viewingOrder.tracking_number} />
+                      )}
                     </div>
                   </div>
                 )}
@@ -900,6 +978,37 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
           editOrderId={editingOrderId}
         />
       )}
+
+      {/* Ship Order Modal */}
+      <Dialog open={!!shippingOrderId} onOpenChange={open => { if (!open) { setShippingOrderId(null); setTrackingNumber(''); } }}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-purple-600" />
+              تأكيد الشحن
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">رقم الشحنة</label>
+              <Input
+                value={trackingNumber}
+                onChange={e => setTrackingNumber(e.target.value)}
+                placeholder="أدخل رقم الشحنة..."
+                dir="ltr"
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!trackingNumber.trim() || savingShipment}
+              onClick={handleShipOrder}
+            >
+              {savingShipment ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Truck className="h-4 w-4 ml-2" />}
+              حفظ وتأكيد الشحن
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deletingOrderId} onOpenChange={open => !open && setDeletingOrderId(null)}>
