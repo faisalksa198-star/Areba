@@ -679,19 +679,19 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>الروابط</TooltipContent>
                         </Tooltip>
-                        {/* Export */}
+                        {/* Export CSV */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => exportOrderJSON(order.id)}
+                              onClick={() => exportSingleCsv(order.id, order.order_number)}
                             >
-                              <FileJson className="h-3.5 w-3.5" />
+                              <Download className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تصدير</TooltipContent>
+                          <TooltipContent>تصدير البيانات</TooltipContent>
                         </Tooltip>
                         {/* Edit - disabled when in_progress */}
                         <Tooltip>
