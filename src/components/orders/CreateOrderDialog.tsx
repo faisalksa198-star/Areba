@@ -419,7 +419,30 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
             {orderType === 'ready_kit' && (
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">اختر الطقم</label>
-                <Select value={selectedKit} onValueChange={setSelectedKit}>
+                <Select value={selectedKit} onValueChange={(kitId) => {
+                  setSelectedKit(kitId);
+                  const kit = kits.find(k => k.id === kitId) as any;
+                  if (kit) {
+                    if (kit.abaya_design_id) setAbayaDesignId(kit.abaya_design_id);
+                    if (kit.sleeve_style_id) setSleeveStyleId(kit.sleeve_style_id);
+                    if (kit.sleeve_color) setSleeveColor(kit.sleeve_color);
+                    if (kit.abaya_color) setCustomAbayaColor(kit.abaya_color);
+                    if (kit.abaya_color_degree) setCustomAbayaColorDegree(kit.abaya_color_degree);
+                    if (kit.scarf_color) setCustomScarfColor(kit.scarf_color);
+                    if (kit.scarf_color_degree) setCustomScarfColorDegree(kit.scarf_color_degree);
+                    if (kit.hat_color) setCustomHatColor(kit.hat_color);
+                    if (kit.hat_color_degree) setCustomHatColorDegree(kit.hat_color_degree);
+                    if (kit.font_id) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, font_id: kit.font_id })));
+                    }
+                    if (kit.scarf_style_id) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, scarf_style_id: kit.scarf_style_id })));
+                    }
+                    if (kit.scarf_method_id) {
+                      setScarfDesigns(prev => prev.map(s => ({ ...s, scarf_method_id: kit.scarf_method_id })));
+                    }
+                  }
+                }}>
                   <SelectTrigger><SelectValue placeholder="اختر الطقم" /></SelectTrigger>
                   <SelectContent>
                     {kits.map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
