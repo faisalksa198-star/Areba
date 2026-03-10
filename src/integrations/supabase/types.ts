@@ -528,7 +528,10 @@ export type Database = {
           abaya_color_degree: string | null
           abaya_design_id: string | null
           created_at: string
+          date_type_id: string | null
           default_scarf_design: string | null
+          embroidery_color: string | null
+          embroidery_direction_id: string | null
           font_id: string | null
           hat_color: string | null
           hat_color_degree: string | null
@@ -551,7 +554,10 @@ export type Database = {
           abaya_color_degree?: string | null
           abaya_design_id?: string | null
           created_at?: string
+          date_type_id?: string | null
           default_scarf_design?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
           font_id?: string | null
           hat_color?: string | null
           hat_color_degree?: string | null
@@ -574,7 +580,10 @@ export type Database = {
           abaya_color_degree?: string | null
           abaya_design_id?: string | null
           created_at?: string
+          date_type_id?: string | null
           default_scarf_design?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
           font_id?: string | null
           hat_color?: string | null
           hat_color_degree?: string | null
@@ -598,6 +607,20 @@ export type Database = {
             columns: ["abaya_design_id"]
             isOneToOne: false
             referencedRelation: "abaya_designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ready_kits_date_type_id_fkey"
+            columns: ["date_type_id"]
+            isOneToOne: false
+            referencedRelation: "date_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ready_kits_embroidery_direction_id_fkey"
+            columns: ["embroidery_direction_id"]
+            isOneToOne: false
+            referencedRelation: "embroidery_directions"
             referencedColumns: ["id"]
           },
           {
