@@ -657,7 +657,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
           <div className="space-y-3">
             {filteredOrders.map(order => {
               const status = statusLabels[order.status] || statusLabels.pending_data;
-              const links = generateLinks(order.id);
+              const links = generateLinks(order.id, order.leader_phone);
               return (
                 <Card key={order.id} className="border-border/50 hover:shadow-sm transition-shadow">
                   <CardContent className="p-3 sm:p-4">
