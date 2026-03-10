@@ -63,7 +63,7 @@ export default function DataCenter() {
     const { data } = await supabase
       .from(activeSection)
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('sort_order', { ascending: true });
     setItems((data as unknown as MasterItem[]) || []);
     setLoading(false);
   }, [activeSection]);
