@@ -15,6 +15,8 @@ import StudentRegister from "./pages/StudentRegister";
 import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 import ShortRedirect from "./pages/ShortRedirect";
+import CalculatorPage from "./pages/Calculator";
+import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 
 const queryClient = new QueryClient();
 
