@@ -256,13 +256,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   };
 
   const exportOrderJSON = async (orderId: string) => {
-    const [orderRes, studentsRes] = await Promise.all([
-      supabase.from('orders').select('*').eq('id', orderId).single(),
-      supabase.from('students').select('*').eq('order_id', orderId).order('serial_number'),
-    ]);
-    if (!orderRes.data) return;
-    const payload = { order: orderRes.data, students: studentsRes.data || [] };
-    downloadJSON(payload, `order-${orderRes.data.order_number}.json`);
+    const transformed = await transformOrderForExport(orderId);
+    if (!transformed) return;
+    downloadJSON(transformed, `order-${transformed.order_details['رقم الطلب'] || orderId}.json`);
   };
 
   const exportBulkJSON = async () => {
@@ -272,17 +268,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     }
     setBulkExporting(true);
     const ids = Array.from(selectedOrderIds);
-    const [ordersRes, studentsRes] = await Promise.all([
-      supabase.from('orders').select('*').in('id', ids),
-      supabase.from('students').select('*').in('order_id', ids).order('serial_number'),
-    ]);
-    const ordersData = ordersRes.data || [];
-    const studentsData = studentsRes.data || [];
-    const payload = ordersData.map(order => ({
-      order,
-      students: studentsData.filter(s => s.order_id === order.id),
-    }));
-    downloadJSON(payload, `orders-export-${new Date().toISOString().slice(0, 10)}.json`);
+    const transformed = await transformMultipleOrdersForExport(ids);
+    downloadJSON(transformed, `orders-export-${new Date().toISOString().slice(0, 10)}.json`);
     setBulkExporting(false);
     setSelectedOrderIds(new Set());
   };
