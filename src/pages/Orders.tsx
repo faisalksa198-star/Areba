@@ -979,6 +979,37 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
         />
       )}
 
+      {/* Ship Order Modal */}
+      <Dialog open={!!shippingOrderId} onOpenChange={open => { if (!open) { setShippingOrderId(null); setTrackingNumber(''); } }}>
+        <DialogContent className="max-w-sm" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-purple-600" />
+              تأكيد الشحن
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">رقم الشحنة</label>
+              <Input
+                value={trackingNumber}
+                onChange={e => setTrackingNumber(e.target.value)}
+                placeholder="أدخل رقم الشحنة..."
+                dir="ltr"
+              />
+            </div>
+            <Button
+              className="w-full"
+              disabled={!trackingNumber.trim() || savingShipment}
+              onClick={handleShipOrder}
+            >
+              {savingShipment ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Truck className="h-4 w-4 ml-2" />}
+              حفظ وتأكيد الشحن
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirm */}
       <AlertDialog open={!!deletingOrderId} onOpenChange={open => !open && setDeletingOrderId(null)}>
         <AlertDialogContent dir="rtl">
