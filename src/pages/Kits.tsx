@@ -221,6 +221,15 @@ export default function Kits() {
     }
   };
 
+  const toggleKitActive = async (kit: KitRow) => {
+    const { error } = await supabase.from('ready_kits').update({ is_active: !kit.is_active }).eq('id', kit.id);
+    if (error) {
+      toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
+    } else {
+      loadKits();
+    }
+  };
+
   const findName = (list: SelectOption[], id: string | null) => list.find(i => i.id === id)?.name || '—';
 
   return (
