@@ -166,8 +166,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setSleeveColor(o.sleeve_color || '');
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
       setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
+      setLogoEmbroideryPreview(o.logo_embroidery_image_url || '');
+      setLogoEmbroideryFile(null);
       setBackEmbroideryEnabled(o.back_embroidery_enabled || false);
       setBackEmbroideryCount(o.back_embroidery_count ? String(o.back_embroidery_count) : '');
+      setBackEmbroideryPreviews(o.back_embroidery_image_urls || []);
+      setBackEmbroideryFiles([]);
       setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
       setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
       setPurplePackageEnabled(o.purple_package_enabled || false);
