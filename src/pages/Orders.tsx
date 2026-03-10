@@ -212,8 +212,27 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     };
   };
 
+  const createShortLink = async (originalUrl: string): Promise<string> => {
+    // Check if short link already exists
+    const { data: existing } = await supabase
+      .from('short_links')
+      .select('code')
+      .eq('original_url', originalUrl)
+      .maybeSingle();
+    if (existing) return `${window.location.origin}/r/${existing.code}`;
+
+    const code = Math.random().toString(36).substring(2, 8);
+    await supabase.from('short_links').insert({ code, original_url: originalUrl });
+    return `${window.location.origin}/r/${code}`;
+  };
+
   const copyToClipboard = async (text: string, field: string) => {
-    await navigator.clipboard.writeText(text);
+    try {
+      const shortUrl = await createShortLink(text);
+      await navigator.clipboard.writeText(shortUrl);
+    } catch {
+      await navigator.clipboard.writeText(text);
+    }
     setCopiedField(field);
     setTimeout(() => setCopiedField(null), 2000);
   };
