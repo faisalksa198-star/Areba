@@ -264,6 +264,8 @@ export default function DataCenter() {
                   ))}
                 </div>
               )}
+              </>
+              )}
             </TabsContent>
           ))}
         </Tabs>

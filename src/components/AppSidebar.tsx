@@ -22,6 +22,7 @@ const menuItems = [
   { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
   { title: 'الطلبات', url: '/orders', icon: ShoppingCart },
   { title: 'طلباتي', url: '/my-orders', icon: ClipboardList },
+  { title: 'حاسبة الأسعار', url: '/calculator', icon: Calculator },
 ];
 
 export function AppSidebar() {

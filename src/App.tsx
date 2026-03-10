@@ -39,6 +39,8 @@ const App = () => (
             <Route path="/order/:orderId/leader" element={<LeaderPage />} />
             <Route path="/order/:orderId/register" element={<StudentRegister />} />
             <Route path="/order/:orderId/status" element={<OrderStatus />} />
+            <Route path="/calculator" element={<CalculatorPage />} />
+            <Route path="/public-calculator" element={<PublicCalculatorPage />} />
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
