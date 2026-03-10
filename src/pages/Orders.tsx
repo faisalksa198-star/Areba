@@ -52,6 +52,8 @@ import {
   Pencil,
   Trash2,
   Eye,
+  Truck,
+  CheckCircle2,
 } from 'lucide-react';
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
