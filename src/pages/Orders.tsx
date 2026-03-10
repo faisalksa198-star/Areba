@@ -58,6 +58,7 @@ import {
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { transformOrderForExport, transformMultipleOrdersForExport } from '@/lib/orderExportTransformer';
 
 interface OrderLinks {
   leaderLink: string;
