@@ -145,6 +145,7 @@ export async function exportOrdersCsv(orderIds: string[]): Promise<string> {
     const updatedAt = order.updated_at ? new Date(order.updated_at).toLocaleDateString('ar-SA') : '';
     const trackingNumber = order.tracking_number || '';
     const abayaDesign = lk(maps.abayaDesigns, order.abaya_design_id);
+    const abayaLength = (order as any).abaya_length || 'ثابت';
     const sleeveStyle = lk(maps.sleeveStyles, order.sleeve_style_id);
     const sleeveColor = order.sleeve_color || '';
 
