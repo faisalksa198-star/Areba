@@ -258,6 +258,14 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       toast({ title: 'يرجى إدخال عدد الطالبات', variant: 'destructive' });
       return;
     }
+    // Phone validation: optional but if entered must be 10 digits
+    const phone = leaderPhone.trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      setPhoneError('رقم الجوال يجب أن يتكون من 10 أرقام');
+      toast({ title: 'رقم الجوال يجب أن يتكون من 10 أرقام', variant: 'destructive' });
+      return;
+    }
+    setPhoneError('');
 
     setSaving(true);
     try {
