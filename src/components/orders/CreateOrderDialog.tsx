@@ -567,13 +567,23 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
             {/* Abaya Design Section */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
               <p className="text-sm font-semibold text-foreground">تصميم العباية</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">شكل العباية</label>
                   <Select value={abayaDesignId} onValueChange={setAbayaDesignId}>
                     <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                     <SelectContent>
                       {abayaDesigns.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">طول العباية</label>
+                  <Select value={abayaLength} onValueChange={setAbayaLength}>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ثابت">ثابت</SelectItem>
+                      <SelectItem value="ميدي">ميدي</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
