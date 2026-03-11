@@ -255,9 +255,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const exportSingleCsv = async (orderId: string, orderNumber: string) => {
-    const csv = await exportOrdersCsv([orderId]);
-    downloadCsv(csv, `order-${orderNumber || orderId}.csv`);
+  const exportSingleXlsx = async (orderId: string) => {
+    await exportOrdersXlsx([orderId]);
   };
 
   const generateOrderNumber = () => {
