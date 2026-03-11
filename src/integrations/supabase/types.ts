@@ -372,6 +372,7 @@ export type Database = {
       orders: {
         Row: {
           abaya_design_id: string | null
+          abaya_length: string | null
           address_details: string | null
           back_embroidery_count: number | null
           back_embroidery_enabled: boolean | null
@@ -419,6 +420,7 @@ export type Database = {
         }
         Insert: {
           abaya_design_id?: string | null
+          abaya_length?: string | null
           address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
@@ -466,6 +468,7 @@ export type Database = {
         }
         Update: {
           abaya_design_id?: string | null
+          abaya_length?: string | null
           address_details?: string | null
           back_embroidery_count?: number | null
           back_embroidery_enabled?: boolean | null
