@@ -164,6 +164,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setCustomHatColorDegree(o.custom_hat_color_degree || '');
       setColorImagePreview(o.color_image_url || '');
       setAbayaDesignId(o.abaya_design_id || '');
+      setAbayaLength(o.abaya_length || 'ثابت');
       setSleeveStyleId(o.sleeve_style_id || '');
       setSleeveColor(o.sleeve_color || '');
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
