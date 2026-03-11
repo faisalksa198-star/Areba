@@ -425,12 +425,11 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     }
   };
 
-  const exportBulkCSV = async () => {
+  const exportBulkXlsx = async () => {
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
     const ids = Array.from(selectedOrderIds);
-    const csv = await exportOrdersCsv(ids);
-    downloadCsv(csv, `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    await exportOrdersXlsx(ids);
     setBulkExporting(false);
     setSelectedOrderIds(new Set());
   };
