@@ -76,6 +76,7 @@ const HEADERS = [
   'تاريخ التحديث',
   'رقم الشحنة',
   'تصميم العباية',
+  'طول العباية',
   'نوع الكم',
   'لون الكم',
   'تصميم وشاح 1',
@@ -144,6 +145,7 @@ export async function exportOrdersCsv(orderIds: string[]): Promise<string> {
     const updatedAt = order.updated_at ? new Date(order.updated_at).toLocaleDateString('ar-SA') : '';
     const trackingNumber = order.tracking_number || '';
     const abayaDesign = lk(maps.abayaDesigns, order.abaya_design_id);
+    const abayaLength = (order as any).abaya_length || 'ثابت';
     const sleeveStyle = lk(maps.sleeveStyles, order.sleeve_style_id);
     const sleeveColor = order.sleeve_color || '';
 
@@ -169,7 +171,7 @@ export async function exportOrdersCsv(orderIds: string[]): Promise<string> {
 
     const orderCommon = [
       orderNumber, status, createdAt, updatedAt, trackingNumber,
-      abayaDesign, sleeveStyle, sleeveColor,
+      abayaDesign, abayaLength, sleeveStyle, sleeveColor,
       scarf1Style, scarf1Method, scarf1EmbDir, scarf1Font, scarf1DateType, scarf1EmbColor,
       scarf2Style, scarf2Method, scarf2EmbDir, scarf2Font, scarf2DateType, scarf2EmbColor,
       logoUrl, backUrls,

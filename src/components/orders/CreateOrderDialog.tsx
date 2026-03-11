@@ -76,8 +76,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
   // Abaya design section
   const [abayaDesignId, setAbayaDesignId] = useState('');
+  const [abayaLength, setAbayaLength] = useState('ثابت');
   const [sleeveStyleId, setSleeveStyleId] = useState('');
   const [sleeveColor, setSleeveColor] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   // Scarf designs (multiple)
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesignEntry[]>([createEmptyScarfDesign()]);
@@ -162,6 +164,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setCustomHatColorDegree(o.custom_hat_color_degree || '');
       setColorImagePreview(o.color_image_url || '');
       setAbayaDesignId(o.abaya_design_id || '');
+      setAbayaLength(o.abaya_length || 'ثابت');
       setSleeveStyleId(o.sleeve_style_id || '');
       setSleeveColor(o.sleeve_color || '');
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
@@ -210,8 +213,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setColorImage(null);
     setColorImagePreview('');
     setAbayaDesignId('');
+    setAbayaLength('ثابت');
     setSleeveStyleId('');
     setSleeveColor('');
+    setPhoneError('');
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
     setLogoEmbroideryCount('');
@@ -254,6 +259,14 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       toast({ title: 'يرجى إدخال عدد الطالبات', variant: 'destructive' });
       return;
     }
+    // Phone validation: optional but if entered must be 10 digits
+    const phone = leaderPhone.trim();
+    if (phone && !/^\d{10}$/.test(phone)) {
+      setPhoneError('رقم الجوال يجب أن يتكون من 10 أرقام');
+      toast({ title: 'رقم الجوال يجب أن يتكون من 10 أرقام', variant: 'destructive' });
+      return;
+    }
+    setPhoneError('');
 
     setSaving(true);
     try {
@@ -309,6 +322,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
         color_image_url: colorImageUrl,
         abaya_design_id: abayaDesignId || null,
+        abaya_length: abayaLength || 'ثابت',
         sleeve_style_id: sleeveStyleId || null,
         sleeve_color: sleeveColor || null,
         logo_embroidery_enabled: logoEmbroideryEnabled,
@@ -420,7 +434,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">رقم الجوال</label>
-                <Input value={leaderPhone} onChange={e => setLeaderPhone(e.target.value)} placeholder="05xxxxxxxx" type="tel" />
+                <Input value={leaderPhone} onChange={e => { setLeaderPhone(e.target.value); setPhoneError(''); }} placeholder="05xxxxxxxx" type="tel" />
+                {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
             <div>
@@ -552,13 +567,23 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
             {/* Abaya Design Section */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
               <p className="text-sm font-semibold text-foreground">تصميم العباية</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">شكل العباية</label>
                   <Select value={abayaDesignId} onValueChange={setAbayaDesignId}>
                     <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
                     <SelectContent>
                       {abayaDesigns.map(d => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">طول العباية</label>
+                  <Select value={abayaLength} onValueChange={setAbayaLength}>
+                    <SelectTrigger><SelectValue placeholder="اختر" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ثابت">ثابت</SelectItem>
+                      <SelectItem value="ميدي">ميدي</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -580,12 +605,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
             {/* Scarf Designs Section */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
-                <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs">
-                  <Plus className="h-3 w-3" /> إضافة وشاح
-                </Button>
-              </div>
+              <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
               {scarfDesigns.map((scarf, idx) => (
                 <div key={scarf.localId} className="p-3 rounded-lg bg-background border border-border space-y-2">
                   <div className="flex items-center justify-between">
@@ -644,6 +664,9 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 </div>
               ))}
+              <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs w-full">
+                <Plus className="h-3 w-3" /> إضافة وشاح
+              </Button>
             </div>
 
             {/* Extra Services */}

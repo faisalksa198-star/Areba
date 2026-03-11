@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN abaya_length text DEFAULT 'ثابت';
