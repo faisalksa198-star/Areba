@@ -439,13 +439,15 @@ export default function LeaderPage() {
     return errors;
   };
 
-  const handleSave = async () => {
-    if (!orderId) return;
-    setSaving(true);
-    setValidationErrors([]);
+  const saveStudentsAndShipping = async (): Promise<boolean> => {
+    if (!orderId) return false;
 
     // Delete existing students and insert new ones
-    await supabase.from('students').delete().eq('order_id', orderId);
+    const { error: deleteError } = await supabase.from('students').delete().eq('order_id', orderId);
+    if (deleteError) {
+      toast({ title: 'خطأ في حذف البيانات القديمة', description: deleteError.message, variant: 'destructive' });
+      return false;
+    }
 
     const rows = students.filter(s => s.name.trim()).map(s => {
       const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
@@ -470,8 +472,7 @@ export default function LeaderPage() {
       const { error: studentsError } = await supabase.from('students').insert(rows as any);
       if (studentsError) {
         toast({ title: 'خطأ في حفظ بيانات الطالبات', description: studentsError.message, variant: 'destructive' });
-        setSaving(false);
-        return;
+        return false;
       }
     }
 
@@ -490,7 +491,18 @@ export default function LeaderPage() {
 
     if (shippingError) {
       toast({ title: 'خطأ في حفظ بيانات الشحن', description: shippingError.message, variant: 'destructive' });
-    } else {
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!orderId) return;
+    setSaving(true);
+    setValidationErrors([]);
+    const ok = await saveStudentsAndShipping();
+    if (ok) {
       toast({ title: 'تم الحفظ بنجاح ✓' });
     }
     setSaving(false);
@@ -509,8 +521,12 @@ export default function LeaderPage() {
     setSubmitting(true);
     setValidationErrors([]);
 
-    // Save everything first
-    await handleSave();
+    // Save students + shipping first
+    const saveOk = await saveStudentsAndShipping();
+    if (!saveOk) {
+      setSubmitting(false);
+      return;
+    }
 
     // Mark as submitted and change status to under_review
     const { error } = await supabase
@@ -522,8 +538,9 @@ export default function LeaderPage() {
       toast({ title: 'خطأ في إرسال البيانات', description: error.message, variant: 'destructive' });
       setSubmitting(false);
     } else {
+      toast({ title: 'تم إرسال البيانات بنجاح ✓' });
       // Force full page reload to read new status from DB
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 500);
     }
   };
 
