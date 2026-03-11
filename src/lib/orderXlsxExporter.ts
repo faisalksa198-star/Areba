@@ -53,15 +53,6 @@ function lk(map: Map<string, string>, id: string | null | undefined): string {
   return map.get(id) || '';
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  pending_data: 'بانتظار البيانات',
-  under_review: 'بانتظار المراجعة',
-  in_progress: 'قيد التنفيذ',
-  shipped: 'تم الشحن',
-  completed: 'منتهي',
-  cancelled: 'ملغي',
-};
-
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 function storageUrl(path: string | null | undefined): string {
@@ -70,7 +61,6 @@ function storageUrl(path: string | null | undefined): string {
   return `${SUPABASE_URL}/storage/v1/object/public/images/${path}`;
 }
 
-/** Extract number after dash: "2026-5006" → "5006" */
 function shortOrderNumber(on: string): string {
   const idx = on.indexOf('-');
   return idx >= 0 ? on.substring(idx + 1) : on;
@@ -108,7 +98,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   wb.views = [{ rightToLeft: true } as any];
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 1: ملخص الطلب
+  // Sheet 1: ملخص الطلب (moved logo/back embroidery columns here)
   // ═══════════════════════════════════════════════════════════
   const s1 = wb.addWorksheet('ملخص الطلب', { views: [{ rightToLeft: true }] });
   s1.columns = [
@@ -127,11 +117,23 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     { header: 'درجته', key: 'scarfDeg', width: 10 },
     { header: 'لون القبعة', key: 'hatColor', width: 14 },
     { header: 'درجتها', key: 'hatDeg', width: 10 },
+    { header: 'عدد الشعارات', key: 'logoCount', width: 12 },
+    { header: 'رابط صورة الشعار', key: 'logoUrl', width: 35 },
+    { header: 'عدد التطريز الخلفي', key: 'backCount', width: 14 },
+    { header: 'رابط صورة 1', key: 'back1', width: 35 },
+    { header: 'رابط صورة 2', key: 'back2', width: 35 },
+    { header: 'رابط صورة 3', key: 'back3', width: 35 },
+    { header: 'رابط صورة 4', key: 'back4', width: 35 },
+    { header: 'رابط صورة 5', key: 'back5', width: 35 },
   ];
   styleHeaderRow(s1);
 
   for (const o of allOrders) {
     const isKit = o.order_type === 'ready_kit';
+    const logoUrl = storageUrl(o.logo_embroidery_image_url);
+    const backUrls = (o.back_embroidery_image_urls || []).map((u: string) => storageUrl(u));
+
+    const rowNum = s1.rowCount + 1;
     s1.addRow({
       num: shortOrderNumber(o.order_number),
       date: o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '',
@@ -142,17 +144,29 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
       sleeveColor: o.sleeve_color || '',
       type: isKit ? 'طقم جاهز' : 'تفصيل',
       kitName: isKit ? lk(maps.kits, o.kit_id) : '',
+      // Colors always shown regardless of order type
       abayaColor: o.custom_abaya_color || '',
       abayaDeg: o.custom_abaya_color_degree || '',
       scarfColor: o.custom_scarf_color || '',
       scarfDeg: o.custom_scarf_color_degree || '',
       hatColor: o.custom_hat_color || '',
       hatDeg: o.custom_hat_color_degree || '',
+      logoCount: o.logo_embroidery_count || 0,
+      logoUrl: '',
+      backCount: o.back_embroidery_count || 0,
+      back1: '', back2: '', back3: '', back4: '', back5: '',
+    });
+
+    // Set hyperlinks for logo and back images
+    const row = s1.getRow(rowNum);
+    if (logoUrl) setHyperlink(row.getCell('logoUrl'), logoUrl);
+    backUrls.forEach((url: string, j: number) => {
+      if (url && j < 5) setHyperlink(row.getCell(`back${j + 1}`), url);
     });
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 2: تصاميم الأوشحة
+  // Sheet 2: تصاميم الأوشحة (removed logo/back columns)
   // ═══════════════════════════════════════════════════════════
   const s2 = wb.addWorksheet('تصاميم الأوشحة', { views: [{ rightToLeft: true }] });
   s2.columns = [
@@ -164,27 +178,16 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     { header: 'نوع التاريخ', key: 'dateType', width: 12 },
     { header: 'لون التطريز', key: 'embColor', width: 12 },
     { header: 'خط التطريز', key: 'font', width: 14 },
-    { header: 'عدد الشعارات', key: 'logoCount', width: 12 },
-    { header: 'رابط صورة الشعار', key: 'logoUrl', width: 35 },
-    { header: 'عدد التطريز الخلفي', key: 'backCount', width: 14 },
-    { header: 'رابط صورة 1', key: 'back1', width: 35 },
-    { header: 'رابط صورة 2', key: 'back2', width: 35 },
-    { header: 'رابط صورة 3', key: 'back3', width: 35 },
-    { header: 'رابط صورة 4', key: 'back4', width: 35 },
-    { header: 'رابط صورة 5', key: 'back5', width: 35 },
   ];
   styleHeaderRow(s2);
 
   for (const o of allOrders) {
     const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
     const on = shortOrderNumber(o.order_number);
-    const logoUrl = storageUrl(o.logo_embroidery_image_url);
-    const backUrls = (o.back_embroidery_image_urls || []).map((u: string) => storageUrl(u));
 
     if (scarfs.length === 0) continue;
 
     scarfs.forEach((sd, i) => {
-      const rowNum = s2.rowCount + 1;
       s2.addRow({
         num: on,
         scarfNum: `وشاح ${i + 1}`,
@@ -194,23 +197,12 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
         dateType: lk(maps.dateTypes, sd.date_type_id),
         embColor: sd.embroidery_color || '',
         font: lk(maps.fonts, sd.font_id),
-        logoCount: o.logo_embroidery_count || 0,
-        logoUrl: '',
-        backCount: o.back_embroidery_count || 0,
-        back1: '', back2: '', back3: '', back4: '', back5: '',
-      });
-
-      // Set hyperlinks
-      const row = s2.getRow(rowNum);
-      if (logoUrl) setHyperlink(row.getCell('logoUrl'), logoUrl);
-      backUrls.forEach((url: string, j: number) => {
-        if (url && j < 5) setHyperlink(row.getCell(`back${j + 1}`), url);
       });
     });
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 3: تصاميم القبعات
+  // Sheet 3: تصاميم القبعات (include default/no-embroidery hats)
   // ═══════════════════════════════════════════════════════════
   const s3 = wb.addWorksheet('تصاميم القبعات', { views: [{ rightToLeft: true }] });
   s3.columns = [
@@ -221,36 +213,39 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   ];
   styleHeaderRow(s3);
 
-  // Build per-order hat design map: group unique hat_embroidery_id per order
-  // Also build a mapping for students to reference "قبعة 1", "قبعة 2"
+  // Build per-order hat design map
   const orderHatMap = new Map<string, Map<string, { code: string; fringeColor: string }>>();
+  // Key: hat_embroidery_id or '__none__' for students without embroidery
 
   for (const o of allOrders) {
     const students = allStudents.filter(st => st.order_id === o.id);
     const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
-    const uniqueHats = new Map<string, string>(); // hat_embroidery_id → code
+    const uniqueHats = new Map<string, string>(); // key → code
     let hatIndex = 0;
 
-    // Get first scarf embroidery color as fringe color
     const defaultFringeColor = scarfs[0]?.embroidery_color || '';
 
+    // First pass: collect unique hat types (including null/no-embroidery)
     for (const st of students) {
-      if (st.hat_embroidery_id && !uniqueHats.has(st.hat_embroidery_id)) {
+      const hatKey = st.hat_embroidery_id || '__none__';
+      if (!uniqueHats.has(hatKey)) {
         hatIndex++;
-        uniqueHats.set(st.hat_embroidery_id, `قبعة ${hatIndex}`);
+        uniqueHats.set(hatKey, `قبعة ${hatIndex}`);
       }
     }
 
     const hatMapping = new Map<string, { code: string; fringeColor: string }>();
     const on = shortOrderNumber(o.order_number);
 
-    uniqueHats.forEach((code, hatId) => {
-      const hatInfo = maps.hatEmbroideries.get(hatId);
-      hatMapping.set(hatId, { code, fringeColor: defaultFringeColor });
+    uniqueHats.forEach((code, hatKey) => {
+      const isNone = hatKey === '__none__';
+      const hatInfo = isNone ? null : maps.hatEmbroideries.get(hatKey);
+
+      hatMapping.set(hatKey, { code, fringeColor: defaultFringeColor });
 
       s3.addRow({
         num: on,
-        designId: hatInfo?.name || '',
+        designId: isNone ? '0' : (hatInfo?.name || ''),
         designCode: code,
         fringeColor: defaultFringeColor,
       });
@@ -260,7 +255,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 4: قائمة الأسماء
+  // Sheet 4: قائمة الأسماء (fixed: no duplicate rows)
   // ═══════════════════════════════════════════════════════════
   const s4 = wb.addWorksheet('قائمة الأسماء', { views: [{ rightToLeft: true }] });
   s4.columns = [
@@ -277,21 +272,29 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   ];
   styleHeaderRow(s4);
 
+  // Use a Set to track already-added student IDs to prevent duplicates
+  const addedStudentIds = new Set<string>();
+
   for (const o of allOrders) {
     const students = allStudents.filter(st => st.order_id === o.id);
     const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
     const hatMapping = orderHatMap.get(o.id) || new Map();
     const on = shortOrderNumber(o.order_number);
 
-    // Build scarf_design_id → "وشاح 1" / "وشاح 2" map
     const scarfCodeMap = new Map<string, string>();
     scarfs.forEach((sd, i) => {
       scarfCodeMap.set(sd.id, `وشاح ${i + 1}`);
     });
 
     for (const st of students) {
+      // Prevent duplicate student rows
+      if (addedStudentIds.has(st.id)) continue;
+      addedStudentIds.add(st.id);
+
       const scarfCode = st.scarf_design_id ? (scarfCodeMap.get(st.scarf_design_id) || '') : '';
-      const hatCode = st.hat_embroidery_id ? (hatMapping.get(st.hat_embroidery_id)?.code || '') : '';
+      // Use hat_embroidery_id or '__none__' to find the hat code
+      const hatKey = st.hat_embroidery_id || '__none__';
+      const hatCode = hatMapping.get(hatKey)?.code || '';
 
       s4.addRow({
         num: on,
