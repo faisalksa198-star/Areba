@@ -684,7 +684,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => exportSingleCsv(order.id, order.order_number)}
+                              onClick={() => exportSingleXlsx(order.id)}
                             >
                               <Download className="h-3.5 w-3.5" />
                             </Button>
