@@ -171,7 +171,7 @@ export async function exportOrdersCsv(orderIds: string[]): Promise<string> {
 
     const orderCommon = [
       orderNumber, status, createdAt, updatedAt, trackingNumber,
-      abayaDesign, sleeveStyle, sleeveColor,
+      abayaDesign, abayaLength, sleeveStyle, sleeveColor,
       scarf1Style, scarf1Method, scarf1EmbDir, scarf1Font, scarf1DateType, scarf1EmbColor,
       scarf2Style, scarf2Method, scarf2EmbDir, scarf2Font, scarf2DateType, scarf2EmbColor,
       logoUrl, backUrls,
