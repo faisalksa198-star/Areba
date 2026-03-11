@@ -212,8 +212,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setColorImage(null);
     setColorImagePreview('');
     setAbayaDesignId('');
+    setAbayaLength('ثابت');
     setSleeveStyleId('');
     setSleeveColor('');
+    setPhoneError('');
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
     setLogoEmbroideryCount('');
