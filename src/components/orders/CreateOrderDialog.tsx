@@ -321,6 +321,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         custom_hat_color_degree: orderType === 'custom' ? customHatColorDegree || null : null,
         color_image_url: colorImageUrl,
         abaya_design_id: abayaDesignId || null,
+        abaya_length: abayaLength || 'ثابت',
         sleeve_style_id: sleeveStyleId || null,
         sleeve_color: sleeveColor || null,
         logo_embroidery_enabled: logoEmbroideryEnabled,
