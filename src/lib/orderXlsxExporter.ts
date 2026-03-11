@@ -1,0 +1,320 @@
+import ExcelJS from 'exceljs';
+import { supabase } from '@/integrations/supabase/client';
+
+// ── Lookup helpers ──────────────────────────────────────────────
+interface LookupMaps {
+  abayaDesigns: Map<string, string>;
+  sleeveStyles: Map<string, string>;
+  scarfStyles: Map<string, string>;
+  scarfMethods: Map<string, string>;
+  embroideryDirections: Map<string, string>;
+  fonts: Map<string, string>;
+  dateTypes: Map<string, string>;
+  hatEmbroideries: Map<string, { name: string; has_extra_text: boolean }>;
+  cities: Map<string, string>;
+  kits: Map<string, string>;
+}
+
+async function loadLookupMaps(): Promise<LookupMaps> {
+  const [
+    abayaRes, sleeveRes, scarfStyleRes, scarfMethodRes,
+    embDirRes, fontRes, dateRes, hatEmbRes, cityRes, kitRes,
+  ] = await Promise.all([
+    supabase.from('abaya_designs').select('id, name'),
+    supabase.from('sleeve_styles').select('id, name'),
+    supabase.from('scarf_styles').select('id, name'),
+    supabase.from('scarf_methods').select('id, name'),
+    supabase.from('embroidery_directions').select('id, name'),
+    supabase.from('fonts').select('id, name'),
+    supabase.from('date_types').select('id, name'),
+    supabase.from('hat_embroideries').select('id, name, has_extra_text'),
+    supabase.from('cities').select('id, name'),
+    supabase.from('ready_kits').select('id, name'),
+  ]);
+
+  const toMap = (data: any[] | null) => new Map((data || []).map(d => [d.id, d.name]));
+
+  return {
+    abayaDesigns: toMap(abayaRes.data),
+    sleeveStyles: toMap(sleeveRes.data),
+    scarfStyles: toMap(scarfStyleRes.data),
+    scarfMethods: toMap(scarfMethodRes.data),
+    embroideryDirections: toMap(embDirRes.data),
+    fonts: toMap(fontRes.data),
+    dateTypes: toMap(dateRes.data),
+    hatEmbroideries: new Map((hatEmbRes.data || []).map(d => [d.id, { name: d.name, has_extra_text: d.has_extra_text }])),
+    cities: toMap(cityRes.data),
+    kits: toMap(kitRes.data),
+  };
+}
+
+function lk(map: Map<string, string>, id: string | null | undefined): string {
+  if (!id) return '';
+  return map.get(id) || '';
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending_data: 'بانتظار البيانات',
+  under_review: 'بانتظار المراجعة',
+  in_progress: 'قيد التنفيذ',
+  shipped: 'تم الشحن',
+  completed: 'منتهي',
+  cancelled: 'ملغي',
+};
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+function storageUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/images/${path}`;
+}
+
+/** Extract number after dash: "2026-5006" → "5006" */
+function shortOrderNumber(on: string): string {
+  const idx = on.indexOf('-');
+  return idx >= 0 ? on.substring(idx + 1) : on;
+}
+
+// ── Style helpers ──────────────────────────────────────────────
+function styleHeaderRow(sheet: ExcelJS.Worksheet) {
+  const row = sheet.getRow(1);
+  row.font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } };
+  row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } };
+  row.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+  row.height = 28;
+}
+
+function setHyperlink(cell: ExcelJS.Cell, url: string) {
+  if (!url) return;
+  cell.value = { text: url, hyperlink: url };
+  cell.font = { color: { argb: 'FF0563C1' }, underline: true };
+}
+
+// ── Main export ────────────────────────────────────────────────
+export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
+  const [maps, ordersRes, studentsRes, scarfDesignsRes] = await Promise.all([
+    loadLookupMaps(),
+    supabase.from('orders').select('*').in('id', orderIds),
+    supabase.from('students').select('*').in('order_id', orderIds).order('serial_number'),
+    supabase.from('order_scarf_designs').select('*').in('order_id', orderIds).order('sort_order'),
+  ]);
+
+  const allOrders = ordersRes.data || [];
+  const allStudents = studentsRes.data || [];
+  const allScarfDesigns = scarfDesignsRes.data || [];
+
+  const wb = new ExcelJS.Workbook();
+  wb.views = [{ rightToLeft: true } as any];
+
+  // ═══════════════════════════════════════════════════════════
+  // Sheet 1: ملخص الطلب
+  // ═══════════════════════════════════════════════════════════
+  const s1 = wb.addWorksheet('ملخص الطلب', { views: [{ rightToLeft: true }] });
+  s1.columns = [
+    { header: 'رقم الطلب', key: 'num', width: 12 },
+    { header: 'تاريخ الطلب', key: 'date', width: 14 },
+    { header: 'العدد', key: 'count', width: 8 },
+    { header: 'تصميم العباية', key: 'abaya', width: 18 },
+    { header: 'طول العباية', key: 'abayaLen', width: 12 },
+    { header: 'تصميم طرف الكم', key: 'sleeve', width: 16 },
+    { header: 'لون طرف الكم', key: 'sleeveColor', width: 14 },
+    { header: 'نوع المنتج', key: 'type', width: 14 },
+    { header: 'اسم المنتج', key: 'kitName', width: 18 },
+    { header: 'لون العباية', key: 'abayaColor', width: 14 },
+    { header: 'درجتها', key: 'abayaDeg', width: 10 },
+    { header: 'لون الوشاح', key: 'scarfColor', width: 14 },
+    { header: 'درجته', key: 'scarfDeg', width: 10 },
+    { header: 'لون القبعة', key: 'hatColor', width: 14 },
+    { header: 'درجتها', key: 'hatDeg', width: 10 },
+  ];
+  styleHeaderRow(s1);
+
+  for (const o of allOrders) {
+    const isKit = o.order_type === 'ready_kit';
+    s1.addRow({
+      num: shortOrderNumber(o.order_number),
+      date: o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '',
+      count: o.student_count || 0,
+      abaya: lk(maps.abayaDesigns, o.abaya_design_id),
+      abayaLen: o.abaya_length || 'ثابت',
+      sleeve: lk(maps.sleeveStyles, o.sleeve_style_id),
+      sleeveColor: o.sleeve_color || '',
+      type: isKit ? 'طقم جاهز' : 'تفصيل',
+      kitName: isKit ? lk(maps.kits, o.kit_id) : '',
+      abayaColor: o.custom_abaya_color || '',
+      abayaDeg: o.custom_abaya_color_degree || '',
+      scarfColor: o.custom_scarf_color || '',
+      scarfDeg: o.custom_scarf_color_degree || '',
+      hatColor: o.custom_hat_color || '',
+      hatDeg: o.custom_hat_color_degree || '',
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Sheet 2: تصاميم الأوشحة
+  // ═══════════════════════════════════════════════════════════
+  const s2 = wb.addWorksheet('تصاميم الأوشحة', { views: [{ rightToLeft: true }] });
+  s2.columns = [
+    { header: 'رقم الطلب', key: 'num', width: 12 },
+    { header: 'رقم الوشاح', key: 'scarfNum', width: 12 },
+    { header: 'تصميم الوشاح', key: 'style', width: 16 },
+    { header: 'طرف الوشاح', key: 'method', width: 14 },
+    { header: 'اتجاه التطريز', key: 'dir', width: 14 },
+    { header: 'نوع التاريخ', key: 'dateType', width: 12 },
+    { header: 'لون التطريز', key: 'embColor', width: 12 },
+    { header: 'خط التطريز', key: 'font', width: 14 },
+    { header: 'عدد الشعارات', key: 'logoCount', width: 12 },
+    { header: 'رابط صورة الشعار', key: 'logoUrl', width: 35 },
+    { header: 'عدد التطريز الخلفي', key: 'backCount', width: 14 },
+    { header: 'رابط صورة 1', key: 'back1', width: 35 },
+    { header: 'رابط صورة 2', key: 'back2', width: 35 },
+    { header: 'رابط صورة 3', key: 'back3', width: 35 },
+    { header: 'رابط صورة 4', key: 'back4', width: 35 },
+    { header: 'رابط صورة 5', key: 'back5', width: 35 },
+  ];
+  styleHeaderRow(s2);
+
+  for (const o of allOrders) {
+    const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
+    const on = shortOrderNumber(o.order_number);
+    const logoUrl = storageUrl(o.logo_embroidery_image_url);
+    const backUrls = (o.back_embroidery_image_urls || []).map((u: string) => storageUrl(u));
+
+    if (scarfs.length === 0) continue;
+
+    scarfs.forEach((sd, i) => {
+      const rowNum = s2.rowCount + 1;
+      s2.addRow({
+        num: on,
+        scarfNum: `وشاح ${i + 1}`,
+        style: lk(maps.scarfStyles, sd.scarf_style_id),
+        method: lk(maps.scarfMethods, sd.scarf_method_id),
+        dir: lk(maps.embroideryDirections, sd.embroidery_direction_id),
+        dateType: lk(maps.dateTypes, sd.date_type_id),
+        embColor: sd.embroidery_color || '',
+        font: lk(maps.fonts, sd.font_id),
+        logoCount: o.logo_embroidery_count || 0,
+        logoUrl: '',
+        backCount: o.back_embroidery_count || 0,
+        back1: '', back2: '', back3: '', back4: '', back5: '',
+      });
+
+      // Set hyperlinks
+      const row = s2.getRow(rowNum);
+      if (logoUrl) setHyperlink(row.getCell('logoUrl'), logoUrl);
+      backUrls.forEach((url: string, j: number) => {
+        if (url && j < 5) setHyperlink(row.getCell(`back${j + 1}`), url);
+      });
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Sheet 3: تصاميم القبعات
+  // ═══════════════════════════════════════════════════════════
+  const s3 = wb.addWorksheet('تصاميم القبعات', { views: [{ rightToLeft: true }] });
+  s3.columns = [
+    { header: 'رقم الطلب', key: 'num', width: 12 },
+    { header: 'رقم التصميم', key: 'designId', width: 18 },
+    { header: 'رمز التصميم', key: 'designCode', width: 14 },
+    { header: 'لون الهدب', key: 'fringeColor', width: 14 },
+  ];
+  styleHeaderRow(s3);
+
+  // Build per-order hat design map: group unique hat_embroidery_id per order
+  // Also build a mapping for students to reference "قبعة 1", "قبعة 2"
+  const orderHatMap = new Map<string, Map<string, { code: string; fringeColor: string }>>();
+
+  for (const o of allOrders) {
+    const students = allStudents.filter(st => st.order_id === o.id);
+    const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
+    const uniqueHats = new Map<string, string>(); // hat_embroidery_id → code
+    let hatIndex = 0;
+
+    // Get first scarf embroidery color as fringe color
+    const defaultFringeColor = scarfs[0]?.embroidery_color || '';
+
+    for (const st of students) {
+      if (st.hat_embroidery_id && !uniqueHats.has(st.hat_embroidery_id)) {
+        hatIndex++;
+        uniqueHats.set(st.hat_embroidery_id, `قبعة ${hatIndex}`);
+      }
+    }
+
+    const hatMapping = new Map<string, { code: string; fringeColor: string }>();
+    const on = shortOrderNumber(o.order_number);
+
+    uniqueHats.forEach((code, hatId) => {
+      const hatInfo = maps.hatEmbroideries.get(hatId);
+      hatMapping.set(hatId, { code, fringeColor: defaultFringeColor });
+
+      s3.addRow({
+        num: on,
+        designId: hatInfo?.name || '',
+        designCode: code,
+        fringeColor: defaultFringeColor,
+      });
+    });
+
+    orderHatMap.set(o.id, hatMapping);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // Sheet 4: قائمة الأسماء
+  // ═══════════════════════════════════════════════════════════
+  const s4 = wb.addWorksheet('قائمة الأسماء', { views: [{ rightToLeft: true }] });
+  s4.columns = [
+    { header: 'رقم الطلب', key: 'num', width: 12 },
+    { header: 'رقم الطالبة', key: 'serial', width: 10 },
+    { header: 'الاسم', key: 'name', width: 22 },
+    { header: 'المقاس', key: 'size', width: 10 },
+    { header: 'رمز الوشاح', key: 'scarfCode', width: 12 },
+    { header: 'رقم القبعة', key: 'hatCode', width: 12 },
+    { header: 'هل يوجد شعار؟', key: 'logo', width: 14 },
+    { header: 'نص التطريز الخلفي', key: 'backText', width: 22 },
+    { header: 'نص تطريز القبعة', key: 'hatText', width: 22 },
+    { header: 'نوع الباقة', key: 'packageType', width: 12 },
+  ];
+  styleHeaderRow(s4);
+
+  for (const o of allOrders) {
+    const students = allStudents.filter(st => st.order_id === o.id);
+    const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
+    const hatMapping = orderHatMap.get(o.id) || new Map();
+    const on = shortOrderNumber(o.order_number);
+
+    // Build scarf_design_id → "وشاح 1" / "وشاح 2" map
+    const scarfCodeMap = new Map<string, string>();
+    scarfs.forEach((sd, i) => {
+      scarfCodeMap.set(sd.id, `وشاح ${i + 1}`);
+    });
+
+    for (const st of students) {
+      const scarfCode = st.scarf_design_id ? (scarfCodeMap.get(st.scarf_design_id) || '') : '';
+      const hatCode = st.hat_embroidery_id ? (hatMapping.get(st.hat_embroidery_id)?.code || '') : '';
+
+      s4.addRow({
+        num: on,
+        serial: st.serial_number,
+        name: st.name || '',
+        size: st.size || '',
+        scarfCode,
+        hatCode,
+        logo: st.has_logo_embroidery ? 'نعم' : 'لا',
+        backText: st.back_embroidery_text || '',
+        hatText: st.hat_extra_text || '',
+        packageType: st.has_purple_package ? 'Purple' : 'Normal',
+      });
+    }
+  }
+
+  // ── Generate and download ────────────────────────────────
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `orders-export-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
