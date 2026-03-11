@@ -76,8 +76,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
   // Abaya design section
   const [abayaDesignId, setAbayaDesignId] = useState('');
+  const [abayaLength, setAbayaLength] = useState('ثابت');
   const [sleeveStyleId, setSleeveStyleId] = useState('');
   const [sleeveColor, setSleeveColor] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   // Scarf designs (multiple)
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesignEntry[]>([createEmptyScarfDesign()]);
