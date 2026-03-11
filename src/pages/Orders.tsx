@@ -58,7 +58,7 @@ import {
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { exportOrdersCsv, downloadCsv } from '@/lib/orderCsvExporter';
+import { exportOrdersXlsx } from '@/lib/orderXlsxExporter';
 
 interface OrderLinks {
   leaderLink: string;
