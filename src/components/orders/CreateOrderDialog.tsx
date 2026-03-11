@@ -434,7 +434,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">رقم الجوال</label>
-                <Input value={leaderPhone} onChange={e => setLeaderPhone(e.target.value)} placeholder="05xxxxxxxx" type="tel" />
+                <Input value={leaderPhone} onChange={e => { setLeaderPhone(e.target.value); setPhoneError(''); }} placeholder="05xxxxxxxx" type="tel" />
+                {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
             <div>
