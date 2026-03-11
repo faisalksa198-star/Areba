@@ -605,12 +605,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
             {/* Scarf Designs Section */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
-                <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs">
-                  <Plus className="h-3 w-3" /> إضافة وشاح
-                </Button>
-              </div>
+              <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
               {scarfDesigns.map((scarf, idx) => (
                 <div key={scarf.localId} className="p-3 rounded-lg bg-background border border-border space-y-2">
                   <div className="flex items-center justify-between">
@@ -669,6 +664,9 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 </div>
               ))}
+              <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs w-full">
+                <Plus className="h-3 w-3" /> إضافة وشاح
+              </Button>
             </div>
 
             {/* Extra Services */}
