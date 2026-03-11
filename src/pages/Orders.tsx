@@ -550,9 +550,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               </SelectContent>
             </Select>
             <div className="h-5 w-px bg-border" />
-            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1.5 h-8">
+            <Button variant="outline" size="sm" onClick={exportBulkXlsx} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              تصدير CSV
+              تصدير Excel
             </Button>
             <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
