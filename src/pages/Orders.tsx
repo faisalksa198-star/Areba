@@ -58,7 +58,7 @@ import {
 import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { exportOrdersCsv, downloadCsv } from '@/lib/orderCsvExporter';
+import { exportOrdersXlsx } from '@/lib/orderXlsxExporter';
 
 interface OrderLinks {
   leaderLink: string;
@@ -255,9 +255,8 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const exportSingleCsv = async (orderId: string, orderNumber: string) => {
-    const csv = await exportOrdersCsv([orderId]);
-    downloadCsv(csv, `order-${orderNumber || orderId}.csv`);
+  const exportSingleXlsx = async (orderId: string) => {
+    await exportOrdersXlsx([orderId]);
   };
 
   const generateOrderNumber = () => {
@@ -426,12 +425,11 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     }
   };
 
-  const exportBulkCSV = async () => {
+  const exportBulkXlsx = async () => {
     if (selectedOrderIds.size === 0) return;
     setBulkExporting(true);
     const ids = Array.from(selectedOrderIds);
-    const csv = await exportOrdersCsv(ids);
-    downloadCsv(csv, `orders-export-${new Date().toISOString().slice(0, 10)}.csv`);
+    await exportOrdersXlsx(ids);
     setBulkExporting(false);
     setSelectedOrderIds(new Set());
   };
@@ -552,9 +550,9 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               </SelectContent>
             </Select>
             <div className="h-5 w-px bg-border" />
-            <Button variant="outline" size="sm" onClick={exportBulkCSV} disabled={bulkExporting} className="gap-1.5 h-8">
+            <Button variant="outline" size="sm" onClick={exportBulkXlsx} disabled={bulkExporting} className="gap-1.5 h-8">
               {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-              تصدير CSV
+              تصدير Excel
             </Button>
             <Button variant="destructive" size="sm" onClick={() => setShowBulkDeleteConfirm(true)} disabled={bulkDeleting} className="gap-1.5 h-8">
               {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
@@ -686,7 +684,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => exportSingleCsv(order.id, order.order_number)}
+                              onClick={() => exportSingleXlsx(order.id)}
                             >
                               <Download className="h-3.5 w-3.5" />
                             </Button>
