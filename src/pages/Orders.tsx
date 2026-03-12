@@ -577,6 +577,30 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
           </Card>
         ) : (
           <div className="space-y-3">
+            {/* Select All Header */}
+            <div className="flex items-center gap-3 px-3 py-2 bg-muted/50 rounded-lg border border-border/30">
+              <Checkbox
+                checked={filteredOrders.length > 0 && filteredOrders.every(o => selectedOrderIds.has(o.id))}
+                onCheckedChange={(checked) => {
+                  setSelectedOrderIds(prev => {
+                    const next = new Set(prev);
+                    if (checked) {
+                      filteredOrders.forEach(o => next.add(o.id));
+                    } else {
+                      filteredOrders.forEach(o => next.delete(o.id));
+                    }
+                    return next;
+                  });
+                }}
+              />
+              <span className="text-xs text-muted-foreground font-medium">تحديد الكل ({filteredOrders.length} طلب)</span>
+              {selectedOrderIds.size > 0 && (
+                <Button variant="outline" size="sm" onClick={exportBulkXlsx} disabled={bulkExporting} className="gap-1.5 h-7 mr-auto text-xs">
+                  {bulkExporting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                  تصدير المختار ({selectedOrderIds.size})
+                </Button>
+              )}
+            </div>
             {filteredOrders.map(order => {
               const status = statusLabels[order.status] || statusLabels.pending_data;
               const links = generateLinks(order.id, order.leader_phone);

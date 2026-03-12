@@ -607,28 +607,23 @@ export default function LeaderPage() {
   if (isLocked) {
     const isInProgress = orderInfo?.status === 'in_progress';
     const isCompleted = orderInfo?.status === 'completed';
-    const showPdf = isInProgress || isCompleted;
 
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <Card className="max-w-md w-full">
           <CardContent className="p-8 text-center space-y-5">
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              {showPdf ? (
+              {isInProgress || isCompleted ? (
                 <Truck className="h-7 w-7 text-primary" />
               ) : (
                 <Send className="h-7 w-7 text-primary" />
               )}
             </div>
 
-            {showPdf ? (
+            {isInProgress || isCompleted ? (
               <>
                 <h2 className="text-lg font-bold text-foreground">تم استلام طلبكم وجاري تنفيذه</h2>
                 <p className="text-sm text-muted-foreground">يمكنكم تحميل تقرير الطلب من الزر أدناه</p>
-                <Button onClick={generatePDF} className="gap-2">
-                  <Download className="h-4 w-4" />
-                  تحميل تقرير طلبكم PDF
-                </Button>
               </>
             ) : (
               <>
@@ -636,6 +631,12 @@ export default function LeaderPage() {
                 <p className="text-sm text-muted-foreground">سيتم مراجعة الطلب وتجهيز التقرير لكم</p>
               </>
             )}
+
+            {/* PDF download always available on locked page */}
+            <Button onClick={generatePDF} className="gap-2">
+              <Download className="h-4 w-4" />
+              تحميل ملخص الطلب PDF
+            </Button>
           </CardContent>
         </Card>
       </div>
