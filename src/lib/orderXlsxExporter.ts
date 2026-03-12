@@ -12,7 +12,7 @@ interface LookupMaps {
   dateTypes: Map<string, string>;
   hatEmbroideries: Map<string, { name: string; has_extra_text: boolean }>;
   cities: Map<string, string>;
-  kits: Map<string, string>;
+  kits: Map<string, { name: string; abaya_color?: string; abaya_color_degree?: string; scarf_color?: string; scarf_color_degree?: string; hat_color?: string; hat_color_degree?: string }>;
 }
 
 async function loadLookupMaps(): Promise<LookupMaps> {
@@ -29,7 +29,7 @@ async function loadLookupMaps(): Promise<LookupMaps> {
     supabase.from('date_types').select('id, name'),
     supabase.from('hat_embroideries').select('id, name, has_extra_text'),
     supabase.from('cities').select('id, name'),
-    supabase.from('ready_kits').select('id, name'),
+    supabase.from('ready_kits').select('id, name, abaya_color, abaya_color_degree, scarf_color, scarf_color_degree, hat_color, hat_color_degree'),
   ]);
 
   const toMap = (data: any[] | null) => new Map((data || []).map(d => [d.id, d.name]));
@@ -44,7 +44,15 @@ async function loadLookupMaps(): Promise<LookupMaps> {
     dateTypes: toMap(dateRes.data),
     hatEmbroideries: new Map((hatEmbRes.data || []).map(d => [d.id, { name: d.name, has_extra_text: d.has_extra_text }])),
     cities: toMap(cityRes.data),
-    kits: toMap(kitRes.data),
+    kits: new Map((kitRes.data || []).map(d => [d.id, {
+      name: d.name,
+      abaya_color: d.abaya_color,
+      abaya_color_degree: d.abaya_color_degree,
+      scarf_color: d.scarf_color,
+      scarf_color_degree: d.scarf_color_degree,
+      hat_color: d.hat_color,
+      hat_color_degree: d.hat_color_degree,
+    }])),
   };
 }
 
@@ -131,6 +139,16 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
 
   for (const o of allOrders) {
     const isKit = o.order_type === 'ready_kit';
+    const kit = isKit && o.kit_id ? maps.kits.get(o.kit_id) : null;
+
+    // Colors: for ready_kit, pull from kit; for custom, pull from order
+    const abayaColor = isKit ? (kit?.abaya_color || '') : (o.custom_abaya_color || '');
+    const abayaDeg = isKit ? (kit?.abaya_color_degree || '') : (o.custom_abaya_color_degree || '');
+    const scarfColor = isKit ? (kit?.scarf_color || '') : (o.custom_scarf_color || '');
+    const scarfDeg = isKit ? (kit?.scarf_color_degree || '') : (o.custom_scarf_color_degree || '');
+    const hatColor = isKit ? (kit?.hat_color || '') : (o.custom_hat_color || '');
+    const hatDeg = isKit ? (kit?.hat_color_degree || '') : (o.custom_hat_color_degree || '');
+
     const logoUrl = storageUrl(o.logo_embroidery_image_url);
     const backUrls = (o.back_embroidery_image_urls || []).map((u: string) => storageUrl(u));
     const colorImgUrl = storageUrl(o.color_image_url);
@@ -145,14 +163,14 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
       sleeve: lk(maps.sleeveStyles, o.sleeve_style_id),
       sleeveColor: o.sleeve_color || '',
       type: isKit ? 'طقم جاهز' : 'تفصيل',
-      kitName: isKit ? lk(maps.kits, o.kit_id) : '',
+      kitName: isKit ? (kit?.name || '') : '',
       colorImageUrl: '',
-      abayaColor: o.custom_abaya_color || '',
-      abayaDeg: o.custom_abaya_color_degree || '',
-      scarfColor: o.custom_scarf_color || '',
-      scarfDeg: o.custom_scarf_color_degree || '',
-      hatColor: o.custom_hat_color || '',
-      hatDeg: o.custom_hat_color_degree || '',
+      abayaColor,
+      abayaDeg,
+      scarfColor,
+      scarfDeg,
+      hatColor,
+      hatDeg,
       logoCount: o.logo_embroidery_count || 0,
       logoUrl: '',
       backCount: o.back_embroidery_count || 0,
@@ -202,7 +220,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 3: تصاميم القبعات (one row per student — no grouping)
+  // Sheet 3: تصاميم القبعات (one row per student)
   // ═══════════════════════════════════════════════════════════
   const s3 = wb.addWorksheet('تصاميم القبعات', { views: [{ rightToLeft: true }] });
   s3.columns = [
@@ -213,7 +231,6 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   ];
   styleHeaderRow(s3);
 
-  // Build per-order: studentId → hat code mapping (one hat per student)
   const studentHatCodeMap = new Map<string, string>();
 
   for (const o of allOrders) {
@@ -221,12 +238,10 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
     const on = shortOrderNumber(o.order_number);
 
-    // Build scarf embroidery color lookup: scarf_design_id → embroidery_color
     const scarfColorMap = new Map<string, string>();
     scarfs.forEach(sd => {
       if (sd.embroidery_color) scarfColorMap.set(sd.id, sd.embroidery_color);
     });
-
     const defaultFringeColor = scarfs[0]?.embroidery_color || '';
 
     let hatIndex = 0;
@@ -238,7 +253,6 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
       const isNone = !st.hat_embroidery_id;
       const hatInfo = isNone ? null : maps.hatEmbroideries.get(st.hat_embroidery_id!);
 
-      // Get fringe color from student's scarf embroidery color
       const fringeColor = st.scarf_design_id
         ? (scarfColorMap.get(st.scarf_design_id) || defaultFringeColor)
         : defaultFringeColor;
