@@ -358,6 +358,8 @@ export default function LeaderPage() {
         serialNumber: s.serial_number,
         name: s.name || '',
         scarfDesignId: s.scarf_design_id || defaultScarfId,
+        hasLogoEmbroidery: false,
+        backEmbroideryText: '',
       })));
     } else if (info.extra_scarf_count > 0) {
       setExtraScarves(Array.from({ length: info.extra_scarf_count }, (_, i) => ({
