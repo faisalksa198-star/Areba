@@ -357,9 +357,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         student_count: sc,
         extra_scarf_count: esc,
         extra_hat_count: ehc,
+        execution_duration: parseInt(executionDuration) || null,
         order_type: orderType,
         kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-        city_id: null, // Removed from order creation
+        city_id: null,
         custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
         custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
         custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
