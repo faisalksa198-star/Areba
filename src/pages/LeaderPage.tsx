@@ -488,10 +488,8 @@ export default function LeaderPage() {
         if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
         const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
         const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text) {
-          if (!s.hatExtraText.trim()) {
-            errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
-          } else if (/\s/.test(s.hatExtraText.trim())) {
+        if (!isNone && hat?.has_extra_text && s.hatExtraText.trim()) {
+          if (/\s/.test(s.hatExtraText.trim())) {
             errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب أن يكون كلمة واحدة بدون مسافات`);
           } else if (s.hatExtraText.trim().length > 10) {
             errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب ألا يتجاوز 10 أحرف`);
