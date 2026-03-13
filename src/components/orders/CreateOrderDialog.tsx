@@ -5,12 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, ImagePlus, X, Copy, Check, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Plus, Trash2, Loader2, ImagePlus, X, Copy } from 'lucide-react';
 
 interface MasterItem {
   id: string;
@@ -66,6 +63,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [leaderName, setLeaderName] = useState('');
   const [leaderPhone, setLeaderPhone] = useState('');
   const [studentCount, setStudentCount] = useState('');
+  const [extraScarfCount, setExtraScarfCount] = useState('');
+  const [extraHatCount, setExtraHatCount] = useState('');
   const [orderType, setOrderType] = useState<'ready_kit' | 'custom'>('ready_kit');
   const [selectedKit, setSelectedKit] = useState('');
 
@@ -86,11 +85,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [sleeveColor, setSleeveColor] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
-  // City (searchable combobox)
-  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
-  const [cityId, setCityId] = useState('');
-  const [cityOpen, setCityOpen] = useState(false);
-
   // Scarf designs (multiple)
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesignEntry[]>([createEmptyScarfDesign()]);
 
@@ -107,6 +101,9 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
   const [purplePackageCount, setPurplePackageCount] = useState('');
+
+  // Hat embroidery designs for extra hats
+  const [hatEmbroideries, setHatEmbroideries] = useState<{ id: string; name: string; has_extra_text: boolean }[]>([]);
 
   // Master data
   const [kits, setKits] = useState<MasterItem[]>([]);
@@ -130,7 +127,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   }, [open, editOrderId]);
 
   const loadMasterData = async () => {
-    const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR, citiesR] = await Promise.all([
+    const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR, hatEmbR] = await Promise.all([
       supabase.from('ready_kits').select('*').eq('is_active', true),
       supabase.from('abaya_designs').select('id, name, image_url').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name, image_url').eq('is_active', true),
@@ -139,7 +136,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       supabase.from('date_types').select('id, name').eq('is_active', true),
       supabase.from('embroidery_directions').select('id, name, image_url').eq('is_active', true),
       supabase.from('fonts').select('id, name').eq('is_active', true),
-      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
+      supabase.from('hat_embroideries').select('id, name, has_extra_text').eq('is_active', true).order('created_at'),
     ]);
     setKits(kitsR.data || []);
     setAbayaDesigns(abayaR.data || []);
@@ -149,7 +146,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setDateTypes(dateR.data || []);
     setEmbroideryDirections(embR.data || []);
     setFonts(fontR.data || []);
-    setCities(citiesR.data || []);
+    setHatEmbroideries((hatEmbR.data || []) as any);
   };
 
   const loadEditData = async () => {
@@ -166,6 +163,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setLeaderName(o.leader_name || '');
       setLeaderPhone(o.leader_phone || '');
       setStudentCount(String(o.student_count || ''));
+      setExtraScarfCount(String(o.extra_scarf_count || ''));
+      setExtraHatCount(String(o.extra_hat_count || ''));
       setOrderType(o.order_type === 'custom' ? 'custom' : 'ready_kit');
       setSelectedKit(o.kit_id || '');
       setCustomAbayaColor(o.custom_abaya_color || '');
@@ -179,7 +178,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setAbayaLength(o.abaya_length || 'ثابت');
       setSleeveStyleId(o.sleeve_style_id || '');
       setSleeveColor(o.sleeve_color || '');
-      setCityId(o.city_id || '');
+      setPhoneError('');
+      setScarfDesigns([createEmptyScarfDesign()]);
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
       setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
       setLogoEmbroideryPreview(o.logo_embroidery_image_url || '');
@@ -215,6 +215,8 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setLeaderName('');
     setLeaderPhone('');
     setStudentCount('');
+    setExtraScarfCount('');
+    setExtraHatCount('');
     setOrderType('ready_kit');
     setSelectedKit('');
     setCustomAbayaColor('');
@@ -229,7 +231,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setAbayaLength('ثابت');
     setSleeveStyleId('');
     setSleeveColor('');
-    setCityId('');
     setPhoneError('');
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
@@ -289,8 +290,13 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   };
 
   const handleSubmit = async () => {
-    if (!studentCount.trim() || parseInt(studentCount) < 1) {
-      toast({ title: 'يرجى إدخال عدد الطالبات', variant: 'destructive' });
+    const sc = parseInt(studentCount) || 0;
+    const esc = parseInt(extraScarfCount) || 0;
+    const ehc = parseInt(extraHatCount) || 0;
+
+    // At least one of student_count, extra_scarf_count, extra_hat_count must be > 0
+    if (sc < 1 && esc < 1 && ehc < 1) {
+      toast({ title: 'يجب إدخال عدد الأطقم أو الأوشحة/القبعات الإضافية', variant: 'destructive' });
       return;
     }
     // Phone validation: optional but if entered must be 10 digits
@@ -345,10 +351,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       const orderPayload = {
         leader_name: leaderName.trim() || null,
         leader_phone: leaderPhone.trim() || null,
-        student_count: parseInt(studentCount) || null,
+        student_count: sc,
+        extra_scarf_count: esc,
+        extra_hat_count: ehc,
         order_type: orderType,
         kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-        city_id: cityId || null,
+        city_id: null, // Removed from order creation
         custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
         custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
         custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
@@ -369,7 +377,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         hat_embroidery_enabled: hatEmbroideryEnabled,
         hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
         purple_package_enabled: purplePackageEnabled,
-        purple_package_count: purplePackageEnabled ? Math.min(parseInt(purplePackageCount) || 0, parseInt(studentCount) || 0) : 0,
+        purple_package_count: purplePackageEnabled ? Math.min(parseInt(purplePackageCount) || 0, sc) : 0,
       };
 
       let finalOrderId: string;
@@ -474,51 +482,34 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                 {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الطالبات *</label>
-                <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="30" type="number" min="1" />
+                <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الأطقم</label>
+                <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="0" type="number" min="0" />
+                <p className="text-[10px] text-muted-foreground mt-0.5">اتركه 0 للأوشحة/قبعات فقط</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">المدينة</label>
-                <Popover open={cityOpen} onOpenChange={setCityOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={cityOpen}
-                      className="w-full justify-between font-normal h-10"
-                    >
-                      {cityId ? cities.find(c => c.id === cityId)?.name || 'اختر المدينة' : 'اختر المدينة'}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="ابحث عن مدينة..." />
-                      <CommandList>
-                        <CommandEmpty>لا توجد نتائج</CommandEmpty>
-                        <CommandGroup>
-                          {cities.map(c => (
-                            <CommandItem
-                              key={c.id}
-                              value={c.name}
-                              onSelect={() => {
-                                setCityId(c.id);
-                                setCityOpen(false);
-                              }}
-                            >
-                              <Check className={cn("ml-2 h-4 w-4", cityId === c.id ? "opacity-100" : "opacity-0")} />
-                              {c.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">أوشحة إضافية</label>
+                <Input value={extraScarfCount} onChange={e => setExtraScarfCount(e.target.value)} placeholder="0" type="number" min="0" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">قبعات إضافية</label>
+                <Input value={extraHatCount} onChange={e => setExtraHatCount(e.target.value)} placeholder="0" type="number" min="0" />
               </div>
             </div>
+
+            {/* Hat embroidery designs info for extra hats */}
+            {parseInt(extraHatCount) > 0 && hatEmbroideries.length > 0 && (
+              <div className="p-3 rounded-lg border border-border bg-muted/30">
+                <p className="text-sm font-semibold text-foreground mb-2">تصاميم تطريز القبعات المتاحة</p>
+                <div className="flex flex-wrap gap-2">
+                  {hatEmbroideries.map(h => (
+                    <Badge key={h.id} variant="secondary" className="text-xs">{h.name}</Badge>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">القائدة ستختار التصميم لكل قبعة إضافية من رابطها</p>
+              </div>
+            )}
 
             {/* Order Type */}
             <div>
