@@ -393,8 +393,8 @@ export default function LeaderPage() {
 
   const logoIsAll = orderInfo && orderInfo.logo_embroidery_enabled && (orderInfo.logo_embroidery_count === 0 || orderInfo.logo_embroidery_count >= maxStudents);
 
-  const logoCount = useMemo(() => students.filter(s => s.hasLogoEmbroidery).length, [students]);
-  const backCount = useMemo(() => students.filter(s => s.backEmbroideryText.trim()).length, [students]);
+  const logoCount = useMemo(() => students.filter(s => s.hasLogoEmbroidery).length + extraScarves.filter(s => s.hasLogoEmbroidery).length, [students, extraScarves]);
+  const backCount = useMemo(() => students.filter(s => s.backEmbroideryText.trim()).length + extraScarves.filter(s => s.backEmbroideryText.trim()).length, [students, extraScarves]);
 
   // Hat embroidery quota: total across students + extra hats
   const studentHatCount = useMemo(() => students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length, [students, noEmbroideryId]);
