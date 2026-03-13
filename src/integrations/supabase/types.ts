@@ -244,7 +244,9 @@ export type Database = {
       }
       extra_scarves: {
         Row: {
+          back_embroidery_text: string | null
           created_at: string
+          has_logo_embroidery: boolean | null
           id: string
           name: string
           order_id: string
@@ -253,7 +255,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          back_embroidery_text?: string | null
           created_at?: string
+          has_logo_embroidery?: boolean | null
           id?: string
           name?: string
           order_id: string
@@ -262,7 +266,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          back_embroidery_text?: string | null
           created_at?: string
+          has_logo_embroidery?: boolean | null
           id?: string
           name?: string
           order_id?: string

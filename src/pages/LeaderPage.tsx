@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import jsPDF from 'jspdf';
 import { useParams } from 'react-router-dom';
+import { generateOrderPdf } from '@/lib/orderPdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,6 +177,7 @@ export default function LeaderPage() {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [shippingOpen, setShippingOpen] = useState(false);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   // Extra scarves & hats
   const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
@@ -358,8 +359,8 @@ export default function LeaderPage() {
         serialNumber: s.serial_number,
         name: s.name || '',
         scarfDesignId: s.scarf_design_id || defaultScarfId,
-        hasLogoEmbroidery: false,
-        backEmbroideryText: '',
+        hasLogoEmbroidery: s.has_logo_embroidery || false,
+        backEmbroideryText: s.back_embroidery_text || '',
       })));
     } else if (info.extra_scarf_count > 0) {
       setExtraScarves(Array.from({ length: info.extra_scarf_count }, (_, i) => ({
@@ -516,7 +517,12 @@ export default function LeaderPage() {
     const extraScarfCount = orderInfo?.extra_scarf_count || 0;
     if (extraScarfCount > 0) {
       extraScarves.forEach((es) => {
-        if (!es.name.trim()) errors.push(`وشاح إضافي رقم ${es.serialNumber} ينقصه الاسم`);
+        if (!es.name.trim()) {
+          errors.push(`وشاح إضافي رقم ${es.serialNumber} ينقصه الاسم`);
+        } else {
+          const { error } = validateName(es.name);
+          if (error) errors.push(`وشاح إضافي رقم ${es.serialNumber}: ${error}`);
+        }
       });
     }
 
@@ -601,6 +607,8 @@ export default function LeaderPage() {
         serial_number: es.serialNumber,
         name: es.name.trim(),
         scarf_design_id: es.scarfDesignId || null,
+        has_logo_embroidery: es.hasLogoEmbroidery,
+        back_embroidery_text: es.backEmbroideryText.trim() || null,
       }));
       const { error: eErr } = await supabase.from('extra_scarves').insert(scarfRows as any);
       if (eErr) {
@@ -714,43 +722,19 @@ export default function LeaderPage() {
   // Lock page when data is submitted or status is not pending_data
   const isLocked = orderInfo && (orderInfo.data_submitted || orderInfo.status !== 'pending_data');
 
-  const generatePDF = async () => {
+  // generatingPdf state moved to top of component
+
+  const handleGeneratePdf = async () => {
     if (!orderId) return;
-    const { data: studentsData } = await supabase.from('students').select('*').eq('order_id', orderId).order('serial_number');
-    const rows = studentsData || [];
-
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(16);
-    doc.text(`Order: ${orderInfo?.order_number || ''}`, 105, 20, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text(`Leader: ${orderInfo?.leader_name || ''}`, 105, 30, { align: 'center' });
-    doc.text(`Students: ${rows.length} / ${orderInfo?.student_count || 0}`, 105, 38, { align: 'center' });
-
-    let y = 50;
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('#', 190, y, { align: 'right' });
-    doc.text('Name', 170, y, { align: 'right' });
-    doc.text('Size', 100, y, { align: 'right' });
-    doc.text('Logo', 70, y, { align: 'right' });
-    doc.text('Purple', 40, y, { align: 'right' });
-    y += 2;
-    doc.line(15, y, 195, y);
-    y += 5;
-
-    doc.setFont('helvetica', 'normal');
-    rows.forEach((s: any, i: number) => {
-      if (y > 280) { doc.addPage(); y = 20; }
-      doc.text(String(s.serial_number || i + 1), 190, y, { align: 'right' });
-      doc.text(s.name || '', 170, y, { align: 'right' });
-      doc.text(s.size || '-', 100, y, { align: 'right' });
-      doc.text(s.has_logo_embroidery ? 'Yes' : 'No', 70, y, { align: 'right' });
-      doc.text(s.has_purple_package ? 'Yes' : 'No', 40, y, { align: 'right' });
-      y += 6;
-    });
-
-    doc.save(`order-${orderInfo?.order_number || orderId}.pdf`);
+    setGeneratingPdf(true);
+    try {
+      await generateOrderPdf(orderId);
+      toast({ title: 'تم تحميل التقرير بنجاح ✓' });
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      toast({ title: 'خطأ في توليد التقرير', variant: 'destructive' });
+    }
+    setGeneratingPdf(false);
   };
 
   if (isLocked) {
@@ -772,9 +756,9 @@ export default function LeaderPage() {
             <h2 className="text-lg font-bold text-foreground">تم إرسال البيانات بنجاح</h2>
             <p className="text-sm text-muted-foreground">يمكنكم تحميل ملخص الطلب من الزر أدناه</p>
 
-            <Button onClick={generatePDF} className="gap-2">
-              <Download className="h-4 w-4" />
-              تحميل ملخص الطلب PDF
+            <Button onClick={handleGeneratePdf} disabled={generatingPdf} className="gap-2">
+              {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل ملخص الطلب PDF'}
             </Button>
           </CardContent>
         </Card>
@@ -1288,8 +1272,8 @@ export default function LeaderPage() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-2 flex justify-end">
-                <div className="w-fit max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="mt-2 flex sm:justify-end">
+                <div className="w-full sm:w-fit sm:max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                   <table className="text-sm">
                     <thead className="bg-card border-b border-border">
                       <tr>
