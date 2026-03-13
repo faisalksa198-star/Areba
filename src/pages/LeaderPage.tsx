@@ -1288,15 +1288,15 @@ export default function LeaderPage() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="mt-2 flex justify-end">
+                <div className="w-fit max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                  <table className="text-sm">
                     <thead className="bg-card border-b border-border">
                       <tr>
-                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
-                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">تصميم التطريز</th>
-                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">نص التطريز</th>
-                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">لون الهدب</th>
+                        <th className="w-10 px-2 py-2 text-center font-semibold text-muted-foreground text-xs">#</th>
+                        <th className="w-[140px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">تصميم التطريز</th>
+                        <th className="w-[110px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">نص التطريز</th>
+                        <th className="w-[100px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">لون الهدب</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1305,8 +1305,8 @@ export default function LeaderPage() {
                         const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
                         return (
                           <tr key={eh.id} className="border-b border-border/50">
-                            <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{eh.serialNumber}</td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-2 text-center text-xs font-bold text-muted-foreground">{eh.serialNumber}</td>
+                            <td className="px-2 py-1.5">
                               <Select
                                 value={eh.hatEmbroideryId}
                                 onValueChange={(v) => {
@@ -1315,7 +1315,6 @@ export default function LeaderPage() {
                                   if (!newIsNone && !isNone) {
                                     // Swapping - ok
                                   } else if (!newIsNone) {
-                                    // Adding embroidery - check quota
                                     const currentUsed = totalHatQuotaUsed;
                                     if (totalHatQuota > 0 && currentUsed >= totalHatQuota) {
                                       toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
@@ -1326,7 +1325,7 @@ export default function LeaderPage() {
                                 }}
                                 disabled={!!isSubmitted}
                               >
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue placeholder="بدون تطريز" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1336,27 +1335,27 @@ export default function LeaderPage() {
                                 </SelectContent>
                               </Select>
                             </td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-1.5">
                               {!isNone && hat?.has_extra_text ? (
                                 <Input
                                   value={eh.hatExtraText}
                                   onChange={e => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, hatExtraText: e.target.value } : h))}
-                                  placeholder="نص التطريز"
+                                  placeholder="اختياري"
                                   maxLength={10}
-                                  className="h-8 text-xs"
+                                  className="h-7 text-xs"
                                   disabled={!!isSubmitted}
                                 />
                               ) : (
                                 <span className="text-xs text-muted-foreground">—</span>
                               )}
                             </td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-1.5">
                               <Select
                                 value={eh.fringeColor}
                                 onValueChange={v => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, fringeColor: v } : h))}
                                 disabled={!!isSubmitted}
                               >
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue placeholder="اختر" />
                                 </SelectTrigger>
                                 <SelectContent>
