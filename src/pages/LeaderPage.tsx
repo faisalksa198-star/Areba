@@ -755,9 +755,9 @@ export default function LeaderPage() {
             <h2 className="text-lg font-bold text-foreground">تم إرسال البيانات بنجاح</h2>
             <p className="text-sm text-muted-foreground">يمكنكم تحميل ملخص الطلب من الزر أدناه</p>
 
-            <Button onClick={generatePDF} className="gap-2">
-              <Download className="h-4 w-4" />
-              تحميل ملخص الطلب PDF
+            <Button onClick={handleGeneratePdf} disabled={generatingPdf} className="gap-2">
+              {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل ملخص الطلب PDF'}
             </Button>
           </CardContent>
         </Card>
