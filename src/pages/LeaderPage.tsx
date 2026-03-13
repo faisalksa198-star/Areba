@@ -154,17 +154,8 @@ function areSimilar(a: string, b: string): boolean {
   if (!a || !b) return false;
   const la = a.toLowerCase().trim();
   const lb = b.toLowerCase().trim();
-  if (la === lb) return true;
-  if (la.length < 2 || lb.length < 2) return false;
-  if (la.includes(lb) || lb.includes(la)) return true;
-  if (Math.abs(la.length - lb.length) > 2) return false;
-  let diff = 0;
-  const maxLen = Math.max(la.length, lb.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (la[i] !== lb[i]) diff++;
-    if (diff > 2) return false;
-  }
-  return diff <= 2;
+  // Exact match only
+  return la === lb;
 }
 
 export default function LeaderPage() {
@@ -491,13 +482,30 @@ export default function LeaderPage() {
         if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
         const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
         const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text && !s.hatExtraText.trim()) {
-          errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
-        }
-        if (!orderInfo?.hat_embroidery_enabled && !isNone) {
-          errors.push(`الطالبة رقم ${s.serialNumber}: خدمة تطريز القبعات غير مفعّلة لهذا الطلب`);
+        if (!isNone && hat?.has_extra_text) {
+          if (!s.hatExtraText.trim()) {
+            errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
+          } else if (/\s/.test(s.hatExtraText.trim())) {
+            errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب أن يكون كلمة واحدة بدون مسافات`);
+          } else if (s.hatExtraText.trim().length > 10) {
+            errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب ألا يتجاوز 10 أحرف`);
+          }
         }
       });
+    }
+
+    // Logo quota validation
+    if (orderInfo?.logo_embroidery_enabled && orderInfo.logo_embroidery_count > 0) {
+      if (logoCount !== orderInfo.logo_embroidery_count) {
+        errors.push(`يجب استهلاك كامل رصيد تطريز الشعار (${logoCount} / ${orderInfo.logo_embroidery_count})`);
+      }
+    }
+
+    // Back embroidery quota validation
+    if (orderInfo?.back_embroidery_enabled && orderInfo.back_embroidery_count > 0) {
+      if (backCount !== orderInfo.back_embroidery_count) {
+        errors.push(`يجب استهلاك كامل رصيد التطريز الخلفي (${backCount} / ${orderInfo.back_embroidery_count})`);
+      }
     }
 
     // Extra scarves validation
@@ -514,8 +522,14 @@ export default function LeaderPage() {
       extraHats.forEach((eh) => {
         const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
         const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text && !eh.hatExtraText.trim()) {
-          errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها نص تطريز القبعة`);
+        if (!isNone && hat?.has_extra_text) {
+          if (!eh.hatExtraText.trim()) {
+            errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها نص تطريز القبعة`);
+          } else if (/\s/.test(eh.hatExtraText.trim())) {
+            errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب أن يكون كلمة واحدة بدون مسافات`);
+          } else if (eh.hatExtraText.trim().length > 10) {
+            errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب ألا يتجاوز 10 أحرف`);
+          }
         }
         if (!eh.fringeColor) {
           errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها لون الهدب`);
@@ -523,10 +537,10 @@ export default function LeaderPage() {
       });
     }
 
-    // Hat embroidery quota validation
+    // Hat embroidery quota validation (optional - only validate if quota set and used)
     if (orderInfo?.hat_embroidery_enabled && totalHatQuota > 0) {
-      if (totalHatQuotaUsed !== totalHatQuota) {
-        errors.push(`يجب استهلاك كامل رصيد تطريز القبعات (${totalHatQuotaUsed} / ${totalHatQuota})`);
+      if (totalHatQuotaUsed > totalHatQuota) {
+        errors.push(`تم تجاوز رصيد تطريز القبعات (${totalHatQuotaUsed} / ${totalHatQuota})`);
       }
     }
 

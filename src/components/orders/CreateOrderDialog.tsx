@@ -65,6 +65,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [studentCount, setStudentCount] = useState('');
   const [extraScarfCount, setExtraScarfCount] = useState('');
   const [extraHatCount, setExtraHatCount] = useState('');
+  const [executionDuration, setExecutionDuration] = useState('');
   const [orderType, setOrderType] = useState<'ready_kit' | 'custom'>('ready_kit');
   const [selectedKit, setSelectedKit] = useState('');
 
@@ -165,6 +166,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setStudentCount(String(o.student_count || ''));
       setExtraScarfCount(String(o.extra_scarf_count || ''));
       setExtraHatCount(String(o.extra_hat_count || ''));
+      setExecutionDuration(o.execution_duration ? String(o.execution_duration) : '');
       setOrderType(o.order_type === 'custom' ? 'custom' : 'ready_kit');
       setSelectedKit(o.kit_id || '');
       setCustomAbayaColor(o.custom_abaya_color || '');
@@ -217,6 +219,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setStudentCount('');
     setExtraScarfCount('');
     setExtraHatCount('');
+    setExecutionDuration('');
     setOrderType('ready_kit');
     setSelectedKit('');
     setCustomAbayaColor('');
@@ -354,9 +357,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         student_count: sc,
         extra_scarf_count: esc,
         extra_hat_count: ehc,
+        execution_duration: parseInt(executionDuration) || null,
         order_type: orderType,
         kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
-        city_id: null, // Removed from order creation
+        city_id: null,
         custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
         custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
         custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
@@ -482,11 +486,15 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                 {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الأطقم</label>
                 <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="0" type="number" min="0" />
                 <p className="text-[10px] text-muted-foreground mt-0.5">اتركه 0 للأوشحة/قبعات فقط</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">مدة التنفيذ (أيام)</label>
+                <Input value={executionDuration} onChange={e => setExecutionDuration(e.target.value)} placeholder="عدد الأيام" type="number" min="1" />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">أوشحة إضافية</label>
