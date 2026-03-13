@@ -526,10 +526,8 @@ export default function LeaderPage() {
       extraHats.forEach((eh) => {
         const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
         const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text) {
-          if (!eh.hatExtraText.trim()) {
-            errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها نص تطريز القبعة`);
-          } else if (/\s/.test(eh.hatExtraText.trim())) {
+        if (!isNone && hat?.has_extra_text && eh.hatExtraText.trim()) {
+          if (/\s/.test(eh.hatExtraText.trim())) {
             errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب أن يكون كلمة واحدة بدون مسافات`);
           } else if (eh.hatExtraText.trim().length > 10) {
             errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب ألا يتجاوز 10 أحرف`);
