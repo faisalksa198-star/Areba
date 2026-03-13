@@ -1196,6 +1196,8 @@ export default function LeaderPage() {
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
                         <th className="px-2 py-3 text-right font-semibold text-muted-foreground">الاسم</th>
                         <th className="w-[150px] px-2 py-3 text-center font-semibold text-muted-foreground">نوع الوشاح</th>
+                        {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
+                        {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1231,6 +1233,39 @@ export default function LeaderPage() {
                               <span className="text-xs text-muted-foreground">—</span>
                             )}
                           </td>
+                          {showLogo && (
+                            <td className="px-2 py-2.5 text-center">
+                              <Checkbox
+                                checked={es.hasLogoEmbroidery}
+                                onCheckedChange={() => {
+                                  if (logoIsAll) return;
+                                  setExtraScarves(prev => {
+                                    const current = prev.find(s => s.id === es.id);
+                                    if (!current) return prev;
+                                    if (!current.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && logoCount >= orderInfo.logo_embroidery_count) return prev;
+                                    return prev.map(s => s.id === es.id ? { ...s, hasLogoEmbroidery: !s.hasLogoEmbroidery } : s);
+                                  });
+                                }}
+                                disabled={!!logoIsAll || !!isSubmitted}
+                              />
+                            </td>
+                          )}
+                          {showBack && (
+                            <td className="px-2 py-2.5">
+                              <Input
+                                value={es.backEmbroideryText}
+                                onChange={e => {
+                                  if (!es.backEmbroideryText.trim() && e.target.value.trim()) {
+                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && backCount >= orderInfo.back_embroidery_count) return;
+                                  }
+                                  setExtraScarves(prev => prev.map(s => s.id === es.id ? { ...s, backEmbroideryText: e.target.value } : s));
+                                }}
+                                placeholder="النص"
+                                className="h-8 text-xs"
+                                disabled={!!isSubmitted}
+                              />
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
