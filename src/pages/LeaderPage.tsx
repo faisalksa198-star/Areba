@@ -722,7 +722,7 @@ export default function LeaderPage() {
   // Lock page when data is submitted or status is not pending_data
   const isLocked = orderInfo && (orderInfo.data_submitted || orderInfo.status !== 'pending_data');
 
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  // generatingPdf state moved to top of component
 
   const handleGeneratePdf = async () => {
     if (!orderId) return;
