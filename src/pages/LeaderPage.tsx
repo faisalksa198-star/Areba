@@ -154,17 +154,8 @@ function areSimilar(a: string, b: string): boolean {
   if (!a || !b) return false;
   const la = a.toLowerCase().trim();
   const lb = b.toLowerCase().trim();
-  if (la === lb) return true;
-  if (la.length < 2 || lb.length < 2) return false;
-  if (la.includes(lb) || lb.includes(la)) return true;
-  if (Math.abs(la.length - lb.length) > 2) return false;
-  let diff = 0;
-  const maxLen = Math.max(la.length, lb.length);
-  for (let i = 0; i < maxLen; i++) {
-    if (la[i] !== lb[i]) diff++;
-    if (diff > 2) return false;
-  }
-  return diff <= 2;
+  // Exact match only
+  return la === lb;
 }
 
 export default function LeaderPage() {
