@@ -65,6 +65,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [studentCount, setStudentCount] = useState('');
   const [extraScarfCount, setExtraScarfCount] = useState('');
   const [extraHatCount, setExtraHatCount] = useState('');
+  const [executionDuration, setExecutionDuration] = useState('');
   const [orderType, setOrderType] = useState<'ready_kit' | 'custom'>('ready_kit');
   const [selectedKit, setSelectedKit] = useState('');
 
