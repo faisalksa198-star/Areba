@@ -516,7 +516,12 @@ export default function LeaderPage() {
     const extraScarfCount = orderInfo?.extra_scarf_count || 0;
     if (extraScarfCount > 0) {
       extraScarves.forEach((es) => {
-        if (!es.name.trim()) errors.push(`وشاح إضافي رقم ${es.serialNumber} ينقصه الاسم`);
+        if (!es.name.trim()) {
+          errors.push(`وشاح إضافي رقم ${es.serialNumber} ينقصه الاسم`);
+        } else {
+          const { error } = validateName(es.name);
+          if (error) errors.push(`وشاح إضافي رقم ${es.serialNumber}: ${error}`);
+        }
       });
     }
 
