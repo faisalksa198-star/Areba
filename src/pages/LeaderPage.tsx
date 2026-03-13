@@ -113,6 +113,8 @@ interface ExtraScarfRow {
   serialNumber: number;
   name: string;
   scarfDesignId: string;
+  hasLogoEmbroidery: boolean;
+  backEmbroideryText: string;
 }
 
 interface ExtraHatRow {
