@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import jsPDF from 'jspdf';
 import { useParams } from 'react-router-dom';
+import { generateOrderPdf } from '@/lib/orderPdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
