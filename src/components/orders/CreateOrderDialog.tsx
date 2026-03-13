@@ -219,6 +219,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setStudentCount('');
     setExtraScarfCount('');
     setExtraHatCount('');
+    setExecutionDuration('');
     setOrderType('ready_kit');
     setSelectedKit('');
     setCustomAbayaColor('');
