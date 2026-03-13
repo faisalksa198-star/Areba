@@ -116,6 +116,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   s1.columns = [
     { header: 'رقم الطلب', key: 'num', width: 12 },
     { header: 'تاريخ الطلب', key: 'date', width: 14 },
+    { header: 'مدة التنفيذ (أيام)', key: 'duration', width: 14 },
     { header: 'عدد الأطقم', key: 'kitCount', width: 10 },
     { header: 'أوشحة إضافية', key: 'extraScarfCount', width: 12 },
     { header: 'إجمالي الأوشحة', key: 'totalScarves', width: 12 },
@@ -142,6 +143,13 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     { header: 'رابط صورة 3', key: 'back3', width: 35 },
     { header: 'رابط صورة 4', key: 'back4', width: 35 },
     { header: 'رابط صورة 5', key: 'back5', width: 35 },
+    // Shipping columns
+    { header: 'اسم المستلم', key: 'recipientName', width: 18 },
+    { header: 'رقم الجوال', key: 'recipientPhone', width: 14 },
+    { header: 'المدينة', key: 'shippingCity', width: 14 },
+    { header: 'الحي', key: 'district', width: 14 },
+    { header: 'تفاصيل العنوان', key: 'addressDetails', width: 22 },
+    { header: 'العنوان الوطني', key: 'nationalAddress', width: 18 },
   ];
   styleHeaderRow(s1);
 
@@ -168,6 +176,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     s1.addRow({
       num: shortOrderNumber(o.order_number),
       date: o.created_at ? new Date(o.created_at).toLocaleDateString('ar-SA') : '',
+      duration: (o as any).execution_duration || '',
       kitCount: sc,
       extraScarfCount: esc,
       totalScarves: sc + esc,
@@ -190,6 +199,13 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
       logoUrl: '',
       backCount: o.back_embroidery_count || 0,
       back1: '', back2: '', back3: '', back4: '', back5: '',
+      // Shipping
+      recipientName: o.recipient_name || '',
+      recipientPhone: o.recipient_phone || '',
+      shippingCity: lk(maps.cities, o.shipping_city_id),
+      district: o.district || '',
+      addressDetails: o.address_details || '',
+      nationalAddress: o.national_address || '',
     });
 
     const row = s1.getRow(rowNum);
@@ -235,7 +251,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 3: تصاميم القبعات (grouped by design + embroidery status)
+  // Sheet 3: تصاميم القبعات (designs WITHOUT text only, grouped)
   // ═══════════════════════════════════════════════════════════
   const s3 = wb.addWorksheet('تصاميم القبعات', { views: [{ rightToLeft: true }] });
   s3.columns = [
@@ -259,7 +275,6 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     });
     const defaultFringeColor = scarfs[0]?.embroidery_color || '';
 
-    // Collect all hats (students + extras) into groups
     interface HatGroup {
       designName: string;
       fringeColor: string;
@@ -268,9 +283,12 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     }
     const groupMap = new Map<string, HatGroup>();
 
+    // Students - only hats WITHOUT extra text (designs without text)
     for (const st of students) {
       const isNone = !st.hat_embroidery_id;
       const hatInfo = isNone ? null : maps.hatEmbroideries.get(st.hat_embroidery_id!);
+      // Skip hats with text - those go to names sheet
+      if (hatInfo?.has_extra_text && st.hat_extra_text?.trim()) continue;
       const designName = isNone ? '0' : (hatInfo?.name || '');
       const fringeColor = st.scarf_design_id
         ? (scarfColorMap.get(st.scarf_design_id) || defaultFringeColor)
@@ -284,9 +302,12 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
       }
     }
 
+    // Extra hats - only WITHOUT text
     for (const eh of extras) {
       const isNone = !eh.hat_embroidery_id;
       const hatInfo = isNone ? null : maps.hatEmbroideries.get(eh.hat_embroidery_id);
+      // Skip hats with text - those go to names sheet
+      if (hatInfo?.has_extra_text && eh.hat_extra_text?.trim()) continue;
       const designName = isNone ? '0' : (hatInfo?.name || '');
       const fringeColor = eh.fringe_color || '';
       const key = `${designName}||${fringeColor}||إضافية`;
@@ -310,7 +331,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // Sheet 4: قائمة الأسماء
+  // Sheet 4: قائمة الأسماء (students + extra scarves + extra hats with text)
   // ═══════════════════════════════════════════════════════════
   const s4 = wb.addWorksheet('قائمة الأسماء', { views: [{ rightToLeft: true }] });
   s4.columns = [
@@ -333,6 +354,7 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
     const students = allStudents.filter(st => st.order_id === o.id);
     const scarfs = allScarfDesigns.filter(sd => sd.order_id === o.id);
     const extras = allExtraScarves.filter(es => es.order_id === o.id);
+    const extraHats = allExtraHats.filter(eh => eh.order_id === o.id);
     const on = shortOrderNumber(o.order_number);
 
     const scarfCodeMap = new Map<string, string>();
@@ -375,6 +397,26 @@ export async function exportOrdersXlsx(orderIds: string[]): Promise<void> {
         hatText: '',
         packageType: '',
         rowType: 'وشاح فقط',
+      });
+    }
+
+    // Extra hats WITH text (embroidered with text)
+    let hatTextSerial = 0;
+    for (const eh of extraHats) {
+      const hatInfo = eh.hat_embroidery_id ? maps.hatEmbroideries.get(eh.hat_embroidery_id) : null;
+      if (!hatInfo?.has_extra_text || !eh.hat_extra_text?.trim()) continue;
+      hatTextSerial++;
+      s4.addRow({
+        num: on,
+        serial: `ق${hatTextSerial}`,
+        name: '',
+        size: '',
+        scarfCode: '',
+        logo: '',
+        backText: '',
+        hatText: eh.hat_extra_text || '',
+        packageType: '',
+        rowType: 'قبعة فقط',
       });
     }
   }
