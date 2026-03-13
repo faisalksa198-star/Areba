@@ -482,6 +482,7 @@ export type Database = {
           data_submitted: boolean | null
           district: string | null
           employee_id: string
+          execution_duration: number | null
           extra_hat_count: number | null
           extra_scarf_count: number | null
           hat_embroidery_count: number | null
@@ -532,6 +533,7 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id: string
+          execution_duration?: number | null
           extra_hat_count?: number | null
           extra_scarf_count?: number | null
           hat_embroidery_count?: number | null
@@ -582,6 +584,7 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id?: string
+          execution_duration?: number | null
           extra_hat_count?: number | null
           extra_scarf_count?: number | null
           hat_embroidery_count?: number | null
