@@ -113,6 +113,8 @@ interface ExtraScarfRow {
   serialNumber: number;
   name: string;
   scarfDesignId: string;
+  hasLogoEmbroidery: boolean;
+  backEmbroideryText: string;
 }
 
 interface ExtraHatRow {
@@ -356,6 +358,8 @@ export default function LeaderPage() {
         serialNumber: s.serial_number,
         name: s.name || '',
         scarfDesignId: s.scarf_design_id || defaultScarfId,
+        hasLogoEmbroidery: false,
+        backEmbroideryText: '',
       })));
     } else if (info.extra_scarf_count > 0) {
       setExtraScarves(Array.from({ length: info.extra_scarf_count }, (_, i) => ({
@@ -363,6 +367,8 @@ export default function LeaderPage() {
         serialNumber: i + 1,
         name: '',
         scarfDesignId: defaultScarfId,
+        hasLogoEmbroidery: false,
+        backEmbroideryText: '',
       })));
     }
 
@@ -391,8 +397,8 @@ export default function LeaderPage() {
 
   const logoIsAll = orderInfo && orderInfo.logo_embroidery_enabled && (orderInfo.logo_embroidery_count === 0 || orderInfo.logo_embroidery_count >= maxStudents);
 
-  const logoCount = useMemo(() => students.filter(s => s.hasLogoEmbroidery).length, [students]);
-  const backCount = useMemo(() => students.filter(s => s.backEmbroideryText.trim()).length, [students]);
+  const logoCount = useMemo(() => students.filter(s => s.hasLogoEmbroidery).length + extraScarves.filter(s => s.hasLogoEmbroidery).length, [students, extraScarves]);
+  const backCount = useMemo(() => students.filter(s => s.backEmbroideryText.trim()).length + extraScarves.filter(s => s.backEmbroideryText.trim()).length, [students, extraScarves]);
 
   // Hat embroidery quota: total across students + extra hats
   const studentHatCount = useMemo(() => students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length, [students, noEmbroideryId]);
@@ -482,10 +488,8 @@ export default function LeaderPage() {
         if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
         const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
         const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text) {
-          if (!s.hatExtraText.trim()) {
-            errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
-          } else if (/\s/.test(s.hatExtraText.trim())) {
+        if (!isNone && hat?.has_extra_text && s.hatExtraText.trim()) {
+          if (/\s/.test(s.hatExtraText.trim())) {
             errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب أن يكون كلمة واحدة بدون مسافات`);
           } else if (s.hatExtraText.trim().length > 10) {
             errors.push(`الطالبة رقم ${s.serialNumber}: نص تطريز القبعة يجب ألا يتجاوز 10 أحرف`);
@@ -522,10 +526,8 @@ export default function LeaderPage() {
       extraHats.forEach((eh) => {
         const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
         const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-        if (!isNone && hat?.has_extra_text) {
-          if (!eh.hatExtraText.trim()) {
-            errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها نص تطريز القبعة`);
-          } else if (/\s/.test(eh.hatExtraText.trim())) {
+        if (!isNone && hat?.has_extra_text && eh.hatExtraText.trim()) {
+          if (/\s/.test(eh.hatExtraText.trim())) {
             errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب أن يكون كلمة واحدة بدون مسافات`);
           } else if (eh.hatExtraText.trim().length > 10) {
             errors.push(`قبعة إضافية رقم ${eh.serialNumber}: نص التطريز يجب ألا يتجاوز 10 أحرف`);
@@ -1194,6 +1196,8 @@ export default function LeaderPage() {
                         <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
                         <th className="px-2 py-3 text-right font-semibold text-muted-foreground">الاسم</th>
                         <th className="w-[150px] px-2 py-3 text-center font-semibold text-muted-foreground">نوع الوشاح</th>
+                        {showLogo && <th className="w-[70px] px-2 py-3 text-center font-semibold text-muted-foreground">شعار</th>}
+                        {showBack && <th className="w-[140px] px-2 py-3 text-center font-semibold text-muted-foreground">تطريز خلفي</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1229,6 +1233,39 @@ export default function LeaderPage() {
                               <span className="text-xs text-muted-foreground">—</span>
                             )}
                           </td>
+                          {showLogo && (
+                            <td className="px-2 py-2.5 text-center">
+                              <Checkbox
+                                checked={es.hasLogoEmbroidery}
+                                onCheckedChange={() => {
+                                  if (logoIsAll) return;
+                                  setExtraScarves(prev => {
+                                    const current = prev.find(s => s.id === es.id);
+                                    if (!current) return prev;
+                                    if (!current.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && logoCount >= orderInfo.logo_embroidery_count) return prev;
+                                    return prev.map(s => s.id === es.id ? { ...s, hasLogoEmbroidery: !s.hasLogoEmbroidery } : s);
+                                  });
+                                }}
+                                disabled={!!logoIsAll || !!isSubmitted}
+                              />
+                            </td>
+                          )}
+                          {showBack && (
+                            <td className="px-2 py-2.5">
+                              <Input
+                                value={es.backEmbroideryText}
+                                onChange={e => {
+                                  if (!es.backEmbroideryText.trim() && e.target.value.trim()) {
+                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && backCount >= orderInfo.back_embroidery_count) return;
+                                  }
+                                  setExtraScarves(prev => prev.map(s => s.id === es.id ? { ...s, backEmbroideryText: e.target.value } : s));
+                                }}
+                                placeholder="النص"
+                                className="h-8 text-xs"
+                                disabled={!!isSubmitted}
+                              />
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
@@ -1251,15 +1288,15 @@ export default function LeaderPage() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+              <div className="mt-2 flex justify-end">
+                <div className="w-fit max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                  <table className="text-sm">
                     <thead className="bg-card border-b border-border">
                       <tr>
-                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
-                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">تصميم التطريز</th>
-                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">نص التطريز</th>
-                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">لون الهدب</th>
+                        <th className="w-10 px-2 py-2 text-center font-semibold text-muted-foreground text-xs">#</th>
+                        <th className="w-[140px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">تصميم التطريز</th>
+                        <th className="w-[110px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">نص التطريز</th>
+                        <th className="w-[100px] px-2 py-2 text-center font-semibold text-muted-foreground text-xs">لون الهدب</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1268,8 +1305,8 @@ export default function LeaderPage() {
                         const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
                         return (
                           <tr key={eh.id} className="border-b border-border/50">
-                            <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{eh.serialNumber}</td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-2 text-center text-xs font-bold text-muted-foreground">{eh.serialNumber}</td>
+                            <td className="px-2 py-1.5">
                               <Select
                                 value={eh.hatEmbroideryId}
                                 onValueChange={(v) => {
@@ -1278,7 +1315,6 @@ export default function LeaderPage() {
                                   if (!newIsNone && !isNone) {
                                     // Swapping - ok
                                   } else if (!newIsNone) {
-                                    // Adding embroidery - check quota
                                     const currentUsed = totalHatQuotaUsed;
                                     if (totalHatQuota > 0 && currentUsed >= totalHatQuota) {
                                       toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
@@ -1289,7 +1325,7 @@ export default function LeaderPage() {
                                 }}
                                 disabled={!!isSubmitted}
                               >
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue placeholder="بدون تطريز" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1299,27 +1335,27 @@ export default function LeaderPage() {
                                 </SelectContent>
                               </Select>
                             </td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-1.5">
                               {!isNone && hat?.has_extra_text ? (
                                 <Input
                                   value={eh.hatExtraText}
                                   onChange={e => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, hatExtraText: e.target.value } : h))}
-                                  placeholder="نص التطريز"
+                                  placeholder="اختياري"
                                   maxLength={10}
-                                  className="h-8 text-xs"
+                                  className="h-7 text-xs"
                                   disabled={!!isSubmitted}
                                 />
                               ) : (
                                 <span className="text-xs text-muted-foreground">—</span>
                               )}
                             </td>
-                            <td className="px-2 py-2.5">
+                            <td className="px-2 py-1.5">
                               <Select
                                 value={eh.fringeColor}
                                 onValueChange={v => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, fringeColor: v } : h))}
                                 disabled={!!isSubmitted}
                               >
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue placeholder="اختر" />
                                 </SelectTrigger>
                                 <SelectContent>
