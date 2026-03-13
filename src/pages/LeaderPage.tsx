@@ -606,6 +606,8 @@ export default function LeaderPage() {
         serial_number: es.serialNumber,
         name: es.name.trim(),
         scarf_design_id: es.scarfDesignId || null,
+        has_logo_embroidery: es.hasLogoEmbroidery,
+        back_embroidery_text: es.backEmbroideryText.trim() || null,
       }));
       const { error: eErr } = await supabase.from('extra_scarves').insert(scarfRows as any);
       if (eErr) {
