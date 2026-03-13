@@ -365,6 +365,8 @@ export default function LeaderPage() {
         serialNumber: i + 1,
         name: '',
         scarfDesignId: defaultScarfId,
+        hasLogoEmbroidery: false,
+        backEmbroideryText: '',
       })));
     }
 
