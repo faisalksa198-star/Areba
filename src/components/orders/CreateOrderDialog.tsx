@@ -486,11 +486,15 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                 {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الأطقم</label>
                 <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="0" type="number" min="0" />
                 <p className="text-[10px] text-muted-foreground mt-0.5">اتركه 0 للأوشحة/قبعات فقط</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">مدة التنفيذ (أيام)</label>
+                <Input value={executionDuration} onChange={e => setExecutionDuration(e.target.value)} placeholder="عدد الأيام" type="number" min="1" />
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">أوشحة إضافية</label>
