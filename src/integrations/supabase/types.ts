@@ -194,6 +194,99 @@ export type Database = {
         }
         Relationships: []
       }
+      extra_hats: {
+        Row: {
+          created_at: string
+          fringe_color: string | null
+          hat_embroidery_id: string | null
+          hat_extra_text: string | null
+          id: string
+          order_id: string
+          serial_number: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fringe_color?: string | null
+          hat_embroidery_id?: string | null
+          hat_extra_text?: string | null
+          id?: string
+          order_id: string
+          serial_number: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fringe_color?: string | null
+          hat_embroidery_id?: string | null
+          hat_extra_text?: string | null
+          id?: string
+          order_id?: string
+          serial_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extra_hats_hat_embroidery_id_fkey"
+            columns: ["hat_embroidery_id"]
+            isOneToOne: false
+            referencedRelation: "hat_embroideries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extra_hats_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extra_scarves: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          order_id: string
+          scarf_design_id: string | null
+          serial_number: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_id: string
+          scarf_design_id?: string | null
+          serial_number: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          order_id?: string
+          scarf_design_id?: string | null
+          serial_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extra_scarves_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extra_scarves_scarf_design_id_fkey"
+            columns: ["scarf_design_id"]
+            isOneToOne: false
+            referencedRelation: "order_scarf_designs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fonts: {
         Row: {
           created_at: string
@@ -389,6 +482,8 @@ export type Database = {
           data_submitted: boolean | null
           district: string | null
           employee_id: string
+          extra_hat_count: number | null
+          extra_scarf_count: number | null
           hat_embroidery_count: number | null
           hat_embroidery_enabled: boolean | null
           id: string
@@ -437,6 +532,8 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id: string
+          extra_hat_count?: number | null
+          extra_scarf_count?: number | null
           hat_embroidery_count?: number | null
           hat_embroidery_enabled?: boolean | null
           id?: string
@@ -485,6 +582,8 @@ export type Database = {
           data_submitted?: boolean | null
           district?: string | null
           employee_id?: string
+          extra_hat_count?: number | null
+          extra_scarf_count?: number | null
           hat_embroidery_count?: number | null
           hat_embroidery_enabled?: boolean | null
           id?: string

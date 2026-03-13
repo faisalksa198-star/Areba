@@ -7,13 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown, Download } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown, Download, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
+
+const FRINGE_COLORS = [
+  { value: 'فضي', label: 'فضي' },
+  { value: 'ذهبي', label: 'ذهبي' },
+  { value: 'أسود', label: 'أسود' },
+  { value: 'أبيض', label: 'أبيض' },
+];
 
 interface ScarfDesign {
   id: string;
@@ -38,6 +48,8 @@ interface OrderInfo {
   order_number: string;
   status: string;
   student_count: number;
+  extra_scarf_count: number;
+  extra_hat_count: number;
   logo_embroidery_enabled: boolean;
   logo_embroidery_count: number;
   back_embroidery_enabled: boolean;
@@ -94,6 +106,21 @@ interface StudentRow {
   hasPurplePackage: boolean;
   nameError: string;
   similarWarning: string;
+}
+
+interface ExtraScarfRow {
+  id: string;
+  serialNumber: number;
+  name: string;
+  scarfDesignId: string;
+}
+
+interface ExtraHatRow {
+  id: string;
+  serialNumber: number;
+  hatEmbroideryId: string;
+  hatExtraText: string;
+  fringeColor: string;
 }
 
 function createEmptyRow(serial: number, defaultScarfId: string, noEmbroideryId: string): StudentRow {
@@ -156,6 +183,11 @@ export default function LeaderPage() {
   const [notFound, setNotFound] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [shippingOpen, setShippingOpen] = useState(false);
+  const [citySearchOpen, setCitySearchOpen] = useState(false);
+
+  // Extra scarves & hats
+  const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
+  const [extraHats, setExtraHats] = useState<ExtraHatRow[]>([]);
 
   // Shipping state
   const [shipping, setShipping] = useState<ShippingInfo>({
@@ -173,12 +205,12 @@ export default function LeaderPage() {
   }, [orderId]);
 
   const loadData = async () => {
-    // Load order info with shipping + leader_phone + order details
     const { data: order } = await supabase
       .from('orders')
       .select(`
         leader_name, order_number, status, school_name,
-        student_count, logo_embroidery_enabled, logo_embroidery_count, 
+        student_count, extra_scarf_count, extra_hat_count,
+        logo_embroidery_enabled, logo_embroidery_count, 
         back_embroidery_enabled, back_embroidery_count, hat_embroidery_enabled, hat_embroidery_count,
         purple_package_enabled, purple_package_count,
         recipient_name, recipient_phone, shipping_city_id, district, address_details, national_address, 
@@ -205,7 +237,9 @@ export default function LeaderPage() {
       leader_name: o.leader_name || '',
       order_number: o.order_number || '',
       status: o.status || 'pending_data',
-      student_count: o.student_count || 30,
+      student_count: o.student_count || 0,
+      extra_scarf_count: o.extra_scarf_count || 0,
+      extra_hat_count: o.extra_hat_count || 0,
       logo_embroidery_enabled: o.logo_embroidery_enabled || false,
       logo_embroidery_count: o.logo_embroidery_count || 0,
       back_embroidery_enabled: o.back_embroidery_enabled || false,
@@ -237,7 +271,7 @@ export default function LeaderPage() {
     setOrderInfo(info);
     setMaxStudents(info.student_count);
 
-    // Load shipping info - auto-fill phone from leader_phone and recipient_name from leader_name if empty
+    // Load shipping info
     setShipping({
       recipient_name: o.recipient_name || o.leader_name || '',
       recipient_phone: o.recipient_phone || o.leader_phone || '',
@@ -247,8 +281,8 @@ export default function LeaderPage() {
       national_address: o.national_address || '',
     });
 
-    // Load cities + hat embroideries + scarf designs + existing students
-    const [citiesRes, hatsRes, scarfsRes, studentsRes] = await Promise.all([
+    // Load cities + hat embroideries + scarf designs + existing students + extras
+    const [citiesRes, hatsRes, scarfsRes, studentsRes, extraScarvesRes, extraHatsRes] = await Promise.all([
       supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
       supabase.from('hat_embroideries').select('id, name, image_url, has_extra_text').eq('is_active', true).order('created_at'),
       supabase
@@ -264,6 +298,8 @@ export default function LeaderPage() {
         .eq('order_id', orderId!)
         .order('sort_order'),
       supabase.from('students').select('*').eq('order_id', orderId!).order('serial_number'),
+      supabase.from('extra_scarves').select('*').eq('order_id', orderId!).order('serial_number'),
+      supabase.from('extra_hats').select('*').eq('order_id', orderId!).order('serial_number'),
     ]);
 
     setCities((citiesRes.data as any) || []);
@@ -293,7 +329,7 @@ export default function LeaderPage() {
 
     const defaultScarfId = parsedScarfs[0]?.id || '';
 
-    // Check if logo embroidery is "all"
+    // Logo is "all"
     const logoIsAll = info.logo_embroidery_enabled && (info.logo_embroidery_count === 0 || info.logo_embroidery_count >= info.student_count);
 
     const existingStudents = (studentsRes.data as any[]) || [];
@@ -312,14 +348,51 @@ export default function LeaderPage() {
         nameError: '',
         similarWarning: '',
       })));
-    } else {
-      // Initialize rows based on student_count: show min(student_count, 5)
+    } else if (info.student_count > 0) {
       const initialCount = Math.min(info.student_count, 5);
       setStudents(Array.from({ length: initialCount }, (_, i) => {
         const row = createEmptyRow(i + 1, defaultScarfId, noneId);
         if (logoIsAll) row.hasLogoEmbroidery = true;
         return row;
       }));
+    }
+
+    // Extra scarves
+    const existingExtraScarves = (extraScarvesRes.data as any[]) || [];
+    if (existingExtraScarves.length > 0) {
+      setExtraScarves(existingExtraScarves.map((s: any) => ({
+        id: s.id,
+        serialNumber: s.serial_number,
+        name: s.name || '',
+        scarfDesignId: s.scarf_design_id || defaultScarfId,
+      })));
+    } else if (info.extra_scarf_count > 0) {
+      setExtraScarves(Array.from({ length: info.extra_scarf_count }, (_, i) => ({
+        id: crypto.randomUUID(),
+        serialNumber: i + 1,
+        name: '',
+        scarfDesignId: defaultScarfId,
+      })));
+    }
+
+    // Extra hats
+    const existingExtraHats = (extraHatsRes.data as any[]) || [];
+    if (existingExtraHats.length > 0) {
+      setExtraHats(existingExtraHats.map((s: any) => ({
+        id: s.id,
+        serialNumber: s.serial_number,
+        hatEmbroideryId: s.hat_embroidery_id || noneId,
+        hatExtraText: s.hat_extra_text || '',
+        fringeColor: s.fringe_color || '',
+      })));
+    } else if (info.extra_hat_count > 0) {
+      setExtraHats(Array.from({ length: info.extra_hat_count }, (_, i) => ({
+        id: crypto.randomUUID(),
+        serialNumber: i + 1,
+        hatEmbroideryId: noneId,
+        hatExtraText: '',
+        fringeColor: '',
+      })));
     }
 
     setLoading(false);
@@ -329,6 +402,12 @@ export default function LeaderPage() {
 
   const logoCount = useMemo(() => students.filter(s => s.hasLogoEmbroidery).length, [students]);
   const backCount = useMemo(() => students.filter(s => s.backEmbroideryText.trim()).length, [students]);
+
+  // Hat embroidery quota: total across students + extra hats
+  const studentHatCount = useMemo(() => students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length, [students, noEmbroideryId]);
+  const extraHatEmbCount = useMemo(() => extraHats.filter(h => h.hatEmbroideryId && h.hatEmbroideryId !== noEmbroideryId).length, [extraHats, noEmbroideryId]);
+  const totalHatQuotaUsed = studentHatCount + extraHatEmbCount;
+  const totalHatQuota = orderInfo?.hat_embroidery_count || 0;
 
   const updateStudent = useCallback((id: string, field: keyof StudentRow, value: any) => {
     setStudents(prev => prev.map(s => {
@@ -401,31 +480,53 @@ export default function LeaderPage() {
 
   const validateAll = (): string[] => {
     const errors: string[] = [];
-    const filledStudents = students.filter(s => s.name.trim());
-
-    if (filledStudents.length === 0) {
-      errors.push('يجب إدخال بيانات طالبة واحدة على الأقل');
+    
+    if (maxStudents > 0) {
+      const filledStudents = students.filter(s => s.name.trim());
+      if (filledStudents.length === 0) {
+        errors.push('يجب إدخال بيانات طالبة واحدة على الأقل');
+      }
+      filledStudents.forEach((s) => {
+        if (!s.size) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار المقاس`);
+        if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
+        const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
+        const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+        if (!isNone && hat?.has_extra_text && !s.hatExtraText.trim()) {
+          errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
+        }
+        if (!orderInfo?.hat_embroidery_enabled && !isNone) {
+          errors.push(`الطالبة رقم ${s.serialNumber}: خدمة تطريز القبعات غير مفعّلة لهذا الطلب`);
+        }
+      });
     }
 
-    filledStudents.forEach((s) => {
-      if (!s.size) errors.push(`الطالبة رقم ${s.serialNumber} ينقصها اختيار المقاس`);
-      if (s.nameError) errors.push(`الطالبة رقم ${s.serialNumber}: ${s.nameError}`);
+    // Extra scarves validation
+    const extraScarfCount = orderInfo?.extra_scarf_count || 0;
+    if (extraScarfCount > 0) {
+      extraScarves.forEach((es) => {
+        if (!es.name.trim()) errors.push(`وشاح إضافي رقم ${es.serialNumber} ينقصه الاسم`);
+      });
+    }
 
-      const hat = hatEmbroideries.find(h => h.id === s.hatEmbroideryId);
-      const isNone = !s.hatEmbroideryId || s.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
-      if (!isNone && hat?.has_extra_text && !s.hatExtraText.trim()) {
-        errors.push(`الطالبة رقم ${s.serialNumber} ينقصها نص تطريز القبعة`);
-      }
-      if (!orderInfo?.hat_embroidery_enabled && !isNone) {
-        errors.push(`الطالبة رقم ${s.serialNumber}: خدمة تطريز القبعات غير مفعّلة لهذا الطلب`);
-      }
-    });
+    // Extra hats validation
+    const extraHatCount = orderInfo?.extra_hat_count || 0;
+    if (extraHatCount > 0) {
+      extraHats.forEach((eh) => {
+        const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
+        const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+        if (!isNone && hat?.has_extra_text && !eh.hatExtraText.trim()) {
+          errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها نص تطريز القبعة`);
+        }
+        if (!eh.fringeColor) {
+          errors.push(`قبعة إضافية رقم ${eh.serialNumber} ينقصها لون الهدب`);
+        }
+      });
+    }
 
-    // Hat embroidery limit
-    if (orderInfo?.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0) {
-      const chosen = students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
-      if (chosen > orderInfo.hat_embroidery_count) {
-        errors.push(`تم اختيار تطريز القبعات لأكثر من العدد المسموح (${chosen} / ${orderInfo.hat_embroidery_count})`);
+    // Hat embroidery quota validation
+    if (orderInfo?.hat_embroidery_enabled && totalHatQuota > 0) {
+      if (totalHatQuotaUsed !== totalHatQuota) {
+        errors.push(`يجب استهلاك كامل رصيد تطريز القبعات (${totalHatQuotaUsed} / ${totalHatQuota})`);
       }
     }
 
@@ -476,6 +577,43 @@ export default function LeaderPage() {
       }
     }
 
+    // Save extra scarves
+    await supabase.from('extra_scarves').delete().eq('order_id', orderId);
+    if (extraScarves.length > 0) {
+      const scarfRows = extraScarves.map(es => ({
+        order_id: orderId,
+        serial_number: es.serialNumber,
+        name: es.name.trim(),
+        scarf_design_id: es.scarfDesignId || null,
+      }));
+      const { error: eErr } = await supabase.from('extra_scarves').insert(scarfRows as any);
+      if (eErr) {
+        toast({ title: 'خطأ في حفظ الأوشحة الإضافية', description: eErr.message, variant: 'destructive' });
+        return false;
+      }
+    }
+
+    // Save extra hats
+    await supabase.from('extra_hats').delete().eq('order_id', orderId);
+    if (extraHats.length > 0) {
+      const hatRows = extraHats.map(eh => {
+        const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
+        const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+        return {
+          order_id: orderId,
+          serial_number: eh.serialNumber,
+          hat_embroidery_id: isNone ? null : eh.hatEmbroideryId,
+          hat_extra_text: !isNone ? (eh.hatExtraText.trim() || null) : null,
+          fringe_color: eh.fringeColor || null,
+        };
+      });
+      const { error: ehErr } = await supabase.from('extra_hats').insert(hatRows as any);
+      if (ehErr) {
+        toast({ title: 'خطأ في حفظ القبعات الإضافية', description: ehErr.message, variant: 'destructive' });
+        return false;
+      }
+    }
+
     // Save shipping info
     const { error: shippingError } = await supabase
       .from('orders')
@@ -521,14 +659,12 @@ export default function LeaderPage() {
     setSubmitting(true);
     setValidationErrors([]);
 
-    // Save students + shipping first
     const saveOk = await saveStudentsAndShipping();
     if (!saveOk) {
       setSubmitting(false);
       return;
     }
 
-    // Mark as submitted and change status to under_review
     const { error } = await supabase
       .from('orders')
       .update({ data_submitted: true, status: 'under_review' as any })
@@ -539,7 +675,6 @@ export default function LeaderPage() {
       setSubmitting(false);
     } else {
       toast({ title: 'تم إرسال البيانات بنجاح ✓' });
-      // Force full page reload to read new status from DB
       setTimeout(() => window.location.reload(), 500);
     }
   };
@@ -569,7 +704,6 @@ export default function LeaderPage() {
     const rows = studentsData || [];
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    // Use built-in font (supports basic Latin)
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(16);
     doc.text(`Order: ${orderInfo?.order_number || ''}`, 105, 20, { align: 'center' });
@@ -577,7 +711,6 @@ export default function LeaderPage() {
     doc.text(`Leader: ${orderInfo?.leader_name || ''}`, 105, 30, { align: 'center' });
     doc.text(`Students: ${rows.length} / ${orderInfo?.student_count || 0}`, 105, 38, { align: 'center' });
 
-    // Table
     let y = 50;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
@@ -623,7 +756,6 @@ export default function LeaderPage() {
             <h2 className="text-lg font-bold text-foreground">تم إرسال البيانات بنجاح</h2>
             <p className="text-sm text-muted-foreground">يمكنكم تحميل ملخص الطلب من الزر أدناه</p>
 
-            {/* PDF download always available on locked page */}
             <Button onClick={generatePDF} className="gap-2">
               <Download className="h-4 w-4" />
               تحميل ملخص الطلب PDF
@@ -650,10 +782,18 @@ export default function LeaderPage() {
             <img src="/logo.svg" alt="متجر Areba" className="h-8 object-contain" />
           </div>
           <div className="flex items-center gap-3 mt-2 text-sm flex-wrap">
-            <Badge variant="secondary" className="gap-1">
-              <Users className="h-3 w-3" />
-              إجمالي الطالبات المسجلات: {students.filter(s => s.name.trim()).length} من {maxStudents}
-            </Badge>
+            {maxStudents > 0 && (
+              <Badge variant="secondary" className="gap-1">
+                <Users className="h-3 w-3" />
+                الطالبات: {students.filter(s => s.name.trim()).length} / {maxStudents}
+              </Badge>
+            )}
+            {(orderInfo?.extra_scarf_count || 0) > 0 && (
+              <Badge variant="outline" className="gap-1">أوشحة إضافية: {orderInfo!.extra_scarf_count}</Badge>
+            )}
+            {(orderInfo?.extra_hat_count || 0) > 0 && (
+              <Badge variant="outline" className="gap-1">قبعات إضافية: {orderInfo!.extra_hat_count}</Badge>
+            )}
             {showLogo && (
               <Badge variant="outline" className="gap-1">
                 شعار: {logoCount} / {logoIsAll ? 'الكل' : orderInfo.logo_embroidery_count}
@@ -666,7 +806,7 @@ export default function LeaderPage() {
             )}
             {orderInfo?.hat_embroidery_enabled && (
               <Badge variant="outline" className="gap-1">
-                تطريز قبعات: {students.filter(s => s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length} / {orderInfo!.hat_embroidery_count || 'الكل'}
+                رصيد تطريز القبعات: {totalHatQuotaUsed} / {totalHatQuota || 'الكل'}
               </Badge>
             )}
             {showPurple && (
@@ -741,13 +881,10 @@ export default function LeaderPage() {
 
                   return (
                     <>
-                      {/* Leader & Order number */}
                       <div className="grid grid-cols-2 gap-4 pb-3 border-b border-border">
                         {orderInfo.leader_name && <DataCell label="اسم القائدة" value={orderInfo.leader_name} />}
                         <DataCell label="رقم الطلب" value={orderInfo.order_number} />
                       </div>
-
-                      {/* Row 1: Order type + kit/abaya info */}
                       <div className="grid grid-cols-2 gap-4">
                         <DataCell label="نوع الطلب" value={isKit ? 'طقم جاهز' : 'تفصيل جديد'} />
                         {isKit && orderInfo.kit_name && <DataCell label="اسم الطقم" value={orderInfo.kit_name} />}
@@ -755,8 +892,6 @@ export default function LeaderPage() {
                         <DataCell label="طرف الكم" value={orderInfo.sleeve_style_name} />
                         {orderInfo.sleeve_color && <DataCell label="لون طرف الكم" value={orderInfo.sleeve_color} />}
                       </div>
-
-                      {/* Colors section */}
                       {(abayaColor || scarfColor || hatColor) && (
                         <div className="border-t border-border pt-3">
                           <p className="text-xs font-semibold text-muted-foreground mb-2">الألوان</p>
@@ -812,6 +947,7 @@ export default function LeaderPage() {
       )}
 
       {/* Students Table Accordion */}
+      {maxStudents > 0 && (
       <div className="pt-3 w-[90%] mx-auto">
         <Collapsible>
           <CollapsibleTrigger asChild>
@@ -852,7 +988,7 @@ export default function LeaderPage() {
                               onBlur={e => updateStudent(student.id, 'name', e.target.value.trim().replace(/\s+/g, ' '))}
                               placeholder="الاسم"
                               className="h-9 text-xs"
-                              disabled={isSubmitted}
+                              disabled={!!isSubmitted}
                             />
                             {student.nameError && (
                               <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">
@@ -871,7 +1007,7 @@ export default function LeaderPage() {
                                 <button
                                   key={size}
                                   onClick={() => updateStudent(student.id, 'size', size)}
-                                  disabled={isSubmitted}
+                                  disabled={!!isSubmitted}
                                   className={`min-w-[32px] h-7 rounded-md text-xs font-medium transition-colors ${
                                     student.size === size
                                       ? 'bg-primary text-primary-foreground'
@@ -888,7 +1024,7 @@ export default function LeaderPage() {
                               <Select
                                 value={student.scarfDesignId}
                                 onValueChange={v => updateStudent(student.id, 'scarfDesignId', v)}
-                                disabled={isSubmitted}
+                                disabled={!!isSubmitted}
                               >
                                 <SelectTrigger className="h-8 text-xs">
                                   <SelectValue placeholder="اختر" />
@@ -913,8 +1049,9 @@ export default function LeaderPage() {
                                   const isNone = !v || v === noEmbroideryId || hat?.name === 'بدون تطريز';
 
                                   if (!isNone) {
-                                    const currentChosen = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
-                                    if (orderInfo!.hat_embroidery_count > 0 && currentChosen >= orderInfo!.hat_embroidery_count) {
+                                    const currentStudentHats = students.filter(s => s.id !== student.id && s.hatEmbroideryId && s.hatEmbroideryId !== noEmbroideryId).length;
+                                    const totalUsed = currentStudentHats + extraHatEmbCount;
+                                    if (totalHatQuota > 0 && totalUsed >= totalHatQuota) {
                                       toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
                                       return;
                                     }
@@ -923,7 +1060,7 @@ export default function LeaderPage() {
                                   updateStudent(student.id, 'hatEmbroideryId', v);
                                   if (isNone) updateStudent(student.id, 'hatExtraText', '');
                                 }}
-                                disabled={isSubmitted}
+                                disabled={!!isSubmitted}
                               >
                                 <SelectTrigger className="h-8 text-xs w-[120px]">
                                   <SelectValue placeholder="بدون تطريز" />
@@ -946,7 +1083,7 @@ export default function LeaderPage() {
                                     placeholder="نص تطريز القبعة"
                                     maxLength={10}
                                     className="h-8 text-xs w-[120px]"
-                                    disabled={isSubmitted}
+                                    disabled={!!isSubmitted}
                                   />
                                 );
                               })()}
@@ -958,7 +1095,7 @@ export default function LeaderPage() {
                               <Checkbox
                                 checked={student.hasLogoEmbroidery}
                                 onCheckedChange={() => toggleLogo(student.id)}
-                                disabled={!!logoIsAll || isSubmitted}
+                                disabled={!!logoIsAll || !!isSubmitted}
                               />
                             </td>
                           )}
@@ -975,7 +1112,7 @@ export default function LeaderPage() {
                                 }}
                                 placeholder="النص"
                                 className="h-8 text-xs"
-                                disabled={isSubmitted}
+                                disabled={!!isSubmitted}
                               />
                             </td>
                           )}
@@ -984,14 +1121,14 @@ export default function LeaderPage() {
                               <Checkbox
                                 checked={student.hasPurplePackage}
                                 onCheckedChange={() => togglePurple(student.id)}
-                                disabled={isSubmitted}
+                                disabled={!!isSubmitted}
                               />
                             </td>
                           )}
                           <td className="px-2 py-2.5 text-center">
                             <button
                               onClick={() => removeRow(student.id)}
-                              disabled={isSubmitted}
+                              disabled={!!isSubmitted}
                               className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1022,6 +1159,173 @@ export default function LeaderPage() {
           </CollapsibleContent>
         </Collapsible>
       </div>
+      )}
+
+      {/* Extra Scarves Section */}
+      {(orderInfo?.extra_scarf_count || 0) > 0 && (
+        <div className="pt-3 w-[90%] mx-auto">
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+                <span className="text-sm font-medium text-foreground">الأوشحة الإضافية ({extraScarves.length})</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-card border-b border-border">
+                      <tr>
+                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
+                        <th className="px-2 py-3 text-right font-semibold text-muted-foreground">الاسم</th>
+                        <th className="w-[150px] px-2 py-3 text-center font-semibold text-muted-foreground">نوع الوشاح</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {extraScarves.map((es) => (
+                        <tr key={es.id} className="border-b border-border/50">
+                          <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{es.serialNumber}</td>
+                          <td className="px-2 py-2.5">
+                            <Input
+                              value={es.name}
+                              onChange={e => setExtraScarves(prev => prev.map(s => s.id === es.id ? { ...s, name: e.target.value } : s))}
+                              placeholder="اسم صاحب/ة الوشاح"
+                              className="h-9 text-xs"
+                              disabled={!!isSubmitted}
+                            />
+                          </td>
+                          <td className="px-2 py-2.5">
+                            {scarfDesigns.length > 0 ? (
+                              <Select
+                                value={es.scarfDesignId}
+                                onValueChange={v => setExtraScarves(prev => prev.map(s => s.id === es.id ? { ...s, scarfDesignId: v } : s))}
+                                disabled={!!isSubmitted}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="اختر" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {scarfDesigns.map((s, i) => (
+                                    <SelectItem key={s.id} value={s.id}>وشاح {i + 1}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      )}
+
+      {/* Extra Hats Section */}
+      {(orderInfo?.extra_hat_count || 0) > 0 && (
+        <div className="pt-3 w-[90%] mx-auto">
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <button className="w-full flex items-center justify-between p-4 rounded-xl border border-border bg-card shadow-sm hover:bg-accent/5 transition-colors">
+                <span className="text-sm font-medium text-foreground">القبعات الإضافية ({extraHats.length})</span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform [[data-state=open]>&]:rotate-180" />
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="mt-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-card border-b border-border">
+                      <tr>
+                        <th className="w-12 px-2 py-3 text-center font-semibold text-muted-foreground">#</th>
+                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">تصميم التطريز</th>
+                        <th className="px-2 py-3 text-center font-semibold text-muted-foreground">نص التطريز</th>
+                        <th className="w-[120px] px-2 py-3 text-center font-semibold text-muted-foreground">لون الهدب</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {extraHats.map((eh) => {
+                        const hat = hatEmbroideries.find(h => h.id === eh.hatEmbroideryId);
+                        const isNone = !eh.hatEmbroideryId || eh.hatEmbroideryId === noEmbroideryId || hat?.name === 'بدون تطريز';
+                        return (
+                          <tr key={eh.id} className="border-b border-border/50">
+                            <td className="px-2 py-3 text-center text-xs font-bold text-muted-foreground">{eh.serialNumber}</td>
+                            <td className="px-2 py-2.5">
+                              <Select
+                                value={eh.hatEmbroideryId}
+                                onValueChange={(v) => {
+                                  const newHat = hatEmbroideries.find(h => h.id === v);
+                                  const newIsNone = !v || v === noEmbroideryId || newHat?.name === 'بدون تطريز';
+                                  if (!newIsNone && !isNone) {
+                                    // Swapping - ok
+                                  } else if (!newIsNone) {
+                                    // Adding embroidery - check quota
+                                    const currentUsed = totalHatQuotaUsed;
+                                    if (totalHatQuota > 0 && currentUsed >= totalHatQuota) {
+                                      toast({ title: 'تم الوصول للحد الأقصى لتطريز القبعات', variant: 'destructive' });
+                                      return;
+                                    }
+                                  }
+                                  setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, hatEmbroideryId: v, hatExtraText: newIsNone ? '' : h.hatExtraText } : h));
+                                }}
+                                disabled={!!isSubmitted}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="بدون تطريز" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {hatEmbroideries.map(h => (
+                                    <SelectItem key={h.id} value={h.id}>{h.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="px-2 py-2.5">
+                              {!isNone && hat?.has_extra_text ? (
+                                <Input
+                                  value={eh.hatExtraText}
+                                  onChange={e => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, hatExtraText: e.target.value } : h))}
+                                  placeholder="نص التطريز"
+                                  maxLength={10}
+                                  className="h-8 text-xs"
+                                  disabled={!!isSubmitted}
+                                />
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-2 py-2.5">
+                              <Select
+                                value={eh.fringeColor}
+                                onValueChange={v => setExtraHats(prev => prev.map(h => h.id === eh.id ? { ...h, fringeColor: v } : h))}
+                                disabled={!!isSubmitted}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="اختر" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {FRINGE_COLORS.map(c => (
+                                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+      )}
 
       {/* Shipping Section */}
       <div className="pt-4 pb-28 w-[90%] mx-auto">
@@ -1042,32 +1346,63 @@ export default function LeaderPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">اسم المستلم *</label>
-                    <Input value={shipping.recipient_name} onChange={e => updateShipping('recipient_name', e.target.value)} placeholder="اسم المستلم" className="h-9 text-xs" disabled={isSubmitted} />
+                    <Input value={shipping.recipient_name} onChange={e => updateShipping('recipient_name', e.target.value)} placeholder="اسم المستلم" className="h-9 text-xs" disabled={!!isSubmitted} />
                   </div>
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">رقم الجوال *</label>
-                    <Input value={shipping.recipient_phone} onChange={e => updateShipping('recipient_phone', e.target.value)} placeholder="05XXXXXXXX" className="h-9 text-xs" disabled={isSubmitted} />
+                    <Input value={shipping.recipient_phone} onChange={e => updateShipping('recipient_phone', e.target.value)} placeholder="05XXXXXXXX" className="h-9 text-xs" disabled={!!isSubmitted} />
                   </div>
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">المدينة *</label>
-                    <Select value={shipping.shipping_city_id} onValueChange={v => updateShipping('shipping_city_id', v)} disabled={isSubmitted}>
-                      <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="اختر المدينة" /></SelectTrigger>
-                      <SelectContent>
-                        {cities.map(c => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={citySearchOpen} onOpenChange={setCitySearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={citySearchOpen}
+                          className="w-full justify-between font-normal h-9 text-xs"
+                          disabled={!!isSubmitted}
+                        >
+                          {shipping.shipping_city_id ? cities.find(c => c.id === shipping.shipping_city_id)?.name || 'اختر المدينة' : 'اختر المدينة'}
+                          <ChevronsUpDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="ابحث عن مدينة..." />
+                          <CommandList>
+                            <CommandEmpty>لا توجد نتائج</CommandEmpty>
+                            <CommandGroup>
+                              {cities.map(c => (
+                                <CommandItem
+                                  key={c.id}
+                                  value={c.name}
+                                  onSelect={() => {
+                                    updateShipping('shipping_city_id', c.id);
+                                    setCitySearchOpen(false);
+                                  }}
+                                >
+                                  <Check className={cn("ml-2 h-4 w-4", shipping.shipping_city_id === c.id ? "opacity-100" : "opacity-0")} />
+                                  {c.name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">الحي *</label>
-                    <Input value={shipping.district} onChange={e => updateShipping('district', e.target.value)} placeholder="اسم الحي" className="h-9 text-xs" disabled={isSubmitted} />
+                    <Input value={shipping.district} onChange={e => updateShipping('district', e.target.value)} placeholder="اسم الحي" className="h-9 text-xs" disabled={!!isSubmitted} />
                   </div>
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">تفاصيل العنوان *</label>
-                    <Input value={shipping.address_details} onChange={e => updateShipping('address_details', e.target.value)} placeholder="الشارع، رقم المبنى..." className="h-9 text-xs" disabled={isSubmitted} />
+                    <Input value={shipping.address_details} onChange={e => updateShipping('address_details', e.target.value)} placeholder="الشارع، رقم المبنى..." className="h-9 text-xs" disabled={!!isSubmitted} />
                   </div>
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground mb-1.5 block">العنوان الوطني (اختياري)</label>
-                    <Input value={shipping.national_address} onChange={e => updateShipping('national_address', e.target.value)} placeholder="العنوان الوطني" className="h-9 text-xs" disabled={isSubmitted} />
+                    <Input value={shipping.national_address} onChange={e => updateShipping('national_address', e.target.value)} placeholder="العنوان الوطني" className="h-9 text-xs" disabled={!!isSubmitted} />
                   </div>
                 </div>
               </div>
