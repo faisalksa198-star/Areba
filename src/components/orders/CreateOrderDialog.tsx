@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Loader2, ImagePlus, X } from 'lucide-react';
+import { Plus, Trash2, Loader2, ImagePlus, X, Copy, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MasterItem {
   id: string;
@@ -31,6 +34,8 @@ const EMBROIDERY_COLORS = [
   { value: 'أسود', label: 'أسود' },
   { value: 'أبيض', label: 'أبيض' },
 ];
+
+const MAX_SCARVES = 5;
 
 function createEmptyScarfDesign(): ScarfDesignEntry {
   return {
@@ -81,6 +86,11 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [sleeveColor, setSleeveColor] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
+  // City (searchable combobox)
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([]);
+  const [cityId, setCityId] = useState('');
+  const [cityOpen, setCityOpen] = useState(false);
+
   // Scarf designs (multiple)
   const [scarfDesigns, setScarfDesigns] = useState<ScarfDesignEntry[]>([createEmptyScarfDesign()]);
 
@@ -120,7 +130,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   }, [open, editOrderId]);
 
   const loadMasterData = async () => {
-    const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR] = await Promise.all([
+    const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR, citiesR] = await Promise.all([
       supabase.from('ready_kits').select('*').eq('is_active', true),
       supabase.from('abaya_designs').select('id, name, image_url').eq('is_active', true),
       supabase.from('sleeve_styles').select('id, name, image_url').eq('is_active', true),
@@ -129,6 +139,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       supabase.from('date_types').select('id, name').eq('is_active', true),
       supabase.from('embroidery_directions').select('id, name, image_url').eq('is_active', true),
       supabase.from('fonts').select('id, name').eq('is_active', true),
+      supabase.from('cities').select('id, name').eq('is_active', true).order('name'),
     ]);
     setKits(kitsR.data || []);
     setAbayaDesigns(abayaR.data || []);
@@ -138,6 +149,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setDateTypes(dateR.data || []);
     setEmbroideryDirections(embR.data || []);
     setFonts(fontR.data || []);
+    setCities(citiesR.data || []);
   };
 
   const loadEditData = async () => {
@@ -167,6 +179,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setAbayaLength(o.abaya_length || 'ثابت');
       setSleeveStyleId(o.sleeve_style_id || '');
       setSleeveColor(o.sleeve_color || '');
+      setCityId(o.city_id || '');
       setLogoEmbroideryEnabled(o.logo_embroidery_enabled || false);
       setLogoEmbroideryCount(o.logo_embroidery_count ? String(o.logo_embroidery_count) : '');
       setLogoEmbroideryPreview(o.logo_embroidery_image_url || '');
@@ -216,6 +229,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setAbayaLength('ثابت');
     setSleeveStyleId('');
     setSleeveColor('');
+    setCityId('');
     setPhoneError('');
     setScarfDesigns([createEmptyScarfDesign()]);
     setLogoEmbroideryEnabled(false);
@@ -239,10 +253,30 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setColorImagePreview(URL.createObjectURL(file));
   };
 
+  // Real-time phone validation
+  const handlePhoneChange = (value: string) => {
+    setLeaderPhone(value);
+    const digits = value.replace(/\D/g, '');
+    if (value.trim() && digits.length > 0 && digits.length < 10) {
+      setPhoneError('رقم الجوال يجب أن يتكون من 10 أرقام');
+    } else {
+      setPhoneError('');
+    }
+  };
+
   const addScarfDesign = () => {
-    const max = parseInt(studentCount) || 30;
-    if (scarfDesigns.length >= max) return;
+    if (scarfDesigns.length >= MAX_SCARVES) return;
     setScarfDesigns(prev => [...prev, createEmptyScarfDesign()]);
+  };
+
+  const duplicatePreviousScarf = () => {
+    if (scarfDesigns.length >= MAX_SCARVES) return;
+    const lastScarf = scarfDesigns[scarfDesigns.length - 1];
+    const clone: ScarfDesignEntry = {
+      ...lastScarf,
+      localId: crypto.randomUUID(),
+    };
+    setScarfDesigns(prev => [...prev, clone]);
   };
 
   const removeScarfDesign = (localId: string) => {
@@ -314,6 +348,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         student_count: parseInt(studentCount) || null,
         order_type: orderType,
         kit_id: orderType === 'ready_kit' ? (selectedKit || null) : null,
+        city_id: cityId || null,
         custom_abaya_color: orderType === 'custom' ? customAbayaColor || null : null,
         custom_abaya_color_degree: orderType === 'custom' ? customAbayaColorDegree || null : null,
         custom_scarf_color: orderType === 'custom' ? customScarfColor || null : null,
@@ -412,6 +447,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   };
 
   const isEditMode = !!editOrderId;
+  const canAddScarf = scarfDesigns.length < MAX_SCARVES;
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
@@ -434,13 +470,54 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
               </div>
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">رقم الجوال</label>
-                <Input value={leaderPhone} onChange={e => { setLeaderPhone(e.target.value); setPhoneError(''); }} placeholder="05xxxxxxxx" type="tel" />
+                <Input value={leaderPhone} onChange={e => handlePhoneChange(e.target.value)} placeholder="05xxxxxxxx" type="tel" />
                 {phoneError && <p className="text-xs text-destructive mt-1">{phoneError}</p>}
               </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الطالبات *</label>
-              <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="30" type="number" min="1" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">عدد الطالبات *</label>
+                <Input value={studentCount} onChange={e => setStudentCount(e.target.value)} placeholder="30" type="number" min="1" />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">المدينة</label>
+                <Popover open={cityOpen} onOpenChange={setCityOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={cityOpen}
+                      className="w-full justify-between font-normal h-10"
+                    >
+                      {cityId ? cities.find(c => c.id === cityId)?.name || 'اختر المدينة' : 'اختر المدينة'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="ابحث عن مدينة..." />
+                      <CommandList>
+                        <CommandEmpty>لا توجد نتائج</CommandEmpty>
+                        <CommandGroup>
+                          {cities.map(c => (
+                            <CommandItem
+                              key={c.id}
+                              value={c.name}
+                              onSelect={() => {
+                                setCityId(c.id);
+                                setCityOpen(false);
+                              }}
+                            >
+                              <Check className={cn("ml-2 h-4 w-4", cityId === c.id ? "opacity-100" : "opacity-0")} />
+                              {c.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
 
             {/* Order Type */}
@@ -605,7 +682,10 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
 
             {/* Scarf Designs Section */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-              <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-foreground">تصاميم الأوشحة</p>
+                <span className="text-xs text-muted-foreground">{scarfDesigns.length} / {MAX_SCARVES}</span>
+              </div>
               {scarfDesigns.map((scarf, idx) => (
                 <div key={scarf.localId} className="p-3 rounded-lg bg-background border border-border space-y-2">
                   <div className="flex items-center justify-between">
@@ -664,9 +744,16 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                   </div>
                 </div>
               ))}
-              <Button variant="outline" size="sm" onClick={addScarfDesign} className="gap-1 text-xs w-full">
-                <Plus className="h-3 w-3" /> إضافة وشاح
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={addScarfDesign} disabled={!canAddScarf} className="gap-1 text-xs flex-1">
+                  <Plus className="h-3 w-3" /> إضافة وشاح
+                </Button>
+                {scarfDesigns.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={duplicatePreviousScarf} disabled={!canAddScarf} className="gap-1 text-xs flex-1">
+                    <Copy className="h-3 w-3" /> تكرار الوشاح السابق
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Extra Services */}
@@ -757,7 +844,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                             )}
                             <button onClick={() => {
                               setBackEmbroideryPreviews(prev => prev.filter((_, i) => i !== idx));
-                              // Only remove from files array if it's a new file (blob URL)
                               if (preview.startsWith('blob:')) {
                                 const fileIdx = backEmbroideryPreviews.slice(0, idx).filter(p => p.startsWith('blob:')).length;
                                 setBackEmbroideryFiles(prev => prev.filter((_, i) => i !== fileIdx));
