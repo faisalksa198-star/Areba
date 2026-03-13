@@ -1271,8 +1271,8 @@ export default function LeaderPage() {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <div className="mt-2 flex justify-end">
-                <div className="w-fit max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+              <div className="mt-2 flex sm:justify-end">
+                <div className="w-full sm:w-fit sm:max-w-[500px] rounded-xl border border-border bg-card shadow-sm overflow-hidden">
                   <table className="text-sm">
                     <thead className="bg-card border-b border-border">
                       <tr>
