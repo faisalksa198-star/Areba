@@ -701,19 +701,20 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                           </TooltipTrigger>
                           <TooltipContent>الروابط</TooltipContent>
                         </Tooltip>
-                        {/* Export CSV */}
+                        {/* Export XLSX - disabled for pending_data */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8"
+                              className={`h-8 w-8 ${order.status === 'pending_data' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              disabled={order.status === 'pending_data'}
                               onClick={() => exportSingleXlsx(order.id)}
                             >
                               <Download className="h-3.5 w-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>تصدير البيانات</TooltipContent>
+                          <TooltipContent>{order.status === 'pending_data' ? 'لا يمكن التصدير قبل إرسال البيانات' : 'تصدير البيانات'}</TooltipContent>
                         </Tooltip>
                         {/* Edit - disabled when in_progress */}
                         <Tooltip>
