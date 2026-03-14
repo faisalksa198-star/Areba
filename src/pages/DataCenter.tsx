@@ -60,7 +60,7 @@ export default function DataCenter() {
   const activeCat = CATEGORIES.find(c => c.key === activeSection);
 
   const loadItems = useCallback(async () => {
-    if (!activeSection || activeSection === 'pricing_rules' || activeSection === 'addon_prices') return;
+    if (!activeSection || activeSection === 'pricing_rules' || activeSection === 'addon_prices' || activeSection === 'season_settings') return;
     setLoading(true);
     const { data } = await supabase
       .from(activeSection)
