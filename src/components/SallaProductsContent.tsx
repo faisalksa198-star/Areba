@@ -218,6 +218,7 @@ export default function SallaProductsContent() {
         is_required: o.is_required,
         default_value: o.default_value,
         sort_order: o.sort_order,
+        field_type: o.field_type,
       }))
     );
     resetFormDefaults(product);
