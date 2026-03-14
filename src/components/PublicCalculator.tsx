@@ -221,14 +221,14 @@ export default function PublicCalculator() {
             <div className="grid grid-cols-2 gap-3 mt-1">
               <div>
                 <Label className="text-xs text-muted-foreground">العدد</Label>
-                <Input type="number" min="0" placeholder="0" value={capWithEmbCount} onChange={e => setCapWithEmbCount(e.target.value)} disabled={!enabled} />
+                <Input type="number" min="0" placeholder="0" value={capWithEmbCount} onChange={e => setCapWithEmbCount(e.target.value)} />
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground">السعر (ريال)</Label>
-                <Input type="number" min="0" step="0.01" placeholder="0" value={capWithEmbPrice} onChange={e => setCapWithEmbPrice(e.target.value)} disabled={!enabled} />
+                <Input type="number" min="0" step="0.01" placeholder="0" value={capWithEmbPrice} onChange={e => setCapWithEmbPrice(e.target.value)} />
               </div>
             </div>
-            {enabled && capWithEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capWithEmbTotal)} ريال</p>}
+            {capWithEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capWithEmbTotal)} ريال</p>}
           </div>
         </CardContent>
       </Card>
