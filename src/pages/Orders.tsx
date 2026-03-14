@@ -101,6 +101,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   const [showLinks, setShowLinks] = useState(false);
   const [generatedLinks, setGeneratedLinks] = useState<OrderLinks | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [linksOrderNumber, setLinksOrderNumber] = useState<string>('');
   const [totalStudents, setTotalStudents] = useState(0);
 
   // Search & Filter
