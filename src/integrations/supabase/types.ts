@@ -969,6 +969,7 @@ export type Database = {
           abaya_color: string | null
           abaya_color_degree: string | null
           abaya_design_id: string | null
+          category: string
           created_at: string
           date_type_id: string | null
           embroidery_color: string | null
@@ -994,6 +995,7 @@ export type Database = {
           abaya_color?: string | null
           abaya_color_degree?: string | null
           abaya_design_id?: string | null
+          category?: string
           created_at?: string
           date_type_id?: string | null
           embroidery_color?: string | null
@@ -1019,6 +1021,7 @@ export type Database = {
           abaya_color?: string | null
           abaya_color_degree?: string | null
           abaya_design_id?: string | null
+          category?: string
           created_at?: string
           date_type_id?: string | null
           embroidery_color?: string | null
