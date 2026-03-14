@@ -102,7 +102,7 @@ export default function Invoices() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [activeSeason]);
 
   const filtered = orders.filter(o => {
     if (myOrdersOnly && o.employee_id !== user?.id) return false;
