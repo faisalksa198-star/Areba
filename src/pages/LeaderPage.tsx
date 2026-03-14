@@ -1105,8 +1105,7 @@ export default function LeaderPage() {
                                 value={student.backEmbroideryText}
                                 onChange={e => {
                                   if (!student.backEmbroideryText.trim() && e.target.value.trim()) {
-                                    const currentBack = students.filter(s => s.id !== student.id && s.backEmbroideryText.trim()).length;
-                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && currentBack >= orderInfo.back_embroidery_count) return;
+                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && backCount >= orderInfo.back_embroidery_count) return;
                                   }
                                   updateStudent(student.id, 'backEmbroideryText', e.target.value);
                                 }}
