@@ -793,7 +793,11 @@ export default function LeaderPage() {
 
             <Button onClick={handleGeneratePdf} disabled={generatingPdf} className="gap-2">
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل ملخص الطلب PDF'}
+              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل تقرير الطلب PDF'}
+            </Button>
+            <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
+              {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
             </Button>
           </CardContent>
         </Card>
