@@ -131,14 +131,13 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
 
   useEffect(() => {
     loadUserRole();
-    loadOrders();
     loadKits();
     loadTotalStudents();
   }, []);
 
   useEffect(() => {
     loadOrders();
-  }, [myOrdersOnly, user]);
+  }, [myOrdersOnly, user, activeSeason]);
 
   const loadUserRole = async () => {
     if (!user) return;
