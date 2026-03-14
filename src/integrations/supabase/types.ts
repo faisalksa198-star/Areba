@@ -923,6 +923,7 @@ export type Database = {
           label: string
           product_id: string
           sort_order: number | null
+          source_table: string | null
           updated_at: string
           values: string[]
         }
@@ -934,6 +935,7 @@ export type Database = {
           label: string
           product_id: string
           sort_order?: number | null
+          source_table?: string | null
           updated_at?: string
           values?: string[]
         }
@@ -945,6 +947,7 @@ export type Database = {
           label?: string
           product_id?: string
           sort_order?: number | null
+          source_table?: string | null
           updated_at?: string
           values?: string[]
         }
@@ -960,33 +963,138 @@ export type Database = {
       }
       salla_products: {
         Row: {
+          abaya_color: string | null
+          abaya_color_degree: string | null
+          abaya_design_id: string | null
           created_at: string
+          date_type_id: string | null
+          embroidery_color: string | null
+          embroidery_direction_id: string | null
+          font_id: string | null
+          hat_color: string | null
+          hat_color_degree: string | null
+          hat_style_id: string | null
           id: string
           image_url: string | null
           is_active: boolean
           name: string
+          scarf_color: string | null
+          scarf_color_degree: string | null
+          scarf_method_id: string | null
+          scarf_style_id: string | null
+          sleeve_color: string | null
+          sleeve_style_id: string | null
           sort_order: number | null
           updated_at: string
         }
         Insert: {
+          abaya_color?: string | null
+          abaya_color_degree?: string | null
+          abaya_design_id?: string | null
           created_at?: string
+          date_type_id?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
+          font_id?: string | null
+          hat_color?: string | null
+          hat_color_degree?: string | null
+          hat_style_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name: string
+          scarf_color?: string | null
+          scarf_color_degree?: string | null
+          scarf_method_id?: string | null
+          scarf_style_id?: string | null
+          sleeve_color?: string | null
+          sleeve_style_id?: string | null
           sort_order?: number | null
           updated_at?: string
         }
         Update: {
+          abaya_color?: string | null
+          abaya_color_degree?: string | null
+          abaya_design_id?: string | null
           created_at?: string
+          date_type_id?: string | null
+          embroidery_color?: string | null
+          embroidery_direction_id?: string | null
+          font_id?: string | null
+          hat_color?: string | null
+          hat_color_degree?: string | null
+          hat_style_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name?: string
+          scarf_color?: string | null
+          scarf_color_degree?: string | null
+          scarf_method_id?: string | null
+          scarf_style_id?: string | null
+          sleeve_color?: string | null
+          sleeve_style_id?: string | null
           sort_order?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "salla_products_abaya_design_id_fkey"
+            columns: ["abaya_design_id"]
+            isOneToOne: false
+            referencedRelation: "abaya_designs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_date_type_id_fkey"
+            columns: ["date_type_id"]
+            isOneToOne: false
+            referencedRelation: "date_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_embroidery_direction_id_fkey"
+            columns: ["embroidery_direction_id"]
+            isOneToOne: false
+            referencedRelation: "embroidery_directions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_font_id_fkey"
+            columns: ["font_id"]
+            isOneToOne: false
+            referencedRelation: "fonts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_hat_style_id_fkey"
+            columns: ["hat_style_id"]
+            isOneToOne: false
+            referencedRelation: "hat_styles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_scarf_method_id_fkey"
+            columns: ["scarf_method_id"]
+            isOneToOne: false
+            referencedRelation: "scarf_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_scarf_style_id_fkey"
+            columns: ["scarf_style_id"]
+            isOneToOne: false
+            referencedRelation: "scarf_styles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_products_sleeve_style_id_fkey"
+            columns: ["sleeve_style_id"]
+            isOneToOne: false
+            referencedRelation: "sleeve_styles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scarf_methods: {
         Row: {
