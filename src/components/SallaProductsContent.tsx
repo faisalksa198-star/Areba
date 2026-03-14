@@ -484,7 +484,7 @@ export default function SallaProductsContent() {
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {product.options.map((opt, i) => (
                           <Badge key={i} variant="outline" className="text-[10px]">
-                            {opt.label} ({opt.values.length})
+                            {opt.label} ({opt.field_type === 'dropdown' ? opt.values.length : opt.field_type === 'text' ? 'نص' : 'اختيار'})
                           </Badge>
                         ))}
                       </div>
