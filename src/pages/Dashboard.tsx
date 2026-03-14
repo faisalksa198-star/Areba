@@ -34,6 +34,7 @@ interface OrderRow {
   id: string;
   status: string;
   created_at: string;
+  submitted_at: string | null;
   student_count: number | null;
   extra_scarf_count: number | null;
   extra_hat_count: number | null;
