@@ -55,6 +55,7 @@ export default function PublicCalculator() {
 
   const qty = parseInt(kitCount) || 0;
   const enabled = qty > 0;
+  const anyInput = true; // extra scarves/caps always enabled
 
   const unitPrice = useMemo(() => {
     if (!enabled) return 0;
