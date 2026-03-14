@@ -918,6 +918,7 @@ export type Database = {
         Row: {
           created_at: string
           default_value: string | null
+          field_type: string
           id: string
           is_required: boolean
           label: string
@@ -930,6 +931,7 @@ export type Database = {
         Insert: {
           created_at?: string
           default_value?: string | null
+          field_type?: string
           id?: string
           is_required?: boolean
           label: string
@@ -942,6 +944,7 @@ export type Database = {
         Update: {
           created_at?: string
           default_value?: string | null
+          field_type?: string
           id?: string
           is_required?: boolean
           label?: string

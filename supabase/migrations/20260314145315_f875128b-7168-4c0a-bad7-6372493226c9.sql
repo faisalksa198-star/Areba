@@ -1,0 +1,1 @@
+ALTER TABLE public.salla_product_options ADD COLUMN field_type text NOT NULL DEFAULT 'dropdown';
