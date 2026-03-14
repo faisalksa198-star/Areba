@@ -97,6 +97,26 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
 
   const fmt = (n: number) => n.toLocaleString('en-US');
 
+  const summaryLines = useMemo(() => {
+    const lines: CalcSummaryLine[] = [];
+    if (basePrice > 0) lines.push({ label: 'الأطقم', detail: `${fmt(qty)} × ${fmt(unitPrice)} ريال`, result: basePrice });
+    if (abayaTotal > 0) lines.push({ label: 'إضافات الكلوش', detail: `${fmt(parseFloat(abayaExtra) || 0)} ريال × ${fmt(qty)}`, result: abayaTotal });
+    if (scarfQitan > 0) lines.push({ label: 'أوشحة بقيطان', detail: `${fmt(parseInt(scarfQitanCount) || 0)} أوشحة × ${fmt(scarfQitanPrice)} ريال`, result: scarfQitan });
+    if (scarfDecorated > 0) lines.push({ label: 'أوشحة بخط مزخرف', detail: `${fmt(parseInt(scarfDecoratedCount) || 0)} أوشحة × ${fmt(scarfDecoratedPrice)} ريال`, result: scarfDecorated });
+    if (backEmb > 0) lines.push({ label: 'تطريز خلفي', detail: `${fmt(parseInt(backEmbroideryCount) || 0)} تطريز × ${fmt(backEmbPrice)} ريال`, result: backEmb });
+    if (logo > 0) lines.push({ label: 'إضافة شعار', detail: `${fmt(parseInt(logoCount) || 0)} شعار × ${fmt(logoPrice)} ريال`, result: logo });
+    if (hatEmb > 0) lines.push({ label: 'تطريز قبعة', detail: `${fmt(parseInt(hatEmbroideryCount) || 0)} قبعات × ${fmt(hatEmbPrice)} ريال`, result: hatEmb });
+    if (purple > 0) lines.push({ label: 'بكج Purple', detail: `${fmt(parseInt(purpleCount) || 0)} بكج × ${fmt(purplePrice)} ريال`, result: purple });
+    if (extraScarfTotal > 0) lines.push({ label: 'أوشحة إضافية', detail: `${fmt(parseInt(extraScarfCount) || 0)} × ${fmt(parseFloat(extraScarfPrice) || 0)} ريال`, result: extraScarfTotal });
+    if (capNoEmbTotal > 0) lines.push({ label: 'قبعة بدون تطريز', detail: `${fmt(parseInt(capNoEmbCount) || 0)} × ${fmt(parseFloat(capNoEmbPrice) || 0)} ريال`, result: capNoEmbTotal });
+    if (capWithEmbTotal > 0) lines.push({ label: 'قبعة مع تطريز', detail: `${fmt(parseInt(capWithEmbCount) || 0)} × ${fmt(parseFloat(capWithEmbPrice) || 0)} ريال`, result: capWithEmbTotal });
+    return lines;
+  }, [basePrice, abayaTotal, scarfQitan, scarfDecorated, backEmb, logo, hatEmb, purple, extraScarfTotal, capNoEmbTotal, capWithEmbTotal, qty, unitPrice, abayaExtra, scarfQitanCount, scarfQitanPrice, scarfDecoratedCount, scarfDecoratedPrice, backEmbroideryCount, backEmbPrice, logoCount, logoPrice, hatEmbroideryCount, hatEmbPrice, purpleCount, purplePrice, extraScarfCount, extraScarfPrice, capNoEmbCount, capNoEmbPrice, capWithEmbCount, capWithEmbPrice]);
+
+  useEffect(() => {
+    onSummaryChange?.(summaryLines, total);
+  }, [summaryLines, total, onSummaryChange]);
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
