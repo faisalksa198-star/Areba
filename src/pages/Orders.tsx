@@ -44,7 +44,7 @@ import {
   Search,
   Download,
   Upload,
-  
+  FileText,
   ClipboardList,
   Clock,
   Users,
@@ -101,6 +101,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   const [showLinks, setShowLinks] = useState(false);
   const [generatedLinks, setGeneratedLinks] = useState<OrderLinks | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [linksOrderNumber, setLinksOrderNumber] = useState<string>('');
   const [totalStudents, setTotalStudents] = useState(0);
 
   // Search & Filter
@@ -693,6 +694,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               className="h-8 w-8"
                               onClick={() => {
                                 setGeneratedLinks(links);
+                                setLinksOrderNumber(order.order_number);
                                 setShowLinks(true);
                               }}
                             >
@@ -944,6 +946,27 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                     onCopy={() => copyToClipboard(generatedLinks.whatsappLink!, 'whatsapp')}
                   />
                 )}
+                {/* Invoice action */}
+                <div className="rounded-xl p-3 transition-all bg-gradient-to-br from-violet-500/15 to-violet-500/5 ring-1 ring-violet-500/20 hover:shadow-md">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">🧾</span>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">الفاتورة الإلكترونية</p>
+                        <p className="text-xs text-muted-foreground">تصدير من حاسبة الأسعار</p>
+                      </div>
+                    </div>
+                    <a
+                      href={`/admin-calculator`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center h-9 w-9 shrink-0 rounded-lg bg-background/80 backdrop-blur-sm shadow-sm border border-input hover:bg-accent transition-colors"
+                      title="فتح الحاسبة"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
               </>
             )}
           </div>

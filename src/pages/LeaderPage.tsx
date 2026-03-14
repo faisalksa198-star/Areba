@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { generateOrderPdf } from '@/lib/orderPdfGenerator';
+import { generateInvoicePdf } from '@/lib/invoicePdfGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
-import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown, Download, Check, ChevronsUpDown } from 'lucide-react';
+import { AlertTriangle, Save, Plus, Trash2, Users, Loader2, Send, Truck, ChevronDown, Download, Check, ChevronsUpDown, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const SIZES = ['48', '50', '52', '54', '56', '58', '60', '62', '64'];
@@ -178,6 +179,7 @@ export default function LeaderPage() {
   const [shippingOpen, setShippingOpen] = useState(false);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
   // Extra scarves & hats
   const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
@@ -736,6 +738,40 @@ export default function LeaderPage() {
     setGeneratingPdf(false);
   };
 
+  const handleGenerateInvoice = async () => {
+    if (!orderId || !orderInfo) return;
+    setGeneratingInvoice(true);
+    try {
+      // Build invoice lines from order data
+      const lines: { label: string; detail: string; amount: number }[] = [];
+      const sc = orderInfo.student_count || 0;
+      if (sc > 0) lines.push({ label: 'الأطقم', detail: `${sc} طقم`, amount: 0 }); // price not stored here
+      if (orderInfo.back_embroidery_enabled && orderInfo.back_embroidery_count > 0)
+        lines.push({ label: 'تطريز خلفي', detail: `${orderInfo.back_embroidery_count} تطريز`, amount: 0 });
+      if (orderInfo.logo_embroidery_enabled && orderInfo.logo_embroidery_count > 0)
+        lines.push({ label: 'إضافة شعار', detail: `${orderInfo.logo_embroidery_count} شعار`, amount: 0 });
+      if (orderInfo.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0)
+        lines.push({ label: 'تطريز قبعة', detail: `${orderInfo.hat_embroidery_count} قبعات`, amount: 0 });
+      if (orderInfo.purple_package_enabled && orderInfo.purple_package_count > 0)
+        lines.push({ label: 'بكج Purple', detail: `${orderInfo.purple_package_count} بكج`, amount: 0 });
+      if (orderInfo.extra_scarf_count > 0)
+        lines.push({ label: 'أوشحة إضافية', detail: `${orderInfo.extra_scarf_count} وشاح`, amount: 0 });
+      if (orderInfo.extra_hat_count > 0)
+        lines.push({ label: 'قبعات إضافية', detail: `${orderInfo.extra_hat_count} قبعة`, amount: 0 });
+
+      await generateInvoicePdf({
+        orderNumber: orderInfo.order_number,
+        lines,
+        total: 0,
+      });
+      toast({ title: 'تم تحميل الفاتورة بنجاح ✓' });
+    } catch (e) {
+      console.error('Invoice generation error:', e);
+      toast({ title: 'خطأ في توليد الفاتورة', variant: 'destructive' });
+    }
+    setGeneratingInvoice(false);
+  };
+
   if (isLocked) {
     const isInProgress = orderInfo?.status === 'in_progress';
     const isCompleted = orderInfo?.status === 'completed';
@@ -757,7 +793,11 @@ export default function LeaderPage() {
 
             <Button onClick={handleGeneratePdf} disabled={generatingPdf} className="gap-2">
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل ملخص الطلب PDF'}
+              {generatingPdf ? 'جارٍ التحميل...' : 'تحميل تقرير الطلب PDF'}
+            </Button>
+            <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
+              {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+              {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
             </Button>
           </CardContent>
         </Card>
