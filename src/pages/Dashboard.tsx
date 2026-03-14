@@ -20,7 +20,15 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
-type FilterPeriod = 'today' | 'week' | 'month' | 'custom';
+type FilterPeriod = 'today' | 'week' | 'month' | 'season' | 'custom';
+
+interface SeasonRow {
+  id: string;
+  season_name: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+}
 
 interface OrderRow {
   id: string;
