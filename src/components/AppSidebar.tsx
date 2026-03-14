@@ -27,7 +27,12 @@ const baseMenuItems = [
 const adminMenuItems = [
   { title: 'مركز البيانات', url: '/data-center', icon: Database },
   { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
+  { title: 'منتجات سلة', url: '/salla-products', icon: Store },
   { title: 'إدارة الموظفين', url: '/employees', icon: Users },
+];
+
+const sallaMenuItems = [
+  { title: 'طلبات موقع سلة', url: '/salla-orders', icon: ShoppingBag },
 ];
 
 export function AppSidebar() {
