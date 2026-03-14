@@ -8,8 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   ClipboardList, Loader2, Users, Scissors, TrendingUp,
   CalendarDays, CalendarRange, Calendar as CalendarIcon, Clock,
-  AlertTriangle, Activity, ArrowLeftRight, Leaf
-
+  AlertTriangle, Activity, ArrowLeftRight, Leaf, ShoppingBag, Globe, Filter
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,6 +21,7 @@ import {
 } from 'recharts';
 
 type FilterPeriod = 'today' | 'week' | 'month' | 'season' | 'custom';
+type SourceFilter = 'all' | 'site' | 'salla';
 
 interface SeasonRow {
   id: string;
@@ -44,6 +44,16 @@ interface OrderRow {
   execution_duration: number | null;
   order_number: string;
   updated_at: string;
+}
+
+interface SallaOrderRow {
+  id: string;
+  salla_order_number: string;
+  internal_number: number;
+  status: string;
+  created_at: string;
+  notes: string | null;
+  item_count: number;
 }
 
 interface AuditRow {
@@ -90,6 +100,7 @@ const DELAYED_DAYS_THRESHOLD = 7;
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [sallaOrders, setSallaOrders] = useState<SallaOrderRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [cities, setCities] = useState<CityRow[]>([]);
   const [audits, setAudits] = useState<AuditRow[]>([]);
@@ -97,22 +108,39 @@ export default function Dashboard() {
   const [activeSeason, setActiveSeason] = useState<SeasonRow | null>(null);
 
   const [filter, setFilter] = useState<FilterPeriod>('month');
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all');
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
 
   useEffect(() => {
     async function load() {
-      const [oRes, pRes, cRes, aRes, sRes] = await Promise.all([
+      const [oRes, pRes, cRes, aRes, sRes, soRes, soiRes] = await Promise.all([
         supabase.from('orders').select('id,status,created_at,submitted_at,student_count,extra_scarf_count,extra_hat_count,employee_id,city_id,execution_duration,order_number,updated_at'),
         supabase.from('profiles').select('user_id,full_name'),
         supabase.from('cities').select('id,name'),
         supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('season_settings').select('*').order('start_date', { ascending: false }),
+        supabase.from('salla_orders').select('id,salla_order_number,internal_number,status,created_at,notes'),
+        supabase.from('salla_order_items').select('id,salla_order_id'),
       ]);
       if (oRes.data) setOrders(oRes.data as OrderRow[]);
       if (pRes.data) setProfiles(pRes.data as ProfileRow[]);
       if (cRes.data) setCities(cRes.data as CityRow[]);
       if (aRes.data) setAudits(aRes.data as AuditRow[]);
+
+      // Build salla orders with item counts
+      if (soRes.data && soiRes.data) {
+        const itemCountMap: Record<string, number> = {};
+        (soiRes.data as any[]).forEach(item => {
+          itemCountMap[item.salla_order_id] = (itemCountMap[item.salla_order_id] || 0) + 1;
+        });
+        const sallaData = (soRes.data as any[]).map(so => ({
+          ...so,
+          item_count: itemCountMap[so.id] || 0,
+        }));
+        setSallaOrders(sallaData);
+      }
+
       if (sRes.data) {
         const seasonData = sRes.data as SeasonRow[];
         setSeasons(seasonData);
@@ -144,11 +172,18 @@ export default function Dashboard() {
   const filteredOrders = useMemo(() => {
     const { from, to } = getDateRange();
     return orders.filter(o => {
-      // Use submitted_at (actual submission date) if available, fallback to created_at
       const d = new Date(o.submitted_at || o.created_at);
       return !isBefore(d, from) && !isAfter(d, to);
     });
   }, [orders, getDateRange]);
+
+  const filteredSallaOrders = useMemo(() => {
+    const { from, to } = getDateRange();
+    return sallaOrders.filter(o => {
+      const d = new Date(o.created_at);
+      return !isBefore(d, from) && !isAfter(d, to);
+    });
+  }, [sallaOrders, getDateRange]);
 
   const profileMap = useMemo(() => {
     const m: Record<string, string> = {};
@@ -162,30 +197,51 @@ export default function Dashboard() {
     return m;
   }, [cities]);
 
-  // === STATS ===
+  // === COMBINED STATS ===
   const stats = useMemo(() => {
-    const totalOrders = filteredOrders.length;
-    const activeOrders = filteredOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length;
-    const totalStudents = filteredOrders.reduce((s, o) => s + (o.student_count || 0), 0);
-    const totalPieces = filteredOrders.reduce((s, o) => {
-      return s + (o.student_count || 0) + (o.extra_scarf_count || 0) + (o.extra_hat_count || 0);
-    }, 0);
-    return { totalOrders, activeOrders, totalStudents, totalPieces };
-  }, [filteredOrders]);
+    const showSite = sourceFilter === 'all' || sourceFilter === 'site';
+    const showSalla = sourceFilter === 'all' || sourceFilter === 'salla';
 
-  // === PIE DATA ===
+    // Site orders
+    const siteTotal = showSite ? filteredOrders.length : 0;
+    const siteActive = showSite ? filteredOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length : 0;
+    const siteStudents = showSite ? filteredOrders.reduce((s, o) => s + (o.student_count || 0), 0) : 0;
+    const sitePieces = showSite ? filteredOrders.reduce((s, o) => {
+      return s + (o.student_count || 0) + (o.extra_scarf_count || 0) + (o.extra_hat_count || 0);
+    }, 0) : 0;
+
+    // Salla orders: each salla_order = 1 order, each item = 1 piece
+    const sallaTotal = showSalla ? filteredSallaOrders.length : 0;
+    const sallaActive = showSalla ? filteredSallaOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled').length : 0;
+    const sallaPieces = showSalla ? filteredSallaOrders.reduce((s, o) => s + o.item_count, 0) : 0;
+
+    return {
+      totalOrders: siteTotal + sallaTotal,
+      activeOrders: siteActive + sallaActive,
+      totalStudents: siteStudents, // Only site orders have students
+      totalPieces: sitePieces + sallaPieces,
+    };
+  }, [filteredOrders, filteredSallaOrders, sourceFilter]);
+
+  // === PIE DATA (combined statuses) ===
   const pieData = useMemo(() => {
     const counts: Record<string, number> = {};
-    filteredOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    const showSite = sourceFilter === 'all' || sourceFilter === 'site';
+    const showSalla = sourceFilter === 'all' || sourceFilter === 'salla';
+
+    if (showSite) filteredOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    if (showSalla) filteredSallaOrders.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+
     return Object.entries(counts).map(([status, value]) => ({
       name: STATUS_LABELS[status] || status,
       value,
       fill: STATUS_COLORS[status] || 'hsl(0,0%,70%)',
     }));
-  }, [filteredOrders]);
+  }, [filteredOrders, filteredSallaOrders, sourceFilter]);
 
-  // === BAR DATA (top 5 cities) ===
+  // === BAR DATA (top 5 cities - site only, salla doesn't have cities) ===
   const barData = useMemo(() => {
+    if (sourceFilter === 'salla') return [];
     const counts: Record<string, number> = {};
     filteredOrders.forEach(o => {
       if (o.city_id) counts[o.city_id] = (counts[o.city_id] || 0) + 1;
@@ -194,9 +250,9 @@ export default function Dashboard() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([cid, count]) => ({ name: cityMap[cid] || 'غير محدد', count }));
-  }, [filteredOrders, cityMap]);
+  }, [filteredOrders, cityMap, sourceFilter]);
 
-  // === LINE DATA (daily registrations) ===
+  // === LINE DATA (daily registrations - combined) ===
   const lineData = useMemo(() => {
     const { from, to } = getDateRange();
     const days: Record<string, { orders: number; students: number }> = {};
@@ -206,18 +262,32 @@ export default function Dashboard() {
       days[key] = { orders: 0, students: 0 };
       d = new Date(d.getTime() + 86400000);
     }
-    filteredOrders.forEach(o => {
-      const key = format(new Date(o.submitted_at || o.created_at), 'MM/dd');
-      if (days[key]) {
-        days[key].orders++;
-        days[key].students += o.student_count || 0;
-      }
-    });
-    return Object.entries(days).map(([date, v]) => ({ date, ...v }));
-  }, [filteredOrders, getDateRange]);
+    const showSite = sourceFilter === 'all' || sourceFilter === 'site';
+    const showSalla = sourceFilter === 'all' || sourceFilter === 'salla';
 
-  // === EMPLOYEE PERFORMANCE ===
+    if (showSite) {
+      filteredOrders.forEach(o => {
+        const key = format(new Date(o.submitted_at || o.created_at), 'MM/dd');
+        if (days[key]) {
+          days[key].orders++;
+          days[key].students += o.student_count || 0;
+        }
+      });
+    }
+    if (showSalla) {
+      filteredSallaOrders.forEach(o => {
+        const key = format(new Date(o.created_at), 'MM/dd');
+        if (days[key]) {
+          days[key].orders++;
+        }
+      });
+    }
+    return Object.entries(days).map(([date, v]) => ({ date, ...v }));
+  }, [filteredOrders, filteredSallaOrders, getDateRange, sourceFilter]);
+
+  // === EMPLOYEE PERFORMANCE (site only) ===
   const employeeStats = useMemo(() => {
+    if (sourceFilter === 'salla') return [];
     const map: Record<string, { total: number; submitted: number; lastActivity: string }> = {};
     filteredOrders.forEach(o => {
       if (!map[o.employee_id]) map[o.employee_id] = { total: 0, submitted: 0, lastActivity: o.updated_at };
@@ -231,7 +301,7 @@ export default function Dashboard() {
       name: profileMap[eid] || 'موظف',
       ...s,
     })).sort((a, b) => b.total - a.total);
-  }, [filteredOrders, profileMap]);
+  }, [filteredOrders, profileMap, sourceFilter]);
 
   // === RECENT ACTIVITY ===
   const recentActivity = useMemo(() => {
@@ -248,14 +318,30 @@ export default function Dashboard() {
     });
   }, [audits, profileMap]);
 
-  // === DELAYED ORDERS ===
+  // === DELAYED ORDERS (combined) ===
   const delayedOrders = useMemo(() => {
     const threshold = subDays(new Date(), DELAYED_DAYS_THRESHOLD);
-    return orders.filter(o =>
-      o.status !== 'completed' && o.status !== 'cancelled' &&
-      isBefore(new Date(o.submitted_at || o.created_at), threshold)
-    );
-  }, [orders]);
+    const showSite = sourceFilter === 'all' || sourceFilter === 'site';
+    const showSalla = sourceFilter === 'all' || sourceFilter === 'salla';
+
+    const delayed: { id: string; label: string; status: string }[] = [];
+
+    if (showSite) {
+      orders.filter(o =>
+        o.status !== 'completed' && o.status !== 'cancelled' &&
+        isBefore(new Date(o.submitted_at || o.created_at), threshold)
+      ).forEach(o => delayed.push({ id: o.id, label: o.order_number, status: o.status }));
+    }
+
+    if (showSalla) {
+      sallaOrders.filter(o =>
+        o.status !== 'completed' && o.status !== 'cancelled' &&
+        isBefore(new Date(o.created_at), threshold)
+      ).forEach(o => delayed.push({ id: o.id, label: `سلة-${o.internal_number}`, status: o.status }));
+    }
+
+    return delayed;
+  }, [orders, sallaOrders, sourceFilter]);
 
   const statCards = [
     { label: 'إجمالي الطلبات', value: stats.totalOrders, icon: ClipboardList, gradient: 'from-primary/10 to-primary/5', iconColor: 'text-primary' },
@@ -269,6 +355,12 @@ export default function Dashboard() {
     { key: 'week', label: 'الأسبوع', icon: CalendarRange },
     { key: 'month', label: 'الشهر', icon: CalendarIcon },
     { key: 'season', label: activeSeason?.season_name || 'الموسم', icon: Leaf },
+  ];
+
+  const sourceButtons: { key: SourceFilter; label: string; icon: typeof Globe }[] = [
+    { key: 'all', label: 'الكل', icon: Filter },
+    { key: 'site', label: 'طلبات الموقع', icon: Globe },
+    { key: 'salla', label: 'طلبات سلة', icon: ShoppingBag },
   ];
 
   if (loading) {
@@ -290,46 +382,67 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
             <p className="text-muted-foreground text-sm mt-1">نظرة عامة على الأداء والعمليات</p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {filterButtons.map(fb => {
-              const Icon = fb.icon;
-              return (
-                <Button
-                  key={fb.key}
-                  size="sm"
-                  variant={filter === fb.key ? 'default' : 'outline'}
-                  onClick={() => setFilter(fb.key)}
-                  className="gap-1.5"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {fb.label}
-                </Button>
-              );
-            })}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button size="sm" variant={filter === 'custom' ? 'default' : 'outline'} className="gap-1.5">
-                  <ArrowLeftRight className="h-3.5 w-3.5" />
-                  مخصص
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-4 space-y-3" align="end">
-                <p className="text-xs font-medium text-muted-foreground">من</p>
-                <Calendar
-                  mode="single"
-                  selected={customFrom}
-                  onSelect={(d) => { setCustomFrom(d); setFilter('custom'); }}
-                  className="p-2 pointer-events-auto"
-                />
-                <p className="text-xs font-medium text-muted-foreground">إلى</p>
-                <Calendar
-                  mode="single"
-                  selected={customTo}
-                  onSelect={(d) => { setCustomTo(d); setFilter('custom'); }}
-                  className="p-2 pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+          <div className="flex flex-col gap-2 items-end">
+            {/* Source Filter */}
+            <div className="flex items-center gap-1.5 bg-muted/50 rounded-lg p-1">
+              {sourceButtons.map(sb => {
+                const Icon = sb.icon;
+                return (
+                  <Button
+                    key={sb.key}
+                    size="sm"
+                    variant={sourceFilter === sb.key ? 'default' : 'ghost'}
+                    onClick={() => setSourceFilter(sb.key)}
+                    className={cn('gap-1.5 h-7 text-xs', sourceFilter === sb.key ? '' : 'text-muted-foreground')}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {sb.label}
+                  </Button>
+                );
+              })}
+            </div>
+            {/* Time Filter */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {filterButtons.map(fb => {
+                const Icon = fb.icon;
+                return (
+                  <Button
+                    key={fb.key}
+                    size="sm"
+                    variant={filter === fb.key ? 'default' : 'outline'}
+                    onClick={() => setFilter(fb.key)}
+                    className="gap-1.5"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {fb.label}
+                  </Button>
+                );
+              })}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant={filter === 'custom' ? 'default' : 'outline'} className="gap-1.5">
+                    <ArrowLeftRight className="h-3.5 w-3.5" />
+                    مخصص
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-4 space-y-3" align="end">
+                  <p className="text-xs font-medium text-muted-foreground">من</p>
+                  <Calendar
+                    mode="single"
+                    selected={customFrom}
+                    onSelect={(d) => { setCustomFrom(d); setFilter('custom'); }}
+                    className="p-2 pointer-events-auto"
+                  />
+                  <p className="text-xs font-medium text-muted-foreground">إلى</p>
+                  <Calendar
+                    mode="single"
+                    selected={customTo}
+                    onSelect={(d) => { setCustomTo(d); setFilter('custom'); }}
+                    className="p-2 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
@@ -384,7 +497,9 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pb-4">
               {barData.length === 0 ? (
-                <p className="text-center text-muted-foreground text-sm py-8">لا توجد بيانات</p>
+                <p className="text-center text-muted-foreground text-sm py-8">
+                  {sourceFilter === 'salla' ? 'لا تنطبق على طلبات سلة' : 'لا توجد بيانات'}
+                </p>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={barData} layout="vertical" margin={{ left: 60, right: 10 }}>
@@ -438,7 +553,7 @@ export default function Dashboard() {
               <div className="flex flex-wrap gap-2">
                 {delayedOrders.slice(0, 10).map(o => (
                   <Badge key={o.id} variant="outline" className="border-destructive/40 text-destructive text-xs">
-                    {o.order_number} — {STATUS_LABELS[o.status] || o.status}
+                    {o.label} — {STATUS_LABELS[o.status] || o.status}
                   </Badge>
                 ))}
                 {delayedOrders.length > 10 && (
@@ -462,7 +577,9 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
-              {employeeStats.length === 0 ? (
+              {sourceFilter === 'salla' ? (
+                <p className="text-center text-muted-foreground text-sm py-6">لا تنطبق على طلبات سلة</p>
+              ) : employeeStats.length === 0 ? (
                 <p className="text-center text-muted-foreground text-sm py-6">لا توجد بيانات</p>
               ) : (
                 <div className="overflow-auto">
