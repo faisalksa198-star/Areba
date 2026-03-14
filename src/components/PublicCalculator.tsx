@@ -31,6 +31,12 @@ export default function PublicCalculator() {
   const [logoCount, setLogoCount] = useState('');
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [purpleCount, setPurpleCount] = useState('');
+  const [extraScarfCount, setExtraScarfCount] = useState('');
+  const [extraScarfPrice, setExtraScarfPrice] = useState('');
+  const [capNoEmbCount, setCapNoEmbCount] = useState('');
+  const [capNoEmbPrice, setCapNoEmbPrice] = useState('');
+  const [capWithEmbCount, setCapWithEmbCount] = useState('');
+  const [capWithEmbPrice, setCapWithEmbPrice] = useState('');
 
   useEffect(() => {
     Promise.all([
