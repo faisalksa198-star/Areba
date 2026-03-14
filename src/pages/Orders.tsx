@@ -162,6 +162,10 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     if (myOrdersOnly && user) {
       query = query.eq('employee_id', user.id);
     }
+    // Season isolation: filter by active season prefix
+    if (activeSeason?.season_name) {
+      query = query.like('order_number', `${activeSeason.season_name}-%`);
+    }
     const { data: ordersData } = await query;
     
     // Fetch employee names from profiles
