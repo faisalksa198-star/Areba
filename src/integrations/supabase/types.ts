@@ -386,6 +386,62 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string
+          discount_amount: number
+          discount_percent: number
+          id: string
+          invoice_number: string
+          line_items: Json
+          order_id: string
+          subtotal: number
+          tax_amount: number
+          total_after_discount: number
+          total_with_tax: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          discount_amount?: number
+          discount_percent?: number
+          id?: string
+          invoice_number: string
+          line_items?: Json
+          order_id: string
+          subtotal?: number
+          tax_amount?: number
+          total_after_discount?: number
+          total_with_tax?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          discount_amount?: number
+          discount_percent?: number
+          id?: string
+          invoice_number?: string
+          line_items?: Json
+          order_id?: string
+          subtotal?: number
+          tax_amount?: number
+          total_after_discount?: number
+          total_with_tax?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_scarf_designs: {
         Row: {
           created_at: string | null
