@@ -268,6 +268,7 @@ export default function Dashboard() {
     { key: 'today', label: 'اليوم', icon: CalendarDays },
     { key: 'week', label: 'الأسبوع', icon: CalendarRange },
     { key: 'month', label: 'الشهر', icon: CalendarIcon },
+    { key: 'season', label: activeSeason?.season_name || 'الموسم', icon: Leaf },
   ];
 
   if (loading) {
