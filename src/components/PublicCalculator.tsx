@@ -78,7 +78,11 @@ export default function PublicCalculator() {
   const hatEmb = (parseInt(hatEmbroideryCount) || 0) * hatEmbPrice;
   const purple = (parseInt(purpleCount) || 0) * purplePrice;
 
-  const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple;
+  const extraScarfTotal = (parseInt(extraScarfCount) || 0) * (parseFloat(extraScarfPrice) || 0);
+  const capNoEmbTotal = (parseInt(capNoEmbCount) || 0) * (parseFloat(capNoEmbPrice) || 0);
+  const capWithEmbTotal = (parseInt(capWithEmbCount) || 0) * (parseFloat(capWithEmbPrice) || 0);
+
+  const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple + extraScarfTotal + capNoEmbTotal + capWithEmbTotal;
 
   const fmt = (n: number) => n.toLocaleString('en-US');
 
