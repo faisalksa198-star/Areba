@@ -126,7 +126,7 @@ export default function PublicCalculator() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-sm">إضافات العباية (بالريال)</Label>
+            <Label className="text-sm">إضافات الكلوش ( بالريال )</Label>
             <Input type="number" min="0" step="0.01" placeholder="0" value={abayaExtra} onChange={e => setAbayaExtra(e.target.value)} disabled={!enabled} />
             {enabled && abayaTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(abayaTotal)} ريال</p>}
           </div>
