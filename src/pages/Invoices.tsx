@@ -11,9 +11,18 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { FileText, Trash2, Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { FileText, Trash2, Search, Loader2, CheckCircle2, XCircle, Download, MessageCircle } from 'lucide-react';
 import { generateInvoicePdf } from '@/lib/invoicePdfGenerator';
 import PublicCalculator, { CalcSummaryLine } from '@/components/PublicCalculator';
+
+const statusLabels: Record<string, { label: string; color: string }> = {
+  pending_data: { label: 'بانتظار البيانات', color: 'bg-amber-500/15 text-amber-700 border-amber-200' },
+  under_review: { label: 'بانتظار المراجعة', color: 'bg-blue-500/15 text-blue-700 border-blue-200' },
+  in_progress: { label: 'قيد التنفيذ', color: 'bg-blue-500/15 text-blue-700 border-blue-200' },
+  shipped: { label: 'تم الشحن', color: 'bg-purple-500/15 text-purple-700 border-purple-200' },
+  completed: { label: 'مكتمل', color: 'bg-emerald-500/15 text-emerald-700 border-emerald-200' },
+  cancelled: { label: 'ملغي', color: 'bg-destructive/15 text-destructive border-destructive/20' },
+};
 
 interface OrderRow {
   id: string;
@@ -21,8 +30,10 @@ interface OrderRow {
   employee_id: string;
   status: string;
   employee_name?: string;
+  leader_phone?: string | null;
   has_invoice: boolean;
   invoice_id?: string;
+  invoice_data?: any;
 }
 
 export default function Invoices() {
@@ -43,17 +54,18 @@ export default function Invoices() {
   const [discountPct, setDiscountPct] = useState('');
   const [generating, setGenerating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   const fetchOrders = async () => {
     setLoading(true);
     const { data: ordersData } = await supabase
       .from('orders')
-      .select('id, order_number, employee_id, status')
+      .select('id, order_number, employee_id, status, leader_phone')
       .order('created_at', { ascending: false });
 
     const { data: invoicesData } = await supabase
       .from('invoices' as any)
-      .select('id, order_id');
+      .select('*');
 
     const { data: profiles } = await supabase
       .from('profiles')
@@ -62,17 +74,19 @@ export default function Invoices() {
     const profileMap: Record<string, string> = {};
     (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p.full_name; });
 
-    const invoiceMap: Record<string, string> = {};
-    ((invoicesData as any[]) || []).forEach((inv: any) => { invoiceMap[inv.order_id] = inv.id; });
+    const invoiceMap: Record<string, any> = {};
+    ((invoicesData as any[]) || []).forEach((inv: any) => { invoiceMap[inv.order_id] = inv; });
 
     const rows: OrderRow[] = (ordersData || []).map((o: any) => ({
       id: o.id,
       order_number: o.order_number,
       employee_id: o.employee_id,
       status: o.status,
+      leader_phone: o.leader_phone,
       employee_name: profileMap[o.employee_id] || 'غير معروف',
       has_invoice: !!invoiceMap[o.id],
-      invoice_id: invoiceMap[o.id],
+      invoice_id: invoiceMap[o.id]?.id,
+      invoice_data: invoiceMap[o.id] || null,
     }));
 
     setOrders(rows);
@@ -128,7 +142,6 @@ export default function Invoices() {
         subtotalBeforeDiscount: totalDiscount > 0 ? subtotal : undefined,
       });
 
-      // Save invoice to DB
       await supabase.from('invoices' as any).insert({
         order_id: selectedOrder.id,
         invoice_number: selectedOrder.order_number,
@@ -149,6 +162,26 @@ export default function Invoices() {
       toast({ title: 'حدث خطأ أثناء إصدار الفاتورة', variant: 'destructive' });
     }
     setGenerating(false);
+  };
+
+  const handleDownloadInvoice = async (order: OrderRow) => {
+    if (!order.invoice_data) return;
+    setDownloading(order.invoice_id!);
+    try {
+      const inv = order.invoice_data;
+      const savedLines = (inv.line_items as any[]) || [];
+      await generateInvoicePdf({
+        orderNumber: inv.invoice_number,
+        lines: savedLines.map((l: any) => ({ label: l.label, detail: l.detail, amount: l.result || 0 })),
+        total: inv.total_after_discount,
+        discount: inv.discount_amount > 0 || inv.discount_percent > 0 ? (inv.subtotal - inv.total_after_discount) : undefined,
+        subtotalBeforeDiscount: inv.discount_amount > 0 || inv.discount_percent > 0 ? inv.subtotal : undefined,
+      });
+      toast({ title: 'تم تحميل الفاتورة ✓' });
+    } catch {
+      toast({ title: 'خطأ في تحميل الفاتورة', variant: 'destructive' });
+    }
+    setDownloading(null);
   };
 
   const handleDeleteInvoice = async (order: OrderRow) => {
@@ -208,51 +241,87 @@ export default function Invoices() {
                   <TableRow>
                     <TableHead className="text-right">رقم الطلب</TableHead>
                     <TableHead className="text-right">الموظف</TableHead>
+                    <TableHead className="text-center">حالة الطلب</TableHead>
                     <TableHead className="text-center">حالة الفاتورة</TableHead>
                     <TableHead className="text-center">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map(order => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-semibold">{order.order_number}</TableCell>
-                      <TableCell>{order.employee_name}</TableCell>
-                      <TableCell className="text-center">
-                        {order.has_invoice ? (
-                          <Badge variant="default" className="gap-1 bg-emerald-500/15 text-emerald-700 border-emerald-200 hover:bg-emerald-500/15">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            مفوترة
+                  {filtered.map(order => {
+                    const st = statusLabels[order.status] || statusLabels.pending_data;
+                    return (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-semibold">{order.order_number}</TableCell>
+                        <TableCell>{order.employee_name}</TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant="outline" className={`gap-1 ${st.color} hover:${st.color}`}>
+                            {st.label}
                           </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1 text-muted-foreground">
-                            <XCircle className="h-3.5 w-3.5" />
-                            غير مفوترة
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center gap-2">
-                          {!order.has_invoice ? (
-                            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleIssueInvoice(order)}>
-                              <FileText className="h-3.5 w-3.5" />
-                              إصدار فاتورة
-                            </Button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {order.has_invoice ? (
+                            <Badge variant="default" className="gap-1 bg-emerald-500/15 text-emerald-700 border-emerald-200 hover:bg-emerald-500/15">
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                              مفوترة
+                            </Badge>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteInvoice(order)}
-                              disabled={deleting === order.invoice_id}
-                            >
-                              {deleting === order.invoice_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                              حذف الفاتورة
-                            </Button>
+                            <Badge variant="outline" className="gap-1 text-muted-foreground">
+                              <XCircle className="h-3.5 w-3.5" />
+                              غير مفوترة
+                            </Badge>
                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center gap-2 flex-wrap">
+                            {!order.has_invoice ? (
+                              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleIssueInvoice(order)}>
+                                <FileText className="h-3.5 w-3.5" />
+                                إصدار فاتورة
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1.5"
+                                  onClick={() => handleDownloadInvoice(order)}
+                                  disabled={downloading === order.invoice_id}
+                                >
+                                  {downloading === order.invoice_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                                  تحميل
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDeleteInvoice(order)}
+                                  disabled={deleting === order.invoice_id}
+                                >
+                                  {deleting === order.invoice_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                                  حذف
+                                </Button>
+                              </>
+                            )}
+                            {order.leader_phone && (() => {
+                              const waPhone = order.leader_phone!.replace(/^0/, '966').replace(/[^0-9]/g, '');
+                              return (
+                                <a
+                                  href={`https://wa.me/${waPhone}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Button size="sm" variant="outline" className="gap-1.5 text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                                    <MessageCircle className="h-3.5 w-3.5" />
+                                    واتساب
+                                  </Button>
+                                </a>
+                              );
+                            })()}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
@@ -290,7 +359,7 @@ export default function Invoices() {
                     </div>
                   </div>
                   {(() => {
-                    const { subtotal, totalDiscount, afterDiscount, preTax, tax } = computeDiscount();
+                    const { subtotal, totalDiscount, afterDiscount } = computeDiscount();
                     return totalDiscount > 0 ? (
                       <div className="text-xs space-y-1 bg-muted/50 rounded-lg p-3">
                         <div className="flex justify-between"><span>الإجمالي قبل الخصم</span><span className="font-semibold">{subtotal.toLocaleString('en-US')} ريال</span></div>

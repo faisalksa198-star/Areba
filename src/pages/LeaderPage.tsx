@@ -814,10 +814,30 @@ export default function LeaderPage() {
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {generatingPdf ? 'جارٍ التحميل...' : 'تحميل تقرير الطلب PDF'}
             </Button>
-            <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
-              {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
-            </Button>
+            {orderInfo && (() => {
+              // Check if invoice exists
+              const [hasInvoice, setHasInvoice] = useState<boolean | null>(null);
+              useEffect(() => {
+                if (!orderId) return;
+                supabase.from('invoices' as any).select('id').eq('order_id', orderId).maybeSingle()
+                  .then(({ data }) => setHasInvoice(!!data));
+              }, [orderId]);
+
+              if (hasInvoice === null) return null; // loading
+              if (!hasInvoice) {
+                return (
+                  <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-3 text-center">
+                    بانتظار إصدار الفاتورة الإلكترونية من الإدارة
+                  </p>
+                );
+              }
+              return (
+                <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
+                  {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                  {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
+                </Button>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
