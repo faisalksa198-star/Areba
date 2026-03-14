@@ -177,7 +177,7 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
-      <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
+      <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">الأوشحة الإضافية</CardTitle>
         </CardHeader>
