@@ -19,7 +19,8 @@ import ShortRedirect from "./pages/ShortRedirect";
 import CalculatorPage from "./pages/Calculator";
 import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 import Invoices from "./pages/Invoices";
-
+import SallaProducts from "./pages/SallaProducts";
+import SallaOrders from "./pages/SallaOrders";
 
 const queryClient = new QueryClient();
 
