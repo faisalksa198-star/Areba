@@ -694,6 +694,7 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               className="h-8 w-8"
                               onClick={() => {
                                 setGeneratedLinks(links);
+                                setLinksOrderNumber(order.order_number);
                                 setShowLinks(true);
                               }}
                             >
