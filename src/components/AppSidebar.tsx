@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText, Settings } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,7 +24,7 @@ const menuItems = [
   { title: 'طلباتي', url: '/my-orders', icon: ClipboardList },
   { title: 'حاسبة الأسعار', url: '/admin-calculator', icon: Calculator },
   { title: 'الفواتير الإلكترونية', url: '/invoices', icon: FileText },
-  { title: 'إعدادات المواسم', url: '/season-settings', icon: Settings },
+  
 ];
 
 export function AppSidebar() {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Plus, Pencil, Trash2, CalendarRange } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2 } from 'lucide-react';
 
 interface Season {
   id: string;
@@ -20,7 +20,7 @@ interface Season {
   is_active: boolean;
 }
 
-export default function SeasonSettings() {
+export function SeasonSettingsContent() {
   const { toast } = useToast();
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +52,10 @@ export default function SeasonSettings() {
   const handleSave = async () => {
     if (!form.season_name || !form.start_date || !form.end_date) {
       toast({ title: 'يرجى تعبئة جميع الحقول', variant: 'destructive' });
+      return;
+    }
+    if (!/^\d{4}$/.test(form.season_name)) {
+      toast({ title: 'اسم الموسم يجب أن يكون سنة من 4 أرقام (مثل 2026)', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -88,23 +92,18 @@ export default function SeasonSettings() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">إعدادات المواسم</h1>
-            <p className="text-muted-foreground text-sm mt-1">تعريف فترات المواسم لفلترة البيانات</p>
-          </div>
-          <Button onClick={openCreate} className="gap-2">
+          <p className="text-muted-foreground text-sm">تعريف فترات المواسم وربط الترقيم بالموسم النشط</p>
+          <Button onClick={openCreate} className="gap-2" size="sm">
             <Plus className="h-4 w-4" />
             إضافة موسم
           </Button>
@@ -115,7 +114,7 @@ export default function SeasonSettings() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-right">اسم الموسم</TableHead>
+                  <TableHead className="text-right">رقم الموسم</TableHead>
                   <TableHead className="text-center">تاريخ البداية</TableHead>
                   <TableHead className="text-center">تاريخ النهاية</TableHead>
                   <TableHead className="text-center">الحالة</TableHead>
@@ -165,8 +164,17 @@ export default function SeasonSettings() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>اسم الموسم</Label>
-              <Input value={form.season_name} onChange={e => setForm(f => ({ ...f, season_name: e.target.value }))} placeholder="مثال: موسم 2026-2027" />
+              <Label>رقم الموسم (سنة)</Label>
+              <Input
+                value={form.season_name}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setForm(f => ({ ...f, season_name: val }));
+                }}
+                placeholder="مثال: 2027"
+                inputMode="numeric"
+                maxLength={4}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -182,6 +190,7 @@ export default function SeasonSettings() {
               <Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} />
               <Label>موسم نشط</Label>
             </div>
+            <p className="text-xs text-muted-foreground">ملاحظة: تفعيل هذا الموسم سيؤدي تلقائياً لإلغاء تفعيل أي موسم آخر</p>
           </div>
           <DialogFooter>
             <Button onClick={handleSave} disabled={saving} className="gap-2">
@@ -191,6 +200,17 @@ export default function SeasonSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+export default function SeasonSettings() {
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-foreground">إعدادات المواسم</h1>
+        <SeasonSettingsContent />
+      </div>
     </DashboardLayout>
   );
 }
