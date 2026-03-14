@@ -20,16 +20,15 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Loader2, Search, Download, Trash2, Pencil, Eye, X,
-  Package, Shirt, GraduationCap, ShoppingBag,
+  Package, Shirt, GraduationCap, ShoppingBag, Copy,
 } from 'lucide-react';
 import { exportSallaOrdersXlsx } from '@/lib/sallaOrderXlsxExporter';
 
-// ===== Status config (matching main orders) =====
+// ===== Status config =====
 const STATUS_OPTIONS: { value: string; label: string; className: string }[] = [
   { value: 'pending_data', label: 'بانتظار البيانات', className: 'bg-warning/10 text-warning border-warning/20' },
   { value: 'under_review', label: 'بانتظار المراجعة', className: 'bg-blue-100 text-blue-700 border-blue-200' },
@@ -77,6 +76,13 @@ interface SallaProduct {
   options: { label: string; field_type: string; values: string[]; is_required: boolean; default_value: string }[];
 }
 
+interface FormItem {
+  product_id: string;
+  category: string;
+  option_values: Record<string, string>;
+  notes: string;
+}
+
 export default function SallaOrders() {
   const { toast } = useToast();
   const [orders, setOrders] = useState<SallaOrder[]>([]);
@@ -92,7 +98,6 @@ export default function SallaOrders() {
   const [showForm, setShowForm] = useState(false);
   const [editingOrder, setEditingOrder] = useState<SallaOrder | null>(null);
   const [formSallaNumber, setFormSallaNumber] = useState('');
-  const [formStatus, setFormStatus] = useState('pending_data');
   const [formNotes, setFormNotes] = useState('');
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -121,7 +126,6 @@ export default function SallaOrders() {
       ? await supabase.from('salla_order_items').select('*').in('salla_order_id', orderIds)
       : { data: [] };
 
-    // Get product names
     const productIds = [...new Set((itemsData || []).filter(i => i.product_id).map(i => i.product_id!))];
     let productNameMap: Record<string, string> = {};
     if (productIds.length > 0) {
@@ -165,12 +169,12 @@ export default function SallaOrders() {
 
   useEffect(() => { loadOrders(); loadProducts(); }, [loadOrders, loadProducts]);
 
-  // ===== Filtering =====
+  // ===== Filtering (search by salla number or internal number only) =====
   const filtered = useMemo(() => {
     return orders.filter(o => {
       if (statusFilter !== 'all' && o.status !== statusFilter) return false;
       if (search) {
-        const s = search.toLowerCase();
+        const s = search.toLowerCase().trim();
         if (!o.salla_order_number.toLowerCase().includes(s) && !String(o.internal_number).includes(s)) return false;
       }
       return true;
@@ -233,18 +237,10 @@ export default function SallaOrders() {
     setBulkExporting(false);
   };
 
-  // ===== Form =====
-  interface FormItem {
-    product_id: string;
-    category: string;
-    quantity: number;
-    option_values: Record<string, string>;
-    notes: string;
-  }
-
+  // ===== Form helpers =====
   const openCreate = () => {
     setEditingOrder(null);
-    setFormSallaNumber(''); setFormStatus('pending_data'); setFormNotes('');
+    setFormSallaNumber(''); setFormNotes('');
     setFormItems([]);
     setShowForm(true);
   };
@@ -252,27 +248,54 @@ export default function SallaOrders() {
   const openEdit = (order: SallaOrder) => {
     setEditingOrder(order);
     setFormSallaNumber(order.salla_order_number);
-    setFormStatus(order.status);
     setFormNotes(order.notes || '');
     setFormItems(order.items.map(i => ({
       product_id: i.product_id || '',
       category: i.category,
-      quantity: i.quantity,
       option_values: i.option_values as Record<string, string>,
       notes: i.notes || '',
     })));
     setShowForm(true);
   };
 
-  const addItem = () => {
-    setFormItems(prev => [...prev, { product_id: '', category: 'kit', quantity: 1, option_values: {}, notes: '' }]);
+  const addNewItem = () => {
+    setFormItems(prev => [...prev, { product_id: '', category: 'kit', option_values: {}, notes: '' }]);
+  };
+
+  const duplicateItem = (index: number) => {
+    const source = formItems[index];
+    const prod = products.find(p => p.id === source.product_id);
+    // Keep dropdown values, clear text inputs
+    const newOptionValues: Record<string, string> = {};
+    if (prod) {
+      prod.options.forEach(opt => {
+        if (opt.field_type === 'text') {
+          newOptionValues[opt.label] = ''; // Clear text fields
+        } else {
+          newOptionValues[opt.label] = source.option_values[opt.label] || '';
+        }
+      });
+    } else {
+      // No product info, copy all
+      Object.assign(newOptionValues, source.option_values);
+    }
+    const duplicated: FormItem = {
+      product_id: source.product_id,
+      category: source.category,
+      option_values: newOptionValues,
+      notes: '',
+    };
+    setFormItems(prev => {
+      const next = [...prev];
+      next.splice(index + 1, 0, duplicated);
+      return next;
+    });
   };
 
   const updateItem = (index: number, updates: Partial<FormItem>) => {
     setFormItems(prev => prev.map((item, i) => {
       if (i !== index) return item;
       const updated = { ...item, ...updates };
-      // When product changes, set category and populate defaults
       if (updates.product_id && updates.product_id !== item.product_id) {
         const prod = products.find(p => p.id === updates.product_id);
         if (prod) {
@@ -299,32 +322,27 @@ export default function SallaOrders() {
     setSaving(true);
 
     if (editingOrder) {
-      // Update order
       const { error } = await supabase.from('salla_orders').update({
         salla_order_number: formSallaNumber.trim(),
-        status: formStatus as any,
         notes: formNotes.trim() || null,
       }).eq('id', editingOrder.id);
       if (error) { toast({ title: 'خطأ', description: error.message, variant: 'destructive' }); setSaving(false); return; }
 
-      // Replace items
       await supabase.from('salla_order_items').delete().eq('salla_order_id', editingOrder.id);
       if (formItems.length > 0) {
         const itemsToInsert = formItems.filter(i => i.product_id).map(i => ({
           salla_order_id: editingOrder.id,
           product_id: i.product_id,
           category: i.category,
-          quantity: i.quantity,
+          quantity: 1,
           option_values: i.option_values,
           notes: i.notes || null,
         }));
         if (itemsToInsert.length > 0) await supabase.from('salla_order_items').insert(itemsToInsert);
       }
     } else {
-      // Create order
       const { data, error } = await supabase.from('salla_orders').insert({
         salla_order_number: formSallaNumber.trim(),
-        status: formStatus as any,
         notes: formNotes.trim() || null,
       }).select('id').single();
       if (error || !data) { toast({ title: 'خطأ', description: error?.message, variant: 'destructive' }); setSaving(false); return; }
@@ -334,7 +352,7 @@ export default function SallaOrders() {
           salla_order_id: data.id,
           product_id: i.product_id,
           category: i.category,
-          quantity: i.quantity,
+          quantity: 1,
           option_values: i.option_values,
           notes: i.notes || null,
         }));
@@ -348,7 +366,7 @@ export default function SallaOrders() {
     loadOrders();
   };
 
-  // ===== Sub-numbering helper =====
+  // ===== Sub-numbering =====
   const getSubNumbers = (order: SallaOrder) => {
     if (order.items.length <= 1) return null;
     return order.items.map((_, i) => `${i + 1}/${order.items.length}`);
@@ -374,7 +392,7 @@ export default function SallaOrders() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث برقم الطلب..." className="pr-9" />
+            <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث برقم طلب سلة أو الرقم الداخلي..." className="pr-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[180px]"><SelectValue placeholder="الحالة" /></SelectTrigger>
@@ -420,10 +438,8 @@ export default function SallaOrders() {
                     </TableHead>
                     <TableHead className="text-right">رقم طلب سلة</TableHead>
                     <TableHead className="text-right">الرقم الداخلي</TableHead>
-                    <TableHead className="text-right">الأصناف</TableHead>
                     <TableHead className="text-right">التوابع</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
-                    <TableHead className="text-right">التاريخ</TableHead>
                     <TableHead className="text-right w-[120px]">إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -437,24 +453,6 @@ export default function SallaOrders() {
                         </TableCell>
                         <TableCell className="font-medium">{order.salla_order_number || '—'}</TableCell>
                         <TableCell className="font-mono text-sm">{order.internal_number}</TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {order.items.length === 0 ? (
-                              <span className="text-muted-foreground text-xs">لا يوجد</span>
-                            ) : (
-                              order.items.map((item, idx) => {
-                                const cat = CATEGORY_LABELS[item.category] || CATEGORY_LABELS.kit;
-                                return (
-                                  <Badge key={idx} variant="outline" className="text-[10px] gap-0.5">
-                                    <cat.icon className="h-3 w-3" />
-                                    {item.product_name || cat.label}
-                                    {item.quantity > 1 && <span className="mr-0.5">×{item.quantity}</span>}
-                                  </Badge>
-                                );
-                              })
-                            )}
-                          </div>
-                        </TableCell>
                         <TableCell>
                           {subNums ? (
                             <div className="flex flex-wrap gap-1">
@@ -479,9 +477,6 @@ export default function SallaOrders() {
                               {STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                             </SelectContent>
                           </Select>
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {new Date(order.created_at).toLocaleDateString('ar-SA')}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
@@ -516,21 +511,10 @@ export default function SallaOrders() {
             <DialogTitle>{editingOrder ? 'تعديل طلب سلة' : 'إضافة طلب سلة جديد'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Order info */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">رقم طلب سلة *</label>
-                <Input value={formSallaNumber} onChange={e => setFormSallaNumber(e.target.value)} placeholder="رقم الطلب من منصة سلة" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">الحالة</label>
-                <Select value={formStatus} onValueChange={setFormStatus}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Order info - only salla number and notes */}
+            <div>
+              <label className="text-sm font-medium mb-1 block">رقم طلب سلة *</label>
+              <Input value={formSallaNumber} onChange={e => setFormSallaNumber(e.target.value)} placeholder="رقم الطلب من منصة سلة" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">ملاحظات</label>
@@ -542,11 +526,12 @@ export default function SallaOrders() {
             {/* Items */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">الأصناف</h3>
-                <Button size="sm" variant="outline" onClick={addItem} className="gap-1">
-                  <Plus className="h-3.5 w-3.5" />
-                  إضافة صنف
-                </Button>
+                <h3 className="text-sm font-semibold">
+                  الأصناف
+                  {formItems.length > 1 && (
+                    <span className="text-muted-foreground font-normal mr-2">({formItems.length} أصناف)</span>
+                  )}
+                </h3>
               </div>
 
               {formItems.map((item, idx) => {
@@ -557,8 +542,14 @@ export default function SallaOrders() {
                       <X className="h-3.5 w-3.5" />
                     </Button>
                     <CardContent className="pt-4 pb-3 space-y-3">
+                      {/* Sub-number badge */}
+                      {formItems.length > 1 && (
+                        <Badge variant="secondary" className="text-[10px] font-mono">
+                          صنف {idx + 1}/{formItems.length}
+                        </Badge>
+                      )}
+
                       <div className="grid grid-cols-2 gap-3">
-                        {/* Category filter for products */}
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">التصنيف</label>
                           <Select value={item.category} onValueChange={v => updateItem(idx, { category: v, product_id: '', option_values: {} })}>
@@ -581,11 +572,6 @@ export default function SallaOrders() {
                             </SelectContent>
                           </Select>
                         </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">الكمية</label>
-                        <Input type="number" min={1} value={item.quantity} onChange={e => updateItem(idx, { quantity: parseInt(e.target.value) || 1 })} className="h-8 w-24 text-xs" />
                       </div>
 
                       {/* Dynamic options from product */}
@@ -629,13 +615,44 @@ export default function SallaOrders() {
                           </div>
                         </div>
                       )}
+
+                      {/* Action buttons under each item */}
+                      <div className="flex items-center gap-2 pt-1 border-t border-border/50">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-xs h-7"
+                          onClick={() => duplicateItem(idx)}
+                          disabled={!item.product_id}
+                        >
+                          <Copy className="h-3 w-3" />
+                          تكرار المنتج
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 text-xs h-7"
+                          onClick={addNewItem}
+                        >
+                          <Plus className="h-3 w-3" />
+                          إضافة صنف
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 );
               })}
 
               {formItems.length === 0 && (
-                <p className="text-center text-muted-foreground text-xs py-4">لم تتم إضافة أصناف بعد</p>
+                <div className="text-center py-6 space-y-2">
+                  <p className="text-muted-foreground text-xs">لم تتم إضافة أصناف بعد</p>
+                  <Button size="sm" variant="outline" onClick={addNewItem} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" />
+                    إضافة صنف
+                  </Button>
+                </div>
               )}
             </div>
 
@@ -664,7 +681,6 @@ export default function SallaOrders() {
                 <div><span className="text-muted-foreground">الحالة:</span>{' '}
                   <Badge className={statusMap[viewingOrder.status]?.className}>{statusMap[viewingOrder.status]?.label}</Badge>
                 </div>
-                <div><span className="text-muted-foreground">التاريخ:</span> {new Date(viewingOrder.created_at).toLocaleDateString('ar-SA')}</div>
               </div>
               {viewingOrder.notes && <div><span className="text-muted-foreground">ملاحظات:</span> {viewingOrder.notes}</div>}
 
@@ -680,7 +696,6 @@ export default function SallaOrders() {
                         <Badge variant="outline" className="text-[10px] gap-0.5"><cat.icon className="h-3 w-3" />{cat.label}</Badge>
                         <span className="font-medium text-xs">{item.product_name || '—'}</span>
                         {subNum && <Badge variant="secondary" className="text-[10px] font-mono mr-auto">{subNum}</Badge>}
-                        {item.quantity > 1 && <Badge className="text-[10px]">×{item.quantity}</Badge>}
                       </div>
                       {Object.keys(item.option_values).length > 0 && (
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
