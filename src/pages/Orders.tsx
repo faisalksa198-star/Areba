@@ -44,7 +44,7 @@ import {
   Search,
   Download,
   Upload,
-  
+  FileText,
   ClipboardList,
   Clock,
   Users,
