@@ -130,14 +130,21 @@ export default function Dashboard() {
       case 'today': return { from: startOfDay(now), to };
       case 'week': return { from: startOfWeek(now, { weekStartsOn: 6 }), to };
       case 'month': return { from: startOfMonth(now), to };
+      case 'season': {
+        if (activeSeason) {
+          return { from: new Date(activeSeason.start_date), to: new Date(activeSeason.end_date) };
+        }
+        return { from: new Date('2025-10-01'), to: new Date('2026-05-31') };
+      }
       case 'custom': return { from: customFrom || subDays(now, 30), to: customTo || now };
     }
-  }, [filter, customFrom, customTo]);
+  }, [filter, customFrom, customTo, activeSeason]);
 
   const filteredOrders = useMemo(() => {
     const { from, to } = getDateRange();
     return orders.filter(o => {
-      const d = new Date(o.created_at);
+      // Use submitted_at (actual submission date) if available, fallback to created_at
+      const d = new Date(o.submitted_at || o.created_at);
       return !isBefore(d, from) && !isAfter(d, to);
     });
   }, [orders, getDateRange]);
