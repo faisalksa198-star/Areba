@@ -453,8 +453,7 @@ export default function LeaderPage() {
     setStudents(prev => {
       const student = prev.find(s => s.id === id);
       if (!student) return prev;
-      const currentCount = prev.filter(s => s.hasLogoEmbroidery).length;
-      if (!student.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && currentCount >= orderInfo.logo_embroidery_count) return prev;
+      if (!student.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && logoCount >= orderInfo.logo_embroidery_count) return prev;
       return prev.map(s => s.id === id ? { ...s, hasLogoEmbroidery: !s.hasLogoEmbroidery } : s);
     });
   }, [logoIsAll, orderInfo]);
