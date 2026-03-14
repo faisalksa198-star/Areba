@@ -235,6 +235,8 @@ export default function DataCenter() {
           <PricingRulesTab />
         ) : activeSection === 'addon_prices' ? (
           <AddonPricesTab />
+        ) : activeSection === 'salla_products' ? (
+          <SallaProductsContent />
         ) : activeSection === 'season_settings' ? (
           <SeasonSettingsContent />
         ) : (
