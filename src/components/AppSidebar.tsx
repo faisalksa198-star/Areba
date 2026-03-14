@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText, Store, ShoppingBag } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +27,12 @@ const baseMenuItems = [
 const adminMenuItems = [
   { title: 'مركز البيانات', url: '/data-center', icon: Database },
   { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
+  { title: 'منتجات سلة', url: '/salla-products', icon: Store },
   { title: 'إدارة الموظفين', url: '/employees', icon: Users },
+];
+
+const sallaMenuItems = [
+  { title: 'طلبات موقع سلة', url: '/salla-orders', icon: ShoppingBag },
 ];
 
 export function AppSidebar() {
@@ -50,8 +55,8 @@ export function AppSidebar() {
   }, [user]);
 
   const allItems = isAdmin
-    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 2), ...baseMenuItems.slice(1), adminMenuItems[2]]
-    : baseMenuItems;
+    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 3), ...baseMenuItems.slice(1), ...sallaMenuItems, adminMenuItems[3]]
+    : [...baseMenuItems, ...sallaMenuItems];
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0 border-r border-sidebar-border">

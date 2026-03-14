@@ -19,7 +19,8 @@ import ShortRedirect from "./pages/ShortRedirect";
 import CalculatorPage from "./pages/Calculator";
 import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 import Invoices from "./pages/Invoices";
-
+import SallaProducts from "./pages/SallaProducts";
+import SallaOrders from "./pages/SallaOrders";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,8 @@ const App = () => (
             <Route path="/admin-calculator" element={<CalculatorPage />} />
             <Route path="/public-calculator" element={<PublicCalculatorPage />} />
             <Route path="/invoices" element={<Invoices />} />
+            <Route path="/salla-products" element={<AdminRoute><SallaProducts /></AdminRoute>} />
+            <Route path="/salla-orders" element={<SallaOrders />} />
             
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
