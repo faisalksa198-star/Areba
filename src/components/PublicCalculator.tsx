@@ -31,6 +31,12 @@ export default function PublicCalculator() {
   const [logoCount, setLogoCount] = useState('');
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [purpleCount, setPurpleCount] = useState('');
+  const [extraScarfCount, setExtraScarfCount] = useState('');
+  const [extraScarfPrice, setExtraScarfPrice] = useState('');
+  const [capNoEmbCount, setCapNoEmbCount] = useState('');
+  const [capNoEmbPrice, setCapNoEmbPrice] = useState('');
+  const [capWithEmbCount, setCapWithEmbCount] = useState('');
+  const [capWithEmbPrice, setCapWithEmbPrice] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -72,7 +78,11 @@ export default function PublicCalculator() {
   const hatEmb = (parseInt(hatEmbroideryCount) || 0) * hatEmbPrice;
   const purple = (parseInt(purpleCount) || 0) * purplePrice;
 
-  const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple;
+  const extraScarfTotal = (parseInt(extraScarfCount) || 0) * (parseFloat(extraScarfPrice) || 0);
+  const capNoEmbTotal = (parseInt(capNoEmbCount) || 0) * (parseFloat(capNoEmbPrice) || 0);
+  const capWithEmbTotal = (parseInt(capWithEmbCount) || 0) * (parseFloat(capWithEmbPrice) || 0);
+
+  const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple + extraScarfTotal + capNoEmbTotal + capWithEmbTotal;
 
   const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -116,7 +126,7 @@ export default function PublicCalculator() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="text-sm">إضافات العباية (بالريال)</Label>
+            <Label className="text-sm">إضافات الكلوش ( بالريال )</Label>
             <Input type="number" min="0" step="0.01" placeholder="0" value={abayaExtra} onChange={e => setAbayaExtra(e.target.value)} disabled={!enabled} />
             {enabled && abayaTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(abayaTotal)} ريال</p>}
           </div>
@@ -166,6 +176,62 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
+      <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">الأوشحة الإضافية</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">العدد</Label>
+              <Input type="number" min="0" placeholder="0" value={extraScarfCount} onChange={e => setExtraScarfCount(e.target.value)} disabled={!enabled} />
+            </div>
+            <div>
+              <Label className="text-sm">سعر الوشاح الواحد (ريال)</Label>
+              <Input type="number" min="0" step="0.01" placeholder="0" value={extraScarfPrice} onChange={e => setExtraScarfPrice(e.target.value)} disabled={!enabled} />
+            </div>
+          </div>
+          {enabled && extraScarfTotal > 0 && <p className="text-xs text-muted-foreground">= {fmt(extraScarfTotal)} ريال</p>}
+        </CardContent>
+      </Card>
+
+      <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">القبعات الإضافية</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">قبعة بدون تطريز</Label>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <div>
+                <Label className="text-xs text-muted-foreground">العدد</Label>
+                <Input type="number" min="0" placeholder="0" value={capNoEmbCount} onChange={e => setCapNoEmbCount(e.target.value)} disabled={!enabled} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">السعر (ريال)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0" value={capNoEmbPrice} onChange={e => setCapNoEmbPrice(e.target.value)} disabled={!enabled} />
+              </div>
+            </div>
+            {enabled && capNoEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capNoEmbTotal)} ريال</p>}
+          </div>
+          <Separator />
+          <div>
+            <Label className="text-sm font-medium">قبعة مع تطريز</Label>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <div>
+                <Label className="text-xs text-muted-foreground">العدد</Label>
+                <Input type="number" min="0" placeholder="0" value={capWithEmbCount} onChange={e => setCapWithEmbCount(e.target.value)} disabled={!enabled} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">السعر (ريال)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0" value={capWithEmbPrice} onChange={e => setCapWithEmbPrice(e.target.value)} disabled={!enabled} />
+              </div>
+            </div>
+            {enabled && capWithEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capWithEmbTotal)} ريال</p>}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-primary/40 bg-primary/5 shadow-md">
         <CardContent className="py-8 text-center">
           <p className="text-sm text-muted-foreground mb-2">المجموع النهائي</p>
@@ -179,13 +245,16 @@ export default function PublicCalculator() {
       {enabled && total > 0 && (() => {
         const lines: { label: string; detail: string; result: number }[] = [];
         if (basePrice > 0) lines.push({ label: 'الأطقم', detail: `${fmt(qty)} × ${fmt(unitPrice)} ريال`, result: basePrice });
-        if (abayaTotal > 0) lines.push({ label: 'إضافات العبايات', detail: `${fmt(parseFloat(abayaExtra) || 0)} ريال × ${fmt(qty)}`, result: abayaTotal });
+        if (abayaTotal > 0) lines.push({ label: 'إضافات الكلوش', detail: `${fmt(parseFloat(abayaExtra) || 0)} ريال × ${fmt(qty)}`, result: abayaTotal });
         if (scarfQitan > 0) lines.push({ label: 'أوشحة بقيطان', detail: `${fmt(parseInt(scarfQitanCount) || 0)} أوشحة × ${fmt(scarfQitanPrice)} ريال`, result: scarfQitan });
         if (scarfDecorated > 0) lines.push({ label: 'أوشحة بخط مزخرف', detail: `${fmt(parseInt(scarfDecoratedCount) || 0)} أوشحة × ${fmt(scarfDecoratedPrice)} ريال`, result: scarfDecorated });
         if (backEmb > 0) lines.push({ label: 'تطريز خلفي', detail: `${fmt(parseInt(backEmbroideryCount) || 0)} تطريز × ${fmt(backEmbPrice)} ريال`, result: backEmb });
         if (logo > 0) lines.push({ label: 'إضافة شعار', detail: `${fmt(parseInt(logoCount) || 0)} شعار × ${fmt(logoPrice)} ريال`, result: logo });
         if (hatEmb > 0) lines.push({ label: 'تطريز قبعة', detail: `${fmt(parseInt(hatEmbroideryCount) || 0)} قبعات × ${fmt(hatEmbPrice)} ريال`, result: hatEmb });
         if (purple > 0) lines.push({ label: 'بكج Purple', detail: `${fmt(parseInt(purpleCount) || 0)} بكج × ${fmt(purplePrice)} ريال`, result: purple });
+        if (extraScarfTotal > 0) lines.push({ label: 'أوشحة إضافية', detail: `${fmt(parseInt(extraScarfCount) || 0)} × ${fmt(parseFloat(extraScarfPrice) || 0)} ريال`, result: extraScarfTotal });
+        if (capNoEmbTotal > 0) lines.push({ label: 'قبعة بدون تطريز', detail: `${fmt(parseInt(capNoEmbCount) || 0)} × ${fmt(parseFloat(capNoEmbPrice) || 0)} ريال`, result: capNoEmbTotal });
+        if (capWithEmbTotal > 0) lines.push({ label: 'قبعة مع تطريز', detail: `${fmt(parseInt(capWithEmbCount) || 0)} × ${fmt(parseFloat(capWithEmbPrice) || 0)} ريال`, result: capWithEmbTotal });
 
         return lines.length > 0 ? (
           <Card className="border-muted relative overflow-hidden">
