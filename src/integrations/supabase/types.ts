@@ -572,6 +572,7 @@ export type Database = {
           sleeve_style_id: string | null
           status: Database["public"]["Enums"]["order_status"]
           student_count: number | null
+          submitted_at: string | null
           tracking_link: string | null
           tracking_number: string | null
           updated_at: string
@@ -623,6 +624,7 @@ export type Database = {
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
+          submitted_at?: string | null
           tracking_link?: string | null
           tracking_number?: string | null
           updated_at?: string
@@ -674,6 +676,7 @@ export type Database = {
           sleeve_style_id?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           student_count?: number | null
+          submitted_at?: string | null
           tracking_link?: string | null
           tracking_number?: string | null
           updated_at?: string
@@ -967,6 +970,36 @@ export type Database = {
           is_active?: boolean
           name?: string
           sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      season_settings: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          season_name: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          season_name?: string
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          season_name?: string
+          start_date?: string
           updated_at?: string
         }
         Relationships: []

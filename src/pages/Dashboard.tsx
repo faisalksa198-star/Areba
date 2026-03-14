@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   ClipboardList, Loader2, Users, Scissors, TrendingUp,
   CalendarDays, CalendarRange, Calendar as CalendarIcon, Clock,
-  AlertTriangle, Activity, ArrowLeftRight
+  AlertTriangle, Activity, ArrowLeftRight, Leaf
+
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,12 +21,21 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 
-type FilterPeriod = 'today' | 'week' | 'month' | 'custom';
+type FilterPeriod = 'today' | 'week' | 'month' | 'season' | 'custom';
+
+interface SeasonRow {
+  id: string;
+  season_name: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+}
 
 interface OrderRow {
   id: string;
   status: string;
   created_at: string;
+  submitted_at: string | null;
   student_count: number | null;
   extra_scarf_count: number | null;
   extra_hat_count: number | null;
@@ -83,6 +93,8 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [cities, setCities] = useState<CityRow[]>([]);
   const [audits, setAudits] = useState<AuditRow[]>([]);
+  const [seasons, setSeasons] = useState<SeasonRow[]>([]);
+  const [activeSeason, setActiveSeason] = useState<SeasonRow | null>(null);
 
   const [filter, setFilter] = useState<FilterPeriod>('month');
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
@@ -90,16 +102,23 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
-      const [oRes, pRes, cRes, aRes] = await Promise.all([
-        supabase.from('orders').select('id,status,created_at,student_count,extra_scarf_count,extra_hat_count,employee_id,city_id,execution_duration,order_number,updated_at'),
+      const [oRes, pRes, cRes, aRes, sRes] = await Promise.all([
+        supabase.from('orders').select('id,status,created_at,submitted_at,student_count,extra_scarf_count,extra_hat_count,employee_id,city_id,execution_duration,order_number,updated_at'),
         supabase.from('profiles').select('user_id,full_name'),
         supabase.from('cities').select('id,name'),
         supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('season_settings').select('*').order('start_date', { ascending: false }),
       ]);
       if (oRes.data) setOrders(oRes.data as OrderRow[]);
       if (pRes.data) setProfiles(pRes.data as ProfileRow[]);
       if (cRes.data) setCities(cRes.data as CityRow[]);
       if (aRes.data) setAudits(aRes.data as AuditRow[]);
+      if (sRes.data) {
+        const seasonData = sRes.data as SeasonRow[];
+        setSeasons(seasonData);
+        const active = seasonData.find(s => s.is_active);
+        if (active) setActiveSeason(active);
+      }
       setLoading(false);
     }
     load();
@@ -112,14 +131,21 @@ export default function Dashboard() {
       case 'today': return { from: startOfDay(now), to };
       case 'week': return { from: startOfWeek(now, { weekStartsOn: 6 }), to };
       case 'month': return { from: startOfMonth(now), to };
+      case 'season': {
+        if (activeSeason) {
+          return { from: new Date(activeSeason.start_date), to: new Date(activeSeason.end_date) };
+        }
+        return { from: new Date('2025-10-01'), to: new Date('2026-05-31') };
+      }
       case 'custom': return { from: customFrom || subDays(now, 30), to: customTo || now };
     }
-  }, [filter, customFrom, customTo]);
+  }, [filter, customFrom, customTo, activeSeason]);
 
   const filteredOrders = useMemo(() => {
     const { from, to } = getDateRange();
     return orders.filter(o => {
-      const d = new Date(o.created_at);
+      // Use submitted_at (actual submission date) if available, fallback to created_at
+      const d = new Date(o.submitted_at || o.created_at);
       return !isBefore(d, from) && !isAfter(d, to);
     });
   }, [orders, getDateRange]);
@@ -181,7 +207,7 @@ export default function Dashboard() {
       d = new Date(d.getTime() + 86400000);
     }
     filteredOrders.forEach(o => {
-      const key = format(new Date(o.created_at), 'MM/dd');
+      const key = format(new Date(o.submitted_at || o.created_at), 'MM/dd');
       if (days[key]) {
         days[key].orders++;
         days[key].students += o.student_count || 0;
@@ -227,7 +253,7 @@ export default function Dashboard() {
     const threshold = subDays(new Date(), DELAYED_DAYS_THRESHOLD);
     return orders.filter(o =>
       o.status !== 'completed' && o.status !== 'cancelled' &&
-      isBefore(new Date(o.created_at), threshold)
+      isBefore(new Date(o.submitted_at || o.created_at), threshold)
     );
   }, [orders]);
 
@@ -242,6 +268,7 @@ export default function Dashboard() {
     { key: 'today', label: 'اليوم', icon: CalendarDays },
     { key: 'week', label: 'الأسبوع', icon: CalendarRange },
     { key: 'month', label: 'الشهر', icon: CalendarIcon },
+    { key: 'season', label: activeSeason?.season_name || 'الموسم', icon: Leaf },
   ];
 
   if (loading) {

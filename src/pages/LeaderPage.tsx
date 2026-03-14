@@ -696,7 +696,7 @@ export default function LeaderPage() {
 
     const { error } = await supabase
       .from('orders')
-      .update({ data_submitted: true, status: 'under_review' as any })
+      .update({ data_submitted: true, status: 'under_review' as any, submitted_at: new Date().toISOString() } as any)
       .eq('id', orderId);
 
     if (error) {
