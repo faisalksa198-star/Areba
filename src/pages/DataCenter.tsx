@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import PricingRulesTab from '@/components/PricingRulesTab';
 import AddonPricesTab from '@/components/AddonPricesTab';
-import SeasonSettings from '@/pages/SeasonSettings';
+import { SeasonSettingsContent } from '@/pages/SeasonSettings';
 
 interface MasterItem {
   id: string;
