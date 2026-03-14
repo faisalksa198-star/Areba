@@ -24,7 +24,11 @@ interface AddonPrice {
   price: number;
 }
 
-export default function PublicCalculator() {
+interface PublicCalculatorProps {
+  onSummaryChange?: (lines: CalcSummaryLine[], total: number) => void;
+}
+
+export default function PublicCalculator({ onSummaryChange }: PublicCalculatorProps) {
   const [rules, setRules] = useState<PricingRule[]>([]);
   const [addons, setAddons] = useState<Record<string, AddonPrice>>({});
   const [loading, setLoading] = useState(true);
