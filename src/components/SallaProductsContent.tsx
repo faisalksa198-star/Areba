@@ -643,11 +643,11 @@ export default function SallaProductsContent() {
                         {/* Manual values input (only when no source_table) */}
                         {!opt.source_table && (
                           <Input
-                            value={opt.values.join('، ')}
+                            value={opt.values.join(' - ')}
                             onChange={e => updateOption(index, {
-                              values: e.target.value.split('،').map(v => v.trim()).filter(Boolean)
+                              values: e.target.value.split('-').map(v => v.trim()).filter(Boolean)
                             })}
-                            placeholder="القيم مفصولة بفاصلة عربية ، (مثال: 48 ، 50 ، 52 ، 54)"
+                            placeholder="القيم مفصولة بشرطة - (مثال: 48 - 50 - 52 - 54)"
                             className="text-sm"
                           />
                         )}
