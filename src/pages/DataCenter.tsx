@@ -15,6 +15,7 @@ import {
 import PricingRulesTab from '@/components/PricingRulesTab';
 import AddonPricesTab from '@/components/AddonPricesTab';
 import { SeasonSettingsContent } from '@/pages/SeasonSettings';
+import SallaProductsContent from '@/components/SallaProductsContent';
 
 interface MasterItem {
   id: string;
