@@ -40,6 +40,7 @@ interface OrderRow {
 export default function Invoices() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { season: activeSeason } = useActiveSeason();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
