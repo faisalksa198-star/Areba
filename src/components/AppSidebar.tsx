@@ -54,7 +54,7 @@ export function AppSidebar() {
   }, [user]);
 
   const allItems = isAdmin
-    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 3), ...baseMenuItems.slice(1), ...sallaMenuItems, adminMenuItems[3]]
+    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems, ...baseMenuItems.slice(1), ...sallaMenuItems]
     : [...baseMenuItems, ...sallaMenuItems];
 
   return (
