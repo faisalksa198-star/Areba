@@ -180,6 +180,7 @@ export default function LeaderPage() {
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [hasInvoice, setHasInvoice] = useState<boolean | null>(null);
 
   // Extra scarves & hats
   const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
