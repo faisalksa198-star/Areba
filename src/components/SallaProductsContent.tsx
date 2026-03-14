@@ -5,11 +5,33 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X, Search, Archive, ArchiveRestore, Copy,
 } from 'lucide-react';
+
+// Master data source tables that options can link to
+const SOURCE_TABLES = [
+  { key: 'abaya_designs', label: 'تصاميم العبايات' },
+  { key: 'sleeve_styles', label: 'أطراف الكم' },
+  { key: 'scarf_styles', label: 'أشكال الأوشحة' },
+  { key: 'scarf_methods', label: 'أطراف الوشاح' },
+  { key: 'embroidery_directions', label: 'اتجاه التطريز' },
+  { key: 'fonts', label: 'الخطوط' },
+  { key: 'date_types', label: 'أنواع التواريخ' },
+  { key: 'hat_styles', label: 'أشكال القبعات' },
+  { key: 'hat_embroideries', label: 'تطريز القبعات' },
+  { key: 'cities', label: 'المدن' },
+] as const;
+
+interface MasterDataItem {
+  id: string;
+  name: string;
+  is_active: boolean;
+}
 
 interface ProductOption {
   id?: string;
@@ -18,6 +40,7 @@ interface ProductOption {
   is_required: boolean;
   default_value: string;
   sort_order: number;
+  source_table?: string | null;
 }
 
 interface SallaProduct {
@@ -28,6 +51,23 @@ interface SallaProduct {
   sort_order: number;
   created_at: string;
   options?: ProductOption[];
+  // Ready-kit-like defaults
+  abaya_design_id: string | null;
+  sleeve_style_id: string | null;
+  scarf_style_id: string | null;
+  scarf_method_id: string | null;
+  hat_style_id: string | null;
+  font_id: string | null;
+  date_type_id: string | null;
+  embroidery_direction_id: string | null;
+  embroidery_color: string | null;
+  abaya_color: string | null;
+  abaya_color_degree: string | null;
+  scarf_color: string | null;
+  scarf_color_degree: string | null;
+  hat_color: string | null;
+  hat_color_degree: string | null;
+  sleeve_color: string | null;
 }
 
 export default function SallaProductsContent() {
@@ -37,6 +77,9 @@ export default function SallaProductsContent() {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
 
+  // Master data cache
+  const [masterData, setMasterData] = useState<Record<string, MasterDataItem[]>>({});
+
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SallaProduct | null>(null);
   const [formName, setFormName] = useState('');
@@ -44,6 +87,41 @@ export default function SallaProductsContent() {
   const [formImagePreview, setFormImagePreview] = useState('');
   const [formOptions, setFormOptions] = useState<ProductOption[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Ready-kit-like default fields
+  const [formDefaults, setFormDefaults] = useState({
+    abaya_design_id: '' as string,
+    sleeve_style_id: '' as string,
+    scarf_style_id: '' as string,
+    scarf_method_id: '' as string,
+    hat_style_id: '' as string,
+    font_id: '' as string,
+    date_type_id: '' as string,
+    embroidery_direction_id: '' as string,
+    embroidery_color: '' as string,
+    abaya_color: '' as string,
+    abaya_color_degree: '' as string,
+    scarf_color: '' as string,
+    scarf_color_degree: '' as string,
+    hat_color: '' as string,
+    hat_color_degree: '' as string,
+    sleeve_color: '' as string,
+  });
+
+  // Load all master data for dropdowns
+  const loadMasterData = useCallback(async () => {
+    const tables = SOURCE_TABLES.map(t => t.key);
+    const results = await Promise.all(
+      tables.map(table =>
+        supabase.from(table).select('id, name, is_active').eq('is_active', true).order('sort_order', { ascending: true })
+      )
+    );
+    const data: Record<string, MasterDataItem[]> = {};
+    tables.forEach((table, i) => {
+      data[table] = (results[i].data as MasterDataItem[]) || [];
+    });
+    setMasterData(data);
+  }, []);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -69,14 +147,18 @@ export default function SallaProductsContent() {
           is_required: o.is_required,
           default_value: o.default_value || '',
           sort_order: o.sort_order || 0,
+          source_table: o.source_table || null,
         })),
       }));
-      setProducts(productsWithOptions);
+      setProducts(productsWithOptions as SallaProduct[]);
     }
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadProducts(); }, [loadProducts]);
+  useEffect(() => {
+    loadProducts();
+    loadMasterData();
+  }, [loadProducts, loadMasterData]);
 
   const filtered = products.filter(p => {
     const matchesSearch = !search || p.name.includes(search);
@@ -84,12 +166,34 @@ export default function SallaProductsContent() {
     return matchesSearch && matchesArchive;
   });
 
+  const resetFormDefaults = (product?: SallaProduct | null) => {
+    setFormDefaults({
+      abaya_design_id: product?.abaya_design_id || '',
+      sleeve_style_id: product?.sleeve_style_id || '',
+      scarf_style_id: product?.scarf_style_id || '',
+      scarf_method_id: product?.scarf_method_id || '',
+      hat_style_id: product?.hat_style_id || '',
+      font_id: product?.font_id || '',
+      date_type_id: product?.date_type_id || '',
+      embroidery_direction_id: product?.embroidery_direction_id || '',
+      embroidery_color: product?.embroidery_color || '',
+      abaya_color: product?.abaya_color || '',
+      abaya_color_degree: product?.abaya_color_degree || '',
+      scarf_color: product?.scarf_color || '',
+      scarf_color_degree: product?.scarf_color_degree || '',
+      hat_color: product?.hat_color || '',
+      hat_color_degree: product?.hat_color_degree || '',
+      sleeve_color: product?.sleeve_color || '',
+    });
+  };
+
   const openCreate = () => {
     setEditingProduct(null);
     setFormName('');
     setFormImage(null);
     setFormImagePreview('');
     setFormOptions([]);
+    resetFormDefaults(null);
     setShowForm(true);
   };
 
@@ -99,6 +203,7 @@ export default function SallaProductsContent() {
     setFormImage(null);
     setFormImagePreview(product.image_url || '');
     setFormOptions(product.options || []);
+    resetFormDefaults(product);
     setShowForm(true);
   };
 
@@ -114,8 +219,10 @@ export default function SallaProductsContent() {
         is_required: o.is_required,
         default_value: o.default_value,
         sort_order: o.sort_order,
+        source_table: o.source_table,
       }))
     );
+    resetFormDefaults(product);
     setShowForm(true);
   };
 
@@ -145,11 +252,22 @@ export default function SallaProductsContent() {
       is_required: false,
       default_value: '',
       sort_order: prev.length,
+      source_table: null,
     }]);
   };
 
   const updateOption = (index: number, updates: Partial<ProductOption>) => {
-    setFormOptions(prev => prev.map((opt, i) => i === index ? { ...opt, ...updates } : opt));
+    setFormOptions(prev => prev.map((opt, i) => {
+      if (i !== index) return opt;
+      const updated = { ...opt, ...updates };
+      // If source_table changed, clear manual values
+      if (updates.source_table !== undefined) {
+        if (updates.source_table) {
+          updated.values = [];
+        }
+      }
+      return updated;
+    }));
   };
 
   const removeOption = (index: number) => {
@@ -169,12 +287,33 @@ export default function SallaProductsContent() {
       if (!imageUrl) { setSaving(false); return; }
     }
 
+    const productData = {
+      name: formName.trim(),
+      image_url: imageUrl,
+      abaya_design_id: formDefaults.abaya_design_id || null,
+      sleeve_style_id: formDefaults.sleeve_style_id || null,
+      scarf_style_id: formDefaults.scarf_style_id || null,
+      scarf_method_id: formDefaults.scarf_method_id || null,
+      hat_style_id: formDefaults.hat_style_id || null,
+      font_id: formDefaults.font_id || null,
+      date_type_id: formDefaults.date_type_id || null,
+      embroidery_direction_id: formDefaults.embroidery_direction_id || null,
+      embroidery_color: formDefaults.embroidery_color || null,
+      abaya_color: formDefaults.abaya_color || null,
+      abaya_color_degree: formDefaults.abaya_color_degree || null,
+      scarf_color: formDefaults.scarf_color || null,
+      scarf_color_degree: formDefaults.scarf_color_degree || null,
+      hat_color: formDefaults.hat_color || null,
+      hat_color_degree: formDefaults.hat_color_degree || null,
+      sleeve_color: formDefaults.sleeve_color || null,
+    };
+
     let productId: string;
 
     if (editingProduct) {
       const { error } = await supabase
         .from('salla_products')
-        .update({ name: formName.trim(), image_url: imageUrl })
+        .update(productData)
         .eq('id', editingProduct.id);
       if (error) {
         toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
@@ -186,7 +325,7 @@ export default function SallaProductsContent() {
     } else {
       const { data, error } = await supabase
         .from('salla_products')
-        .insert({ name: formName.trim(), image_url: imageUrl })
+        .insert(productData)
         .select('id')
         .single();
       if (error || !data) {
@@ -202,10 +341,11 @@ export default function SallaProductsContent() {
       const optionsToInsert = validOptions.map((o, i) => ({
         product_id: productId,
         label: o.label.trim(),
-        values: o.values,
+        values: o.source_table ? [] : o.values,
         is_required: o.is_required,
         default_value: o.default_value || null,
         sort_order: i,
+        source_table: o.source_table || null,
       }));
       const { error } = await supabase.from('salla_product_options').insert(optionsToInsert);
       if (error) {
@@ -220,13 +360,17 @@ export default function SallaProductsContent() {
   };
 
   const toggleArchive = async (product: SallaProduct) => {
-    const { error } = await supabase.from('salla_products').update({ is_active: !product.is_active }).eq('id', product.id);
+    const newStatus = !product.is_active;
+    // Optimistic update
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_active: newStatus } : p));
+    const { error } = await supabase.from('salla_products').update({ is_active: newStatus }).eq('id', product.id);
     if (error) {
+      // Revert on error
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, is_active: !newStatus } : p));
       toast({ title: 'خطأ', description: error.message, variant: 'destructive' });
       return;
     }
-    toast({ title: product.is_active ? 'تمت الأرشفة ✓' : 'تم التفعيل ✓' });
-    loadProducts();
+    toast({ title: newStatus ? 'تم التفعيل ✓' : 'تمت الأرشفة ✓' });
   };
 
   const handleDelete = async (id: string) => {
@@ -235,9 +379,45 @@ export default function SallaProductsContent() {
       toast({ title: 'خطأ في الحذف', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'تم الحذف ✓' });
-      loadProducts();
+      setProducts(prev => prev.filter(p => p.id !== id));
     }
   };
+
+  // Helper to get master data item name by id
+  const getMasterName = (table: string, id: string | null) => {
+    if (!id || !masterData[table]) return null;
+    return masterData[table].find(i => i.id === id)?.name || null;
+  };
+
+  // Get values for an option (from source_table or manual)
+  const getOptionValues = (opt: ProductOption): string[] => {
+    if (opt.source_table && masterData[opt.source_table]) {
+      return masterData[opt.source_table].map(item => item.name);
+    }
+    return opt.values;
+  };
+
+  const DROPDOWN_FIELDS = [
+    { key: 'abaya_design_id', label: 'تصميم العباية', table: 'abaya_designs' },
+    { key: 'sleeve_style_id', label: 'طرف الكم', table: 'sleeve_styles' },
+    { key: 'scarf_style_id', label: 'شكل الوشاح', table: 'scarf_styles' },
+    { key: 'scarf_method_id', label: 'طرف الوشاح', table: 'scarf_methods' },
+    { key: 'hat_style_id', label: 'شكل القبعة', table: 'hat_styles' },
+    { key: 'font_id', label: 'خط التطريز', table: 'fonts' },
+    { key: 'date_type_id', label: 'نوع التاريخ', table: 'date_types' },
+    { key: 'embroidery_direction_id', label: 'اتجاه التطريز', table: 'embroidery_directions' },
+  ] as const;
+
+  const COLOR_FIELDS = [
+    { key: 'abaya_color', label: 'لون العباية' },
+    { key: 'abaya_color_degree', label: 'درجة لون العباية' },
+    { key: 'scarf_color', label: 'لون الوشاح' },
+    { key: 'scarf_color_degree', label: 'درجة لون الوشاح' },
+    { key: 'hat_color', label: 'لون القبعة' },
+    { key: 'hat_color_degree', label: 'درجة لون القبعة' },
+    { key: 'sleeve_color', label: 'لون الكم' },
+    { key: 'embroidery_color', label: 'لون التطريز' },
+  ] as const;
 
   return (
     <>
@@ -300,15 +480,14 @@ export default function SallaProductsContent() {
                         {product.is_active ? 'نشط' : 'مؤرشف'}
                       </Badge>
                     </div>
-                    {product.options && product.options.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1.5">
-                        {product.options.map((opt, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px]">
-                            {opt.label} ({opt.values.length})
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
+                    {/* Show linked master data summary */}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {product.options && product.options.length > 0 && product.options.map((opt, i) => (
+                        <Badge key={i} variant="outline" className="text-[10px]">
+                          {opt.label} ({opt.source_table ? getMasterName(opt.source_table, '') ? 'مرتبط' : 'ديناميكي' : opt.values.length})
+                        </Badge>
+                      ))}
+                    </div>
                     <div className="flex flex-wrap gap-1 mt-2">
                       <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="h-7 px-2 text-xs gap-1">
                         <Pencil className="h-3 w-3" />
@@ -339,41 +518,91 @@ export default function SallaProductsContent() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" dir="rtl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
           <DialogHeader>
             <DialogTitle>{editingProduct ? `تعديل: ${editingProduct.name}` : 'إضافة منتج جديد'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5 mt-2">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">اسم المنتج *</label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="مثال: عباية تخرج كلاسيك" />
+            {/* Basic info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">اسم المنتج *</label>
+                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="مثال: عباية تخرج كلاسيك" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">صورة المنتج</label>
+                {formImagePreview ? (
+                  <div className="relative w-full h-20 rounded-lg overflow-hidden border border-border">
+                    <img src={formImagePreview} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => { setFormImage(null); setFormImagePreview(''); }}
+                      className="absolute top-1 left-1 bg-background/80 rounded-full p-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center justify-center gap-2 h-20 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/30 transition-colors">
+                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">اختر صورة</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                  </label>
+                )}
+              </div>
             </div>
 
+            <Separator />
+
+            {/* Default master data selections */}
             <div>
-              <label className="text-sm font-medium mb-1.5 block">صورة المنتج</label>
-              {formImagePreview ? (
-                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
-                  <img src={formImagePreview} alt="" className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => { setFormImage(null); setFormImagePreview(''); }}
-                    className="absolute top-1 left-1 bg-background/80 rounded-full p-1"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center gap-2 h-28 rounded-lg border-2 border-dashed border-border cursor-pointer hover:bg-muted/30 transition-colors">
-                  <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">اختر صورة</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                </label>
-              )}
+              <label className="text-sm font-medium mb-3 block">القيم الافتراضية للمنتج (من البيانات الأساسية)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {DROPDOWN_FIELDS.map(field => (
+                  <div key={field.key}>
+                    <label className="text-xs text-muted-foreground mb-1 block">{field.label}</label>
+                    <Select
+                      value={formDefaults[field.key] || '_none_'}
+                      onValueChange={v => setFormDefaults(prev => ({ ...prev, [field.key]: v === '_none_' ? '' : v }))}
+                    >
+                      <SelectTrigger className="text-sm">
+                        <SelectValue placeholder="اختر..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none_">-- بدون --</SelectItem>
+                        {(masterData[field.table] || []).map(item => (
+                          <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </div>
             </div>
+
+            {/* Color fields */}
+            <div>
+              <label className="text-sm font-medium mb-3 block">الألوان الافتراضية</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {COLOR_FIELDS.map(field => (
+                  <div key={field.key}>
+                    <label className="text-xs text-muted-foreground mb-1 block">{field.label}</label>
+                    <Input
+                      value={formDefaults[field.key] || ''}
+                      onChange={e => setFormDefaults(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.label}
+                      className="text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
 
             {/* Dynamic options */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium">خصائص المنتج</label>
+                <label className="text-sm font-medium">خصائص إضافية (ديناميكية)</label>
                 <Button type="button" variant="outline" size="sm" onClick={addOption} className="gap-1">
                   <Plus className="h-3 w-3" />
                   إضافة خاصية
@@ -391,18 +620,72 @@ export default function SallaProductsContent() {
                           placeholder="اسم الخاصية (مثال: المقاس)"
                           className="text-sm"
                         />
-                        <Input
-                          value={opt.values.join('-')}
-                          onChange={e => updateOption(index, { values: e.target.value.split('-').map(v => v.trim()).filter(Boolean) })}
-                          placeholder="القيم مفصولة بشرطات (مثال: 50-52-54)"
-                          className="text-sm"
-                        />
-                        <Input
-                          value={opt.default_value}
-                          onChange={e => updateOption(index, { default_value: e.target.value })}
-                          placeholder="القيمة الافتراضية (اختياري)"
-                          className="text-sm"
-                        />
+
+                        {/* Source: linked to master data OR manual */}
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">مصدر القيم</label>
+                          <Select
+                            value={opt.source_table || '_manual_'}
+                            onValueChange={v => updateOption(index, { source_table: v === '_manual_' ? null : v })}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="_manual_">إدخال يدوي</SelectItem>
+                              {SOURCE_TABLES.map(st => (
+                                <SelectItem key={st.key} value={st.key}>{st.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Manual values input (only when no source_table) */}
+                        {!opt.source_table && (
+                          <Input
+                            value={opt.values.join('، ')}
+                            onChange={e => updateOption(index, {
+                              values: e.target.value.split('،').map(v => v.trim()).filter(Boolean)
+                            })}
+                            placeholder="القيم مفصولة بفاصلة عربية ، (مثال: 48 ، 50 ، 52 ، 54)"
+                            className="text-sm"
+                          />
+                        )}
+
+                        {/* Show linked values preview */}
+                        {opt.source_table && masterData[opt.source_table] && (
+                          <div className="flex flex-wrap gap-1">
+                            {masterData[opt.source_table].map(item => (
+                              <Badge key={item.id} variant="outline" className="text-[10px]">{item.name}</Badge>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Default value */}
+                        {opt.source_table ? (
+                          <Select
+                            value={opt.default_value || '_none_'}
+                            onValueChange={v => updateOption(index, { default_value: v === '_none_' ? '' : v })}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="القيمة الافتراضية (اختياري)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="_none_">-- بدون --</SelectItem>
+                              {(masterData[opt.source_table] || []).map(item => (
+                                <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            value={opt.default_value}
+                            onChange={e => updateOption(index, { default_value: e.target.value })}
+                            placeholder="القيمة الافتراضية (اختياري)"
+                            className="text-sm"
+                          />
+                        )}
+
                         <div className="flex items-center gap-2">
                           <Checkbox
                             checked={opt.is_required}
@@ -420,7 +703,7 @@ export default function SallaProductsContent() {
               ))}
 
               {formOptions.length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-3">لم تتم إضافة خصائص بعد</p>
+                <p className="text-xs text-muted-foreground text-center py-3">لم تتم إضافة خصائص ديناميكية بعد</p>
               )}
             </div>
 
