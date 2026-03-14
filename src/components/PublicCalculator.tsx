@@ -185,14 +185,14 @@ export default function PublicCalculator() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-sm">العدد</Label>
-              <Input type="number" min="0" placeholder="0" value={extraScarfCount} onChange={e => setExtraScarfCount(e.target.value)} disabled={!enabled} />
+              <Input type="number" min="0" placeholder="0" value={extraScarfCount} onChange={e => setExtraScarfCount(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm">سعر الوشاح الواحد (ريال)</Label>
-              <Input type="number" min="0" step="0.01" placeholder="0" value={extraScarfPrice} onChange={e => setExtraScarfPrice(e.target.value)} disabled={!enabled} />
+              <Input type="number" min="0" step="0.01" placeholder="0" value={extraScarfPrice} onChange={e => setExtraScarfPrice(e.target.value)} />
             </div>
           </div>
-          {enabled && extraScarfTotal > 0 && <p className="text-xs text-muted-foreground">= {fmt(extraScarfTotal)} ريال</p>}
+          {extraScarfTotal > 0 && <p className="text-xs text-muted-foreground">= {fmt(extraScarfTotal)} ريال</p>}
         </CardContent>
       </Card>
 
