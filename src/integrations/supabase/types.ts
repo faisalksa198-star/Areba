@@ -914,6 +914,80 @@ export type Database = {
           },
         ]
       }
+      salla_product_options: {
+        Row: {
+          created_at: string
+          default_value: string | null
+          id: string
+          is_required: boolean
+          label: string
+          product_id: string
+          sort_order: number | null
+          updated_at: string
+          values: string[]
+        }
+        Insert: {
+          created_at?: string
+          default_value?: string | null
+          id?: string
+          is_required?: boolean
+          label: string
+          product_id: string
+          sort_order?: number | null
+          updated_at?: string
+          values?: string[]
+        }
+        Update: {
+          created_at?: string
+          default_value?: string | null
+          id?: string
+          is_required?: boolean
+          label?: string
+          product_id?: string
+          sort_order?: number | null
+          updated_at?: string
+          values?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salla_product_options_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "salla_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salla_products: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       scarf_methods: {
         Row: {
           created_at: string
