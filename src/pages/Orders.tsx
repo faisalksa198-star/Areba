@@ -94,6 +94,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
 export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { season: activeSeason } = useActiveSeason();
   const [userRole, setUserRole] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
