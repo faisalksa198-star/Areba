@@ -742,28 +742,47 @@ export default function LeaderPage() {
     if (!orderId || !orderInfo) return;
     setGeneratingInvoice(true);
     try {
-      // Build invoice lines from order data
-      const lines: { label: string; detail: string; amount: number }[] = [];
-      const sc = orderInfo.student_count || 0;
-      if (sc > 0) lines.push({ label: 'الأطقم', detail: `${sc} طقم`, amount: 0 }); // price not stored here
-      if (orderInfo.back_embroidery_enabled && orderInfo.back_embroidery_count > 0)
-        lines.push({ label: 'تطريز خلفي', detail: `${orderInfo.back_embroidery_count} تطريز`, amount: 0 });
-      if (orderInfo.logo_embroidery_enabled && orderInfo.logo_embroidery_count > 0)
-        lines.push({ label: 'إضافة شعار', detail: `${orderInfo.logo_embroidery_count} شعار`, amount: 0 });
-      if (orderInfo.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0)
-        lines.push({ label: 'تطريز قبعة', detail: `${orderInfo.hat_embroidery_count} قبعات`, amount: 0 });
-      if (orderInfo.purple_package_enabled && orderInfo.purple_package_count > 0)
-        lines.push({ label: 'بكج Purple', detail: `${orderInfo.purple_package_count} بكج`, amount: 0 });
-      if (orderInfo.extra_scarf_count > 0)
-        lines.push({ label: 'أوشحة إضافية', detail: `${orderInfo.extra_scarf_count} وشاح`, amount: 0 });
-      if (orderInfo.extra_hat_count > 0)
-        lines.push({ label: 'قبعات إضافية', detail: `${orderInfo.extra_hat_count} قبعة`, amount: 0 });
+      // Try to fetch saved invoice from DB
+      const { data: invoice } = await supabase
+        .from('invoices' as any)
+        .select('*')
+        .eq('order_id', orderId)
+        .maybeSingle();
 
-      await generateInvoicePdf({
-        orderNumber: orderInfo.order_number,
-        lines,
-        total: 0,
-      });
+      if (invoice) {
+        const inv = invoice as any;
+        const savedLines = (inv.line_items as any[]) || [];
+        await generateInvoicePdf({
+          orderNumber: inv.invoice_number,
+          lines: savedLines.map((l: any) => ({ label: l.label, detail: l.detail, amount: l.result || 0 })),
+          total: inv.total_after_discount,
+          discount: inv.discount_amount > 0 || inv.discount_percent > 0 ? (inv.subtotal - inv.total_after_discount) : undefined,
+          subtotalBeforeDiscount: inv.discount_amount > 0 || inv.discount_percent > 0 ? inv.subtotal : undefined,
+        });
+      } else {
+        // Fallback: basic invoice from order data
+        const lines: { label: string; detail: string; amount: number }[] = [];
+        const sc = orderInfo.student_count || 0;
+        if (sc > 0) lines.push({ label: 'الأطقم', detail: `${sc} طقم`, amount: 0 });
+        if (orderInfo.back_embroidery_enabled && orderInfo.back_embroidery_count > 0)
+          lines.push({ label: 'تطريز خلفي', detail: `${orderInfo.back_embroidery_count} تطريز`, amount: 0 });
+        if (orderInfo.logo_embroidery_enabled && orderInfo.logo_embroidery_count > 0)
+          lines.push({ label: 'إضافة شعار', detail: `${orderInfo.logo_embroidery_count} شعار`, amount: 0 });
+        if (orderInfo.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0)
+          lines.push({ label: 'تطريز قبعة', detail: `${orderInfo.hat_embroidery_count} قبعات`, amount: 0 });
+        if (orderInfo.purple_package_enabled && orderInfo.purple_package_count > 0)
+          lines.push({ label: 'بكج Purple', detail: `${orderInfo.purple_package_count} بكج`, amount: 0 });
+        if (orderInfo.extra_scarf_count > 0)
+          lines.push({ label: 'أوشحة إضافية', detail: `${orderInfo.extra_scarf_count} وشاح`, amount: 0 });
+        if (orderInfo.extra_hat_count > 0)
+          lines.push({ label: 'قبعات إضافية', detail: `${orderInfo.extra_hat_count} قبعة`, amount: 0 });
+
+        await generateInvoicePdf({
+          orderNumber: orderInfo.order_number,
+          lines,
+          total: 0,
+        });
+      }
       toast({ title: 'تم تحميل الفاتورة بنجاح ✓' });
     } catch (e) {
       console.error('Invoice generation error:', e);

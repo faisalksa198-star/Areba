@@ -22,15 +22,28 @@ interface InvoiceExportModalProps {
 
 export default function InvoiceExportModal({ open, onOpenChange, lines, total }: InvoiceExportModalProps) {
   const [orderNum, setOrderNum] = useState('');
+  const [discountSar, setDiscountSar] = useState('');
+  const [discountPct, setDiscountPct] = useState('');
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
 
   const currentYear = new Date().getFullYear();
   const fullOrderNumber = orderNum ? `${currentYear}-${orderNum.padStart(4, '0')}` : '';
 
+  // Discount logic
+  const fixedDisc = parseFloat(discountSar) || 0;
+  const pctDisc = parseFloat(discountPct) || 0;
+  const pctAmount = total * (pctDisc / 100);
+  const totalDiscount = Math.min(fixedDisc + pctAmount, total);
+  const afterDiscount = Math.max(total - totalDiscount, 0);
+
   const handleExport = async () => {
     if (!orderNum.trim()) {
       toast({ title: 'يرجى إدخال رقم الطلب', variant: 'destructive' });
+      return;
+    }
+    if (afterDiscount <= 0 && total > 0) {
+      toast({ title: 'الخصم أكبر من الإجمالي', variant: 'destructive' });
       return;
     }
     if (total <= 0) {
@@ -43,7 +56,9 @@ export default function InvoiceExportModal({ open, onOpenChange, lines, total }:
       await generateInvoicePdf({
         orderNumber: fullOrderNumber,
         lines: lines.map(l => ({ label: l.label, detail: l.detail, amount: l.result })),
-        total,
+        total: afterDiscount,
+        discount: totalDiscount > 0 ? totalDiscount : undefined,
+        subtotalBeforeDiscount: totalDiscount > 0 ? total : undefined,
       });
       toast({ title: 'تم تصدير الفاتورة بنجاح ✓' });
       onOpenChange(false);
@@ -81,9 +96,30 @@ export default function InvoiceExportModal({ open, onOpenChange, lines, total }:
             )}
           </div>
 
+          {/* Discount */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">الخصم (اختياري)</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">خصم بالريال</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0" value={discountSar} onChange={e => setDiscountSar(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">خصم بالنسبة %</Label>
+                <Input type="number" min="0" max="100" step="0.1" placeholder="0" value={discountPct} onChange={e => setDiscountPct(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
           <div className="bg-muted/50 rounded-lg p-3 space-y-1">
             <p className="text-xs text-muted-foreground">عدد البنود: <span className="font-semibold text-foreground">{lines.length}</span></p>
-            <p className="text-xs text-muted-foreground">الإجمالي شامل الضريبة: <span className="font-semibold text-foreground">{total.toLocaleString('en-US')} ريال</span></p>
+            {totalDiscount > 0 && (
+              <>
+                <p className="text-xs text-muted-foreground">الإجمالي قبل الخصم: <span className="font-semibold text-foreground">{total.toLocaleString('en-US')} ريال</span></p>
+                <p className="text-xs text-destructive">الخصم: <span className="font-semibold">- {totalDiscount.toLocaleString('en-US')} ريال</span></p>
+              </>
+            )}
+            <p className="text-xs text-muted-foreground">الإجمالي شامل الضريبة: <span className="font-semibold text-foreground">{afterDiscount.toLocaleString('en-US')} ريال</span></p>
           </div>
         </div>
 

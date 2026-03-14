@@ -17,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import ShortRedirect from "./pages/ShortRedirect";
 import CalculatorPage from "./pages/Calculator";
 import PublicCalculatorPage from "./pages/PublicCalculatorPage";
+import Invoices from "./pages/Invoices";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/calculator" element={<PublicCalculatorPage />} />
             <Route path="/admin-calculator" element={<CalculatorPage />} />
             <Route path="/public-calculator" element={<PublicCalculatorPage />} />
+            <Route path="/invoices" element={<Invoices />} />
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
