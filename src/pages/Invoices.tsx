@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { FileText, Trash2, Search, Loader2, CheckCircle2, XCircle, Download, MessageCircle } from 'lucide-react';
 import { generateInvoicePdf } from '@/lib/invoicePdfGenerator';
 import PublicCalculator, { CalcSummaryLine } from '@/components/PublicCalculator';
+import { useActiveSeason } from '@/hooks/useActiveSeason';
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending_data: { label: 'بانتظار البيانات', color: 'bg-amber-500/15 text-amber-700 border-amber-200' },
