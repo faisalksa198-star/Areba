@@ -59,6 +59,7 @@ import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { exportOrdersXlsx } from '@/lib/orderXlsxExporter';
+import { useActiveSeason } from '@/hooks/useActiveSeason';
 
 interface OrderLinks {
   leaderLink: string;
@@ -93,6 +94,7 @@ const statusLabels: Record<string, { label: string; className: string }> = {
 export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { season: activeSeason } = useActiveSeason();
   const [userRole, setUserRole] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [orders, setOrders] = useState<OrderRow[]>([]);
@@ -129,14 +131,13 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
 
   useEffect(() => {
     loadUserRole();
-    loadOrders();
     loadKits();
     loadTotalStudents();
   }, []);
 
   useEffect(() => {
     loadOrders();
-  }, [myOrdersOnly, user]);
+  }, [myOrdersOnly, user, activeSeason]);
 
   const loadUserRole = async () => {
     if (!user) return;
@@ -159,6 +160,10 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
     // "My Orders" mode only filters by employee_id
     if (myOrdersOnly && user) {
       query = query.eq('employee_id', user.id);
+    }
+    // Season isolation: filter by active season prefix
+    if (activeSeason?.season_name) {
+      query = query.like('order_number', `${activeSeason.season_name}-%`);
     }
     const { data: ordersData } = await query;
     

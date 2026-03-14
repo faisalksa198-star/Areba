@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { FileText, Trash2, Search, Loader2, CheckCircle2, XCircle, Download, MessageCircle } from 'lucide-react';
 import { generateInvoicePdf } from '@/lib/invoicePdfGenerator';
 import PublicCalculator, { CalcSummaryLine } from '@/components/PublicCalculator';
+import { useActiveSeason } from '@/hooks/useActiveSeason';
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   pending_data: { label: 'بانتظار البيانات', color: 'bg-amber-500/15 text-amber-700 border-amber-200' },
@@ -39,6 +40,7 @@ interface OrderRow {
 export default function Invoices() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { season: activeSeason } = useActiveSeason();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -58,10 +60,17 @@ export default function Invoices() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data: ordersData } = await supabase
+    let query = supabase
       .from('orders')
       .select('id, order_number, employee_id, status, leader_phone')
       .order('created_at', { ascending: false });
+    
+    // Season isolation
+    if (activeSeason?.season_name) {
+      query = query.like('order_number', `${activeSeason.season_name}-%`);
+    }
+    
+    const { data: ordersData } = await query;
 
     const { data: invoicesData } = await supabase
       .from('invoices' as any)
@@ -93,7 +102,7 @@ export default function Invoices() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { fetchOrders(); }, [activeSeason]);
 
   const filtered = orders.filter(o => {
     if (myOrdersOnly && o.employee_id !== user?.id) return false;
