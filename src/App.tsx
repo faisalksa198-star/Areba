@@ -45,7 +45,7 @@ const App = () => (
             <Route path="/admin-calculator" element={<CalculatorPage />} />
             <Route path="/public-calculator" element={<PublicCalculatorPage />} />
             <Route path="/invoices" element={<Invoices />} />
-            <Route path="/season-settings" element={<SeasonSettings />} />
+            
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
