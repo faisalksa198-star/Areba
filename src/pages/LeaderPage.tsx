@@ -180,6 +180,7 @@ export default function LeaderPage() {
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [hasInvoice, setHasInvoice] = useState<boolean | null>(null);
 
   // Extra scarves & hats
   const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
@@ -198,6 +199,9 @@ export default function LeaderPage() {
   useEffect(() => {
     if (!orderId) return;
     loadData();
+    // Check invoice existence
+    supabase.from('invoices' as any).select('id').eq('order_id', orderId).maybeSingle()
+      .then(({ data }) => setHasInvoice(!!data));
   }, [orderId]);
 
   const loadData = async () => {
@@ -814,10 +818,17 @@ export default function LeaderPage() {
               {generatingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
               {generatingPdf ? 'جارٍ التحميل...' : 'تحميل تقرير الطلب PDF'}
             </Button>
-            <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
-              {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
-            </Button>
+            {hasInvoice === false && (
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg px-4 py-3 text-center">
+                بانتظار إصدار الفاتورة الإلكترونية من الإدارة
+              </p>
+            )}
+            {hasInvoice === true && (
+              <Button variant="outline" onClick={handleGenerateInvoice} disabled={generatingInvoice} className="gap-2">
+                {generatingInvoice ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {generatingInvoice ? 'جارٍ التحميل...' : 'تحميل الفاتورة الإلكترونية'}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
