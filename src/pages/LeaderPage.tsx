@@ -179,6 +179,7 @@ export default function LeaderPage() {
   const [shippingOpen, setShippingOpen] = useState(false);
   const [citySearchOpen, setCitySearchOpen] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
   // Extra scarves & hats
   const [extraScarves, setExtraScarves] = useState<ExtraScarfRow[]>([]);
