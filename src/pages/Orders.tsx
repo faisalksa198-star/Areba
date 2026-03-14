@@ -59,6 +59,7 @@ import CreateOrderDialog from '@/components/orders/CreateOrderDialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { exportOrdersXlsx } from '@/lib/orderXlsxExporter';
+import { useActiveSeason } from '@/hooks/useActiveSeason';
 
 interface OrderLinks {
   leaderLink: string;
