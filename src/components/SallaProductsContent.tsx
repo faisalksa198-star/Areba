@@ -27,6 +27,14 @@ interface MasterDataItem {
   is_active: boolean;
 }
 
+type FieldType = 'dropdown' | 'text' | 'checkbox';
+
+const FIELD_TYPES: { value: FieldType; label: string }[] = [
+  { value: 'dropdown', label: 'قائمة منسدلة' },
+  { value: 'text', label: 'مربع نص' },
+  { value: 'checkbox', label: 'مربع اختيار (نعم/لا)' },
+];
+
 interface ProductOption {
   id?: string;
   label: string;
@@ -34,6 +42,7 @@ interface ProductOption {
   is_required: boolean;
   default_value: string;
   sort_order: number;
+  field_type: FieldType;
 }
 
 interface SallaProduct {
