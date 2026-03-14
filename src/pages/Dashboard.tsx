@@ -206,7 +206,7 @@ export default function Dashboard() {
       d = new Date(d.getTime() + 86400000);
     }
     filteredOrders.forEach(o => {
-      const key = format(new Date(o.created_at), 'MM/dd');
+      const key = format(new Date(o.submitted_at || o.created_at), 'MM/dd');
       if (days[key]) {
         days[key].orders++;
         days[key].students += o.student_count || 0;
