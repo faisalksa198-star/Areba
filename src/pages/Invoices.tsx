@@ -60,10 +60,17 @@ export default function Invoices() {
 
   const fetchOrders = async () => {
     setLoading(true);
-    const { data: ordersData } = await supabase
+    let query = supabase
       .from('orders')
       .select('id, order_number, employee_id, status, leader_phone')
       .order('created_at', { ascending: false });
+    
+    // Season isolation
+    if (activeSeason?.season_name) {
+      query = query.like('order_number', `${activeSeason.season_name}-%`);
+    }
+    
+    const { data: ordersData } = await query;
 
     const { data: invoicesData } = await supabase
       .from('invoices' as any)
