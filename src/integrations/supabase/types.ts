@@ -914,6 +914,87 @@ export type Database = {
           },
         ]
       }
+      salla_order_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          notes: string | null
+          option_values: Json
+          product_id: string | null
+          quantity: number
+          salla_order_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          option_values?: Json
+          product_id?: string | null
+          quantity?: number
+          salla_order_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          option_values?: Json
+          product_id?: string | null
+          quantity?: number
+          salla_order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salla_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "salla_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "salla_order_items_salla_order_id_fkey"
+            columns: ["salla_order_id"]
+            isOneToOne: false
+            referencedRelation: "salla_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salla_orders: {
+        Row: {
+          created_at: string
+          id: string
+          internal_number: number
+          notes: string | null
+          salla_order_number: string
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          internal_number?: number
+          notes?: string | null
+          salla_order_number?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          internal_number?: number
+          notes?: string | null
+          salla_order_number?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       salla_product_options: {
         Row: {
           created_at: string
