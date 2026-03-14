@@ -38,6 +38,7 @@ const CATEGORIES = [
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
   { key: 'pricing_rules', label: 'التسعيرة', icon: DollarSign, hasImage: false, hasDescription: false },
   { key: 'addon_prices', label: 'أسعار الإضافات', icon: Tag, hasImage: false, hasDescription: false },
+  { key: 'season_settings', label: 'إعدادات المواسم', icon: Calendar, hasImage: false, hasDescription: false },
 ] as const;
 
 type CategoryKey = typeof CATEGORIES[number]['key'];
