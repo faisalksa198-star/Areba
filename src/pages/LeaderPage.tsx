@@ -738,6 +738,40 @@ export default function LeaderPage() {
     setGeneratingPdf(false);
   };
 
+  const handleGenerateInvoice = async () => {
+    if (!orderId || !orderInfo) return;
+    setGeneratingInvoice(true);
+    try {
+      // Build invoice lines from order data
+      const lines: { label: string; detail: string; amount: number }[] = [];
+      const sc = orderInfo.student_count || 0;
+      if (sc > 0) lines.push({ label: 'الأطقم', detail: `${sc} طقم`, amount: 0 }); // price not stored here
+      if (orderInfo.back_embroidery_enabled && orderInfo.back_embroidery_count > 0)
+        lines.push({ label: 'تطريز خلفي', detail: `${orderInfo.back_embroidery_count} تطريز`, amount: 0 });
+      if (orderInfo.logo_embroidery_enabled && orderInfo.logo_embroidery_count > 0)
+        lines.push({ label: 'إضافة شعار', detail: `${orderInfo.logo_embroidery_count} شعار`, amount: 0 });
+      if (orderInfo.hat_embroidery_enabled && orderInfo.hat_embroidery_count > 0)
+        lines.push({ label: 'تطريز قبعة', detail: `${orderInfo.hat_embroidery_count} قبعات`, amount: 0 });
+      if (orderInfo.purple_package_enabled && orderInfo.purple_package_count > 0)
+        lines.push({ label: 'بكج Purple', detail: `${orderInfo.purple_package_count} بكج`, amount: 0 });
+      if (orderInfo.extra_scarf_count > 0)
+        lines.push({ label: 'أوشحة إضافية', detail: `${orderInfo.extra_scarf_count} وشاح`, amount: 0 });
+      if (orderInfo.extra_hat_count > 0)
+        lines.push({ label: 'قبعات إضافية', detail: `${orderInfo.extra_hat_count} قبعة`, amount: 0 });
+
+      await generateInvoicePdf({
+        orderNumber: orderInfo.order_number,
+        lines,
+        total: 0,
+      });
+      toast({ title: 'تم تحميل الفاتورة بنجاح ✓' });
+    } catch (e) {
+      console.error('Invoice generation error:', e);
+      toast({ title: 'خطأ في توليد الفاتورة', variant: 'destructive' });
+    }
+    setGeneratingInvoice(false);
+  };
+
   if (isLocked) {
     const isInProgress = orderInfo?.status === 'in_progress';
     const isCompleted = orderInfo?.status === 'completed';
