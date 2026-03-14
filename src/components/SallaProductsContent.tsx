@@ -643,41 +643,76 @@ export default function SallaProductsContent() {
                       </Button>
                     </div>
 
-                    {/* Property name */}
-                    <div>
-                      <label className="text-xs font-medium mb-1 block">اسم الخاصية</label>
-                      <Input
-                        value={opt.label}
-                        onChange={e => updateOption(index, { label: e.target.value })}
-                        placeholder="مثال: المقاس"
-                        className="text-sm"
-                      />
+                    {/* Field type selector + Property name */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">نوع الحقل</label>
+                        <Select
+                          value={opt.field_type}
+                          onValueChange={v => updateOption(index, { field_type: v as FieldType, values: v !== 'dropdown' ? [] : opt.values, default_value: '' })}
+                        >
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {FIELD_TYPES.map(ft => (
+                              <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">اسم الحقل</label>
+                        <Input
+                          value={opt.label}
+                          onChange={e => updateOption(index, { label: e.target.value })}
+                          placeholder="مثال: المقاس"
+                          className="text-sm h-9"
+                        />
+                      </div>
                     </div>
 
-                    {/* Values as tags - each value added individually */}
-                    <div>
-                      <label className="text-xs font-medium mb-1 block">القيم</label>
-                      <TagInput
-                        values={opt.values}
-                        onAdd={(val) => addValueToOption(index, val)}
-                        onRemove={(valIdx) => removeValueFromOption(index, valIdx)}
-                        placeholder="اكتب قيمة ثم اضغط Enter"
-                      />
-                    </div>
+                    {/* Dropdown: tag-based values */}
+                    {opt.field_type === 'dropdown' && (
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">القيم</label>
+                        <TagInput
+                          values={opt.values}
+                          onAdd={(val) => addValueToOption(index, val)}
+                          onRemove={(valIdx) => removeValueFromOption(index, valIdx)}
+                          placeholder="اكتب قيمة ثم اضغط Enter"
+                        />
+                      </div>
+                    )}
 
-                    {/* Required toggle */}
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        checked={opt.is_required}
-                        onCheckedChange={v => updateOption(index, { is_required: !!v })}
-                      />
-                      <span className="text-xs text-muted-foreground">خاصية إجبارية</span>
-                    </div>
+                    {/* Text: default value input */}
+                    {opt.field_type === 'text' && (
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">القيمة الافتراضية</label>
+                        <Input
+                          value={opt.default_value}
+                          onChange={e => updateOption(index, { default_value: e.target.value })}
+                          placeholder="القيمة الافتراضية (اختياري)"
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
 
-                    {/* Default value */}
-                    <div>
-                      <label className="text-xs font-medium mb-1 block">القيمة الافتراضية</label>
-                      {opt.values.length > 0 ? (
+                    {/* Checkbox: default checked */}
+                    {opt.field_type === 'checkbox' && (
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={opt.default_value === 'true'}
+                          onCheckedChange={v => updateOption(index, { default_value: v ? 'true' : 'false' })}
+                        />
+                        <span className="text-xs text-muted-foreground">محدد افتراضياً</span>
+                      </div>
+                    )}
+
+                    {/* Dropdown: default value selector */}
+                    {opt.field_type === 'dropdown' && opt.values.length > 0 && (
+                      <div>
+                        <label className="text-xs font-medium mb-1 block">القيمة الافتراضية</label>
                         <Select
                           value={opt.default_value || '_none_'}
                           onValueChange={v => updateOption(index, { default_value: v === '_none_' ? '' : v })}
@@ -692,14 +727,16 @@ export default function SallaProductsContent() {
                             ))}
                           </SelectContent>
                         </Select>
-                      ) : (
-                        <Input
-                          value={opt.default_value}
-                          onChange={e => updateOption(index, { default_value: e.target.value })}
-                          placeholder="القيمة الافتراضية (اختياري)"
-                          className="text-sm"
-                        />
-                      )}
+                      </div>
+                    )}
+
+                    {/* Required toggle */}
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={opt.is_required}
+                        onCheckedChange={v => updateOption(index, { is_required: !!v })}
+                      />
+                      <span className="text-xs text-muted-foreground">حقل إجباري</span>
                     </div>
                   </CardContent>
                 </Card>
