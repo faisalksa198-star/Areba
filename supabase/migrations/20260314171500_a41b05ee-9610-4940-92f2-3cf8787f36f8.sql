@@ -1,0 +1,1 @@
+ALTER TABLE public.salla_products ADD COLUMN category text NOT NULL DEFAULT 'kit';
