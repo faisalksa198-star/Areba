@@ -16,15 +16,18 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 
-const menuItems = [
+const baseMenuItems = [
   { title: 'لوحة التحكم', url: '/dashboard', icon: LayoutDashboard },
-  { title: 'مركز البيانات', url: '/data-center', icon: Database },
-  { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
   { title: 'الطلبات', url: '/orders', icon: ShoppingCart },
   { title: 'طلباتي', url: '/my-orders', icon: ClipboardList },
   { title: 'حاسبة الأسعار', url: '/admin-calculator', icon: Calculator },
   { title: 'الفواتير الإلكترونية', url: '/invoices', icon: FileText },
-  
+];
+
+const adminMenuItems = [
+  { title: 'مركز البيانات', url: '/data-center', icon: Database },
+  { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
+  { title: 'إدارة الموظفين', url: '/employees', icon: Users },
 ];
 
 export function AppSidebar() {
@@ -47,8 +50,8 @@ export function AppSidebar() {
   }, [user]);
 
   const allItems = isAdmin
-    ? [...menuItems, { title: 'إدارة الموظفين', url: '/employees', icon: Users }]
-    : menuItems;
+    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 2), ...baseMenuItems.slice(1), adminMenuItems[2]]
+    : baseMenuItems;
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0 border-r border-sidebar-border">
