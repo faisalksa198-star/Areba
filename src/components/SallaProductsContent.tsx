@@ -146,6 +146,7 @@ export default function SallaProductsContent() {
           is_required: o.is_required,
           default_value: o.default_value || '',
           sort_order: o.sort_order || 0,
+          field_type: (o as any).field_type || 'dropdown',
         })),
       }));
       setProducts(productsWithOptions as SallaProduct[]);
