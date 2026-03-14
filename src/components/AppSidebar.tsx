@@ -24,7 +24,7 @@ const menuItems = [
   { title: 'طلباتي', url: '/my-orders', icon: ClipboardList },
   { title: 'حاسبة الأسعار', url: '/admin-calculator', icon: Calculator },
   { title: 'الفواتير الإلكترونية', url: '/invoices', icon: FileText },
-  { title: 'إعدادات المواسم', url: '/season-settings', icon: Settings },
+  
 ];
 
 export function AppSidebar() {

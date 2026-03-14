@@ -233,6 +233,8 @@ export default function DataCenter() {
           <PricingRulesTab />
         ) : activeSection === 'addon_prices' ? (
           <AddonPricesTab />
+        ) : activeSection === 'season_settings' ? (
+          <SeasonSettingsInline />
         ) : (
           <>
             <div className="flex items-center justify-between">
