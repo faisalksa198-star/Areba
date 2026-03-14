@@ -8,7 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   ClipboardList, Loader2, Users, Scissors, TrendingUp,
   CalendarDays, CalendarRange, Calendar as CalendarIcon, Clock,
-  AlertTriangle, Activity, ArrowLeftRight
+  AlertTriangle, Activity, ArrowLeftRight, Leaf
+
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
