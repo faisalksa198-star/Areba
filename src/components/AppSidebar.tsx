@@ -55,8 +55,8 @@ export function AppSidebar() {
   }, [user]);
 
   const allItems = isAdmin
-    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 2), ...baseMenuItems.slice(1), adminMenuItems[2]]
-    : baseMenuItems;
+    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 3), ...baseMenuItems.slice(1), ...sallaMenuItems, adminMenuItems[3]]
+    : [...baseMenuItems, ...sallaMenuItems];
 
   return (
     <Sidebar collapsible="icon" side="right" className="border-l-0 border-r border-sidebar-border">
