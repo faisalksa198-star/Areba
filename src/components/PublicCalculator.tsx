@@ -1,10 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+
+export interface CalcSummaryLine {
+  label: string;
+  detail: string;
+  result: number;
+}
 
 interface PricingRule {
   min_quantity: number;
