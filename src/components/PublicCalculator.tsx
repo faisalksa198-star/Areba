@@ -237,7 +237,7 @@ export default function PublicCalculator() {
         <CardContent className="py-8 text-center">
           <p className="text-sm text-muted-foreground mb-2">المجموع النهائي</p>
           <p className="text-5xl font-extrabold text-primary drop-shadow-sm">
-            {enabled ? fmt(total) : '—'}
+            {(enabled || total > 0) ? fmt(total) : '—'}
           </p>
           <p className="text-sm text-muted-foreground mt-2">ريال سعودي</p>
         </CardContent>
