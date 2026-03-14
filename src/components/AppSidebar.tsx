@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText, Store, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText, ShoppingBag } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +27,6 @@ const baseMenuItems = [
 const adminMenuItems = [
   { title: 'مركز البيانات', url: '/data-center', icon: Database },
   { title: 'الأطقم الجاهزة', url: '/kits', icon: Package },
-  { title: 'منتجات سلة', url: '/salla-products', icon: Store },
   { title: 'إدارة الموظفين', url: '/employees', icon: Users },
 ];
 
@@ -55,7 +54,7 @@ export function AppSidebar() {
   }, [user]);
 
   const allItems = isAdmin
-    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems.slice(0, 3), ...baseMenuItems.slice(1), ...sallaMenuItems, adminMenuItems[3]]
+    ? [...baseMenuItems.slice(0, 1), ...adminMenuItems, ...baseMenuItems.slice(1), ...sallaMenuItems]
     : [...baseMenuItems, ...sallaMenuItems];
 
   return (

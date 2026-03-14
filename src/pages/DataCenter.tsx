@@ -15,6 +15,7 @@ import {
 import PricingRulesTab from '@/components/PricingRulesTab';
 import AddonPricesTab from '@/components/AddonPricesTab';
 import { SeasonSettingsContent } from '@/pages/SeasonSettings';
+import SallaProductsContent from '@/components/SallaProductsContent';
 
 interface MasterItem {
   id: string;
@@ -38,6 +39,7 @@ const CATEGORIES = [
   { key: 'cities', label: 'المدن', icon: MapPin, hasImage: false, hasDescription: false },
   { key: 'pricing_rules', label: 'التسعيرة', icon: DollarSign, hasImage: false, hasDescription: false },
   { key: 'addon_prices', label: 'أسعار الإضافات', icon: Tag, hasImage: false, hasDescription: false },
+  { key: 'salla_products', label: 'منتجات موقع سلة', icon: Tag, hasImage: false, hasDescription: false },
   { key: 'season_settings', label: 'إعدادات المواسم', icon: Calendar, hasImage: false, hasDescription: false },
 ] as const;
 
@@ -60,7 +62,7 @@ export default function DataCenter() {
   const activeCat = CATEGORIES.find(c => c.key === activeSection);
 
   const loadItems = useCallback(async () => {
-    if (!activeSection || activeSection === 'pricing_rules' || activeSection === 'addon_prices' || activeSection === 'season_settings') return;
+    if (!activeSection || activeSection === 'pricing_rules' || activeSection === 'addon_prices' || activeSection === 'season_settings' || activeSection === 'salla_products') return;
     setLoading(true);
     const { data } = await supabase
       .from(activeSection)
@@ -233,6 +235,8 @@ export default function DataCenter() {
           <PricingRulesTab />
         ) : activeSection === 'addon_prices' ? (
           <AddonPricesTab />
+        ) : activeSection === 'salla_products' ? (
+          <SallaProductsContent />
         ) : activeSection === 'season_settings' ? (
           <SeasonSettingsContent />
         ) : (
