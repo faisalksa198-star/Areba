@@ -176,6 +176,62 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
+      <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">الأوشحة الإضافية</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">العدد</Label>
+              <Input type="number" min="0" placeholder="0" value={extraScarfCount} onChange={e => setExtraScarfCount(e.target.value)} disabled={!enabled} />
+            </div>
+            <div>
+              <Label className="text-sm">سعر الوشاح الواحد (ريال)</Label>
+              <Input type="number" min="0" step="0.01" placeholder="0" value={extraScarfPrice} onChange={e => setExtraScarfPrice(e.target.value)} disabled={!enabled} />
+            </div>
+          </div>
+          {enabled && extraScarfTotal > 0 && <p className="text-xs text-muted-foreground">= {fmt(extraScarfTotal)} ريال</p>}
+        </CardContent>
+      </Card>
+
+      <Card className={!enabled ? 'opacity-50 pointer-events-none' : ''}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">القبعات الإضافية</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">قبعة بدون تطريز</Label>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <div>
+                <Label className="text-xs text-muted-foreground">العدد</Label>
+                <Input type="number" min="0" placeholder="0" value={capNoEmbCount} onChange={e => setCapNoEmbCount(e.target.value)} disabled={!enabled} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">السعر (ريال)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0" value={capNoEmbPrice} onChange={e => setCapNoEmbPrice(e.target.value)} disabled={!enabled} />
+              </div>
+            </div>
+            {enabled && capNoEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capNoEmbTotal)} ريال</p>}
+          </div>
+          <Separator />
+          <div>
+            <Label className="text-sm font-medium">قبعة مع تطريز</Label>
+            <div className="grid grid-cols-2 gap-3 mt-1">
+              <div>
+                <Label className="text-xs text-muted-foreground">العدد</Label>
+                <Input type="number" min="0" placeholder="0" value={capWithEmbCount} onChange={e => setCapWithEmbCount(e.target.value)} disabled={!enabled} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">السعر (ريال)</Label>
+                <Input type="number" min="0" step="0.01" placeholder="0" value={capWithEmbPrice} onChange={e => setCapWithEmbPrice(e.target.value)} disabled={!enabled} />
+              </div>
+            </div>
+            {enabled && capWithEmbTotal > 0 && <p className="text-xs text-muted-foreground mt-1">= {fmt(capWithEmbTotal)} ريال</p>}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-primary/40 bg-primary/5 shadow-md">
         <CardContent className="py-8 text-center">
           <p className="text-sm text-muted-foreground mb-2">المجموع النهائي</p>
