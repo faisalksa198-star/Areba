@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator } from 'lucide-react';
+import { LayoutDashboard, Database, Package, ShoppingCart, LogOut, Users, ClipboardList, Calculator, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
