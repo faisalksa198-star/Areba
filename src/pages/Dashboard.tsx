@@ -92,6 +92,8 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [cities, setCities] = useState<CityRow[]>([]);
   const [audits, setAudits] = useState<AuditRow[]>([]);
+  const [seasons, setSeasons] = useState<SeasonRow[]>([]);
+  const [activeSeason, setActiveSeason] = useState<SeasonRow | null>(null);
 
   const [filter, setFilter] = useState<FilterPeriod>('month');
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
