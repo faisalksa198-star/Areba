@@ -253,7 +253,7 @@ export default function Dashboard() {
     const threshold = subDays(new Date(), DELAYED_DAYS_THRESHOLD);
     return orders.filter(o =>
       o.status !== 'completed' && o.status !== 'cancelled' &&
-      isBefore(new Date(o.created_at), threshold)
+      isBefore(new Date(o.submitted_at || o.created_at), threshold)
     );
   }, [orders]);
 
