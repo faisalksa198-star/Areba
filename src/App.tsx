@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/calculator" element={<PublicCalculatorPage />} />
             <Route path="/admin-calculator" element={<CalculatorPage />} />
             <Route path="/public-calculator" element={<PublicCalculatorPage />} />
+            <Route path="/invoices" element={<Invoices />} />
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
