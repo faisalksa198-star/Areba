@@ -18,6 +18,8 @@ interface InvoiceData {
   orderNumber: string;
   lines: InvoiceLine[];
   total: number;
+  discount?: number;
+  subtotalBeforeDiscount?: number;
 }
 
 function makePage(): HTMLDivElement {
@@ -37,8 +39,13 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const preTax = data.total / 1.15;
-  const taxAmount = data.total - preTax;
+  const hasDiscount = (data.discount ?? 0) > 0;
+  const subtotalBeforeDiscount = data.subtotalBeforeDiscount ?? data.total;
+  const discountAmount = data.discount ?? 0;
+  const totalAfterDiscount = data.total;
+
+  const preTax = totalAfterDiscount / 1.15;
+  const taxAmount = totalAfterDiscount - preTax;
 
   const page = makePage();
 
@@ -61,6 +68,17 @@ export async function generateInvoicePdf(data: InvoiceData) {
       <td style="padding:12px 16px;border-bottom:1px solid #ede9f5;font-size:12px;font-weight:700;color:#2d1b4e;text-align:left;font-family:${FONT};">${fmt(line.amount)} ريال</td>
     </tr>
   `).join('');
+
+  const discountHtml = hasDiscount ? `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ecf5;font-family:${FONT};line-height:2;">
+      <span style="font-size:13px;color:#8b7fa8;">الإجمالي قبل الخصم</span>
+      <span style="font-size:14px;font-weight:700;color:#2d1b4e;">${fmt(subtotalBeforeDiscount)} ريال</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ecf5;font-family:${FONT};line-height:2;">
+      <span style="font-size:13px;font-weight:700;color:#dc2626;">الخصم</span>
+      <span style="font-size:14px;font-weight:700;color:#dc2626;">- ${fmt(discountAmount)} ريال</span>
+    </div>
+  ` : '';
 
   page.innerHTML = `
     <!-- Header -->
@@ -108,6 +126,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
     <!-- Totals -->
     <div style="background:#fff;border-radius:12px;border:1px solid #ede9f5;padding:20px;box-shadow:0 2px 12px rgba(68,3,118,0.04);">
+      ${discountHtml}
       <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ecf5;font-family:${FONT};line-height:2;">
         <span style="font-size:13px;color:#8b7fa8;">الإجمالي قبل الضريبة</span>
         <span style="font-size:14px;font-weight:700;color:#2d1b4e;">${fmt(preTax)} ريال</span>
@@ -118,7 +137,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 4px;font-family:${FONT};line-height:2;">
         <span style="font-size:16px;font-weight:800;color:${BRAND};">الإجمالي شامل الضريبة</span>
-        <span style="font-size:20px;font-weight:800;color:${BRAND};">${fmt(data.total)} ريال</span>
+        <span style="font-size:20px;font-weight:800;color:${BRAND};">${fmt(totalAfterDiscount)} ريال</span>
       </div>
     </div>
 

@@ -48,6 +48,10 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
   const [capWithEmbCount, setCapWithEmbCount] = useState('');
   const [capWithEmbPrice, setCapWithEmbPrice] = useState('');
 
+  // Discount fields
+  const [discountSar, setDiscountSar] = useState('');
+  const [discountPct, setDiscountPct] = useState('');
+
   useEffect(() => {
     Promise.all([
       supabase.from('pricing_rules').select('*').order('min_quantity', { ascending: true }),
@@ -65,7 +69,6 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
 
   const qty = parseInt(kitCount) || 0;
   const enabled = qty > 0;
-  const anyInput = true; // extra scarves/caps always enabled
 
   const unitPrice = useMemo(() => {
     if (!enabled) return 0;
@@ -93,7 +96,14 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
   const capNoEmbTotal = (parseInt(capNoEmbCount) || 0) * (parseFloat(capNoEmbPrice) || 0);
   const capWithEmbTotal = (parseInt(capWithEmbCount) || 0) * (parseFloat(capWithEmbPrice) || 0);
 
-  const total = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple + extraScarfTotal + capNoEmbTotal + capWithEmbTotal;
+  const subtotal = basePrice + abayaTotal + scarfQitan + scarfDecorated + backEmb + logo + hatEmb + purple + extraScarfTotal + capNoEmbTotal + capWithEmbTotal;
+
+  // Discount calculation
+  const fixedDisc = parseFloat(discountSar) || 0;
+  const pctDisc = parseFloat(discountPct) || 0;
+  const pctAmount = subtotal * (pctDisc / 100);
+  const totalDiscount = Math.min(fixedDisc + pctAmount, subtotal);
+  const total = Math.max(subtotal - totalDiscount, 0);
 
   const fmt = (n: number) => n.toLocaleString('en-US');
 
@@ -263,6 +273,32 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
         </CardContent>
       </Card>
 
+      {/* Discount Section */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">الخصم</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-sm">خصم بالريال</Label>
+              <Input type="number" min="0" step="0.01" placeholder="0" value={discountSar} onChange={e => setDiscountSar(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">خصم بالنسبة %</Label>
+              <Input type="number" min="0" max="100" step="0.1" placeholder="0" value={discountPct} onChange={e => setDiscountPct(e.target.value)} />
+            </div>
+          </div>
+          {totalDiscount > 0 && (
+            <div className="text-xs space-y-1 bg-destructive/5 rounded-lg p-3 border border-destructive/20">
+              <div className="flex justify-between"><span className="text-muted-foreground">الإجمالي قبل الخصم</span><span className="font-semibold">{fmt(subtotal)} ريال</span></div>
+              <div className="flex justify-between text-destructive"><span>قيمة الخصم</span><span className="font-semibold">- {fmt(totalDiscount)} ريال</span></div>
+              <div className="flex justify-between font-bold border-t border-destructive/20 pt-1"><span>الصافي بعد الخصم</span><span>{fmt(total)} ريال</span></div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="border-primary/40 bg-primary/5 shadow-md">
         <CardContent className="py-8 text-center">
           <p className="text-sm text-muted-foreground mb-2">المجموع النهائي</p>
@@ -295,6 +331,15 @@ export default function PublicCalculator({ onSummaryChange }: PublicCalculatorPr
                   <p className="text-sm font-semibold text-foreground whitespace-nowrap">{fmt(line.result)} ريال</p>
                 </div>
               ))}
+              {totalDiscount > 0 && (
+                <>
+                  <Separator className="my-2" />
+                  <div className="flex items-center justify-between py-2.5">
+                    <p className="text-sm font-medium text-destructive">الخصم</p>
+                    <p className="text-sm font-semibold text-destructive whitespace-nowrap">- {fmt(totalDiscount)} ريال</p>
+                  </div>
+                </>
+              )}
               <Separator className="my-2" />
               <div className="flex items-center justify-between pt-2">
                 <p className="text-sm font-bold text-foreground">الإجمالي</p>
