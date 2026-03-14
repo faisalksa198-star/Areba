@@ -199,6 +199,9 @@ export default function LeaderPage() {
   useEffect(() => {
     if (!orderId) return;
     loadData();
+    // Check invoice existence
+    supabase.from('invoices' as any).select('id').eq('order_id', orderId).maybeSingle()
+      .then(({ data }) => setHasInvoice(!!data));
   }, [orderId]);
 
   const loadData = async () => {
