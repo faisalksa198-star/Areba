@@ -101,16 +101,23 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function load() {
-      const [oRes, pRes, cRes, aRes] = await Promise.all([
-        supabase.from('orders').select('id,status,created_at,student_count,extra_scarf_count,extra_hat_count,employee_id,city_id,execution_duration,order_number,updated_at'),
+      const [oRes, pRes, cRes, aRes, sRes] = await Promise.all([
+        supabase.from('orders').select('id,status,created_at,submitted_at,student_count,extra_scarf_count,extra_hat_count,employee_id,city_id,execution_duration,order_number,updated_at'),
         supabase.from('profiles').select('user_id,full_name'),
         supabase.from('cities').select('id,name'),
         supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('season_settings').select('*').order('start_date', { ascending: false }),
       ]);
       if (oRes.data) setOrders(oRes.data as OrderRow[]);
       if (pRes.data) setProfiles(pRes.data as ProfileRow[]);
       if (cRes.data) setCities(cRes.data as CityRow[]);
       if (aRes.data) setAudits(aRes.data as AuditRow[]);
+      if (sRes.data) {
+        const seasonData = sRes.data as SeasonRow[];
+        setSeasons(seasonData);
+        const active = seasonData.find(s => s.is_active);
+        if (active) setActiveSeason(active);
+      }
       setLoading(false);
     }
     load();
