@@ -251,6 +251,7 @@ export default function SallaProductsContent() {
       is_required: false,
       default_value: '',
       sort_order: prev.length,
+      field_type: 'dropdown' as FieldType,
     }]);
   };
 
