@@ -347,10 +347,11 @@ export default function SallaProductsContent() {
       const optionsToInsert = validOptions.map((o, i) => ({
         product_id: productId,
         label: o.label.trim(),
-        values: o.values,
+        values: o.field_type === 'dropdown' ? o.values : [],
         is_required: o.is_required,
         default_value: o.default_value || null,
         sort_order: i,
+        field_type: o.field_type,
       }));
       const { error } = await supabase.from('salla_product_options').insert(optionsToInsert);
       if (error) {
