@@ -453,8 +453,7 @@ export default function LeaderPage() {
     setStudents(prev => {
       const student = prev.find(s => s.id === id);
       if (!student) return prev;
-      const currentCount = prev.filter(s => s.hasLogoEmbroidery).length;
-      if (!student.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && currentCount >= orderInfo.logo_embroidery_count) return prev;
+      if (!student.hasLogoEmbroidery && orderInfo && orderInfo.logo_embroidery_count > 0 && logoCount >= orderInfo.logo_embroidery_count) return prev;
       return prev.map(s => s.id === id ? { ...s, hasLogoEmbroidery: !s.hasLogoEmbroidery } : s);
     });
   }, [logoIsAll, orderInfo]);
@@ -1105,8 +1104,7 @@ export default function LeaderPage() {
                                 value={student.backEmbroideryText}
                                 onChange={e => {
                                   if (!student.backEmbroideryText.trim() && e.target.value.trim()) {
-                                    const currentBack = students.filter(s => s.id !== student.id && s.backEmbroideryText.trim()).length;
-                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && currentBack >= orderInfo.back_embroidery_count) return;
+                                    if (orderInfo && orderInfo.back_embroidery_count > 0 && backCount >= orderInfo.back_embroidery_count) return;
                                   }
                                   updateStudent(student.id, 'backEmbroideryText', e.target.value);
                                 }}
