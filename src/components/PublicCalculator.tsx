@@ -243,7 +243,7 @@ export default function PublicCalculator() {
         </CardContent>
       </Card>
 
-      {enabled && total > 0 && (() => {
+      {total > 0 && (() => {
         const lines: { label: string; detail: string; result: number }[] = [];
         if (basePrice > 0) lines.push({ label: 'الأطقم', detail: `${fmt(qty)} × ${fmt(unitPrice)} ريال`, result: basePrice });
         if (abayaTotal > 0) lines.push({ label: 'إضافات الكلوش', detail: `${fmt(parseFloat(abayaExtra) || 0)} ريال × ${fmt(qty)}`, result: abayaTotal });
