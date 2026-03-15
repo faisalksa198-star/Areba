@@ -289,10 +289,18 @@ export default function DataCenter() {
           <>
             <div className="flex items-center justify-between">
               <div />
-              <Button size="sm" onClick={openCreate} className="gap-1">
-                <Plus className="h-3.5 w-3.5" />
-                إضافة
-              </Button>
+              <div className="flex gap-2">
+                {activeSection === 'cities' && (
+                  <Button size="sm" variant="outline" onClick={() => { setShowBulkImport(true); setBulkResult(null); setBulkCities(''); }} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" />
+                    إضافة جماعية
+                  </Button>
+                )}
+                <Button size="sm" onClick={openCreate} className="gap-1">
+                  <Plus className="h-3.5 w-3.5" />
+                  إضافة
+                </Button>
+              </div>
             </div>
 
             {loading ? (
