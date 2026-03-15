@@ -58,6 +58,52 @@ export default function DataCenter() {
   const [formImagePreview, setFormImagePreview] = useState('');
   const [formHasExtraText, setFormHasExtraText] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkCities, setBulkCities] = useState('');
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkResult, setBulkResult] = useState<{ added: number; skipped: number; total: number } | null>(null);
+
+  const handleBulkCityImport = async () => {
+    if (!bulkCities.trim()) return;
+    setBulkImporting(true);
+    setBulkResult(null);
+    try {
+      // Parse and clean city names
+      const cityNames = bulkCities
+        .split(/[,،\n]+/)
+        .map(c => c.trim().replace(/\s+/g, ' '))
+        .filter(c => c.length > 0);
+      const uniqueNames = [...new Set(cityNames)];
+
+      // Fetch existing cities
+      const { data: existing } = await supabase.from('cities').select('name');
+      const existingNames = new Set((existing || []).map(c => c.name.trim()));
+
+      // Filter new cities
+      const newCities = uniqueNames.filter(name => !existingNames.has(name));
+      const skipped = uniqueNames.length - newCities.length;
+
+      // Insert in batches of 50
+      if (newCities.length > 0) {
+        const batches = [];
+        for (let i = 0; i < newCities.length; i += 50) {
+          batches.push(newCities.slice(i, i + 50));
+        }
+        for (const batch of batches) {
+          await supabase.from('cities').insert(batch.map(name => ({ name })));
+        }
+      }
+
+      // Get total count
+      const { count } = await supabase.from('cities').select('*', { count: 'exact', head: true });
+
+      setBulkResult({ added: newCities.length, skipped, total: count || 0 });
+      if (activeSection === 'cities') loadItems();
+    } catch (err) {
+      toast({ title: 'خطأ في الاستيراد', variant: 'destructive' });
+    }
+    setBulkImporting(false);
+  };
 
   const activeCat = CATEGORIES.find(c => c.key === activeSection);
 
