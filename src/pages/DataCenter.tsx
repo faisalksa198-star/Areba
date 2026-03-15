@@ -58,6 +58,52 @@ export default function DataCenter() {
   const [formImagePreview, setFormImagePreview] = useState('');
   const [formHasExtraText, setFormHasExtraText] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [bulkCities, setBulkCities] = useState('');
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkResult, setBulkResult] = useState<{ added: number; skipped: number; total: number } | null>(null);
+
+  const handleBulkCityImport = async () => {
+    if (!bulkCities.trim()) return;
+    setBulkImporting(true);
+    setBulkResult(null);
+    try {
+      // Parse and clean city names
+      const cityNames = bulkCities
+        .split(/[,،\n]+/)
+        .map(c => c.trim().replace(/\s+/g, ' '))
+        .filter(c => c.length > 0);
+      const uniqueNames = [...new Set(cityNames)];
+
+      // Fetch existing cities
+      const { data: existing } = await supabase.from('cities').select('name');
+      const existingNames = new Set((existing || []).map(c => c.name.trim()));
+
+      // Filter new cities
+      const newCities = uniqueNames.filter(name => !existingNames.has(name));
+      const skipped = uniqueNames.length - newCities.length;
+
+      // Insert in batches of 50
+      if (newCities.length > 0) {
+        const batches = [];
+        for (let i = 0; i < newCities.length; i += 50) {
+          batches.push(newCities.slice(i, i + 50));
+        }
+        for (const batch of batches) {
+          await supabase.from('cities').insert(batch.map(name => ({ name })));
+        }
+      }
+
+      // Get total count
+      const { count } = await supabase.from('cities').select('*', { count: 'exact', head: true });
+
+      setBulkResult({ added: newCities.length, skipped, total: count || 0 });
+      if (activeSection === 'cities') loadItems();
+    } catch (err) {
+      toast({ title: 'خطأ في الاستيراد', variant: 'destructive' });
+    }
+    setBulkImporting(false);
+  };
 
   const activeCat = CATEGORIES.find(c => c.key === activeSection);
 
@@ -243,10 +289,18 @@ export default function DataCenter() {
           <>
             <div className="flex items-center justify-between">
               <div />
-              <Button size="sm" onClick={openCreate} className="gap-1">
-                <Plus className="h-3.5 w-3.5" />
-                إضافة
-              </Button>
+              <div className="flex gap-2">
+                {activeSection === 'cities' && (
+                  <Button size="sm" variant="outline" onClick={() => { setShowBulkImport(true); setBulkResult(null); setBulkCities(''); }} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" />
+                    إضافة جماعية
+                  </Button>
+                )}
+                <Button size="sm" onClick={openCreate} className="gap-1">
+                  <Plus className="h-3.5 w-3.5" />
+                  إضافة
+                </Button>
+              </div>
             </div>
 
             {loading ? (
@@ -375,6 +429,41 @@ export default function DataCenter() {
             <Button onClick={handleSave} disabled={saving} className="w-full gap-1">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {saving ? 'جارٍ الحفظ...' : editingItem ? 'حفظ التعديلات' : 'إضافة'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk City Import Dialog */}
+      <Dialog open={showBulkImport} onOpenChange={setShowBulkImport}>
+        <DialogContent className="max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>إضافة مدن جماعية</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">أدخل أسماء المدن (مفصولة بفواصل أو أسطر جديدة)</label>
+              <textarea
+                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={bulkCities}
+                onChange={e => setBulkCities(e.target.value)}
+                placeholder="مثال: الرياض، جدة، مكة المكرمة"
+                disabled={bulkImporting}
+              />
+            </div>
+
+            {bulkResult && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2 text-sm">
+                <p className="font-semibold text-foreground">✅ تمت العملية بنجاح</p>
+                <p className="text-foreground">مدن جديدة تمت إضافتها: <span className="font-bold text-primary">{bulkResult.added}</span></p>
+                <p className="text-foreground">مدن تم تجاهلها (موجودة مسبقاً): <span className="font-bold text-muted-foreground">{bulkResult.skipped}</span></p>
+                <p className="text-foreground">إجمالي المدن في قاعدة البيانات: <span className="font-bold text-primary">{bulkResult.total}</span></p>
+              </div>
+            )}
+
+            <Button onClick={handleBulkCityImport} disabled={bulkImporting || !bulkCities.trim()} className="w-full gap-1">
+              {bulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {bulkImporting ? 'جارٍ الاستيراد...' : 'استيراد المدن'}
             </Button>
           </div>
         </DialogContent>
