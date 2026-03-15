@@ -433,6 +433,41 @@ export default function DataCenter() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk City Import Dialog */}
+      <Dialog open={showBulkImport} onOpenChange={setShowBulkImport}>
+        <DialogContent className="max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>إضافة مدن جماعية</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">أدخل أسماء المدن (مفصولة بفواصل أو أسطر جديدة)</label>
+              <textarea
+                className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={bulkCities}
+                onChange={e => setBulkCities(e.target.value)}
+                placeholder="مثال: الرياض، جدة، مكة المكرمة"
+                disabled={bulkImporting}
+              />
+            </div>
+
+            {bulkResult && (
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2 text-sm">
+                <p className="font-semibold text-foreground">✅ تمت العملية بنجاح</p>
+                <p className="text-foreground">مدن جديدة تمت إضافتها: <span className="font-bold text-primary">{bulkResult.added}</span></p>
+                <p className="text-foreground">مدن تم تجاهلها (موجودة مسبقاً): <span className="font-bold text-muted-foreground">{bulkResult.skipped}</span></p>
+                <p className="text-foreground">إجمالي المدن في قاعدة البيانات: <span className="font-bold text-primary">{bulkResult.total}</span></p>
+              </div>
+            )}
+
+            <Button onClick={handleBulkCityImport} disabled={bulkImporting || !bulkCities.trim()} className="w-full gap-1">
+              {bulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {bulkImporting ? 'جارٍ الاستيراد...' : 'استيراد المدن'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
