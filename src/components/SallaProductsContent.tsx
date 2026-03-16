@@ -240,6 +240,15 @@ export default function SallaProductsContent() {
     setFormOptions(prev => prev.map((opt, i) => i === index ? { ...opt, ...updates } : opt));
   };
   const removeOption = (index: number) => { setFormOptions(prev => prev.filter((_, i) => i !== index)); };
+  const moveOption = (index: number, direction: 'up' | 'down') => {
+    setFormOptions(prev => {
+      const arr = [...prev];
+      const target = direction === 'up' ? index - 1 : index + 1;
+      if (target < 0 || target >= arr.length) return prev;
+      [arr[index], arr[target]] = [arr[target], arr[index]];
+      return arr.map((o, i) => ({ ...o, sort_order: i }));
+    });
+  };
   const addValueToOption = (index: number, value: string) => {
     if (!value.trim()) return;
     setFormOptions(prev => prev.map((opt, i) => {
