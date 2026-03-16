@@ -119,6 +119,7 @@ export default function SallaProductsContent() {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<ProductCategory>('kit');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [masterData, setMasterData] = useState<Record<string, MasterDataItem[]>>({});
 
   // Form state
