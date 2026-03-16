@@ -13,8 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X, Search, Copy,
-  Package, Shirt, GraduationCap,
+  Package, Shirt, GraduationCap, ChevronUp, ChevronDown, LayoutGrid, List,
 } from 'lucide-react';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 // ===== Types =====
 type ProductCategory = 'kit' | 'scarf' | 'hat';
