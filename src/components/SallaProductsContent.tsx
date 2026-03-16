@@ -365,6 +365,10 @@ export default function SallaProductsContent() {
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={`بحث في ${tab.label}...`} className="pr-9" />
               </div>
+              <ToggleGroup type="single" value={viewMode} onValueChange={v => v && setViewMode(v as 'grid' | 'list')} size="sm">
+                <ToggleGroupItem value="grid" aria-label="عرض مربعات"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="عرض جدول"><List className="h-4 w-4" /></ToggleGroupItem>
+              </ToggleGroup>
               <Button variant={showArchived ? 'secondary' : 'outline'} size="sm" onClick={() => setShowArchived(!showArchived)} className="gap-1">
                 {showArchived ? 'عرض النشطة' : 'عرض غير النشطة'}
               </Button>
@@ -374,11 +378,47 @@ export default function SallaProductsContent() {
               </Button>
             </div>
 
-            {/* Grid */}
+            {/* Products */}
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : filtered.length === 0 ? (
               <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground text-sm">{showArchived ? 'لا توجد منتجات غير نشطة' : `لا توجد منتجات في ${tab.label} بعد`}</p></CardContent></Card>
+            ) : viewMode === 'list' ? (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">اسم المنتج</TableHead>
+                      <TableHead className="text-right">القسم</TableHead>
+                      <TableHead className="text-right">عدد الخصائص</TableHead>
+                      <TableHead className="text-right">الحالة</TableHead>
+                      <TableHead className="text-right">إجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(product => (
+                      <TableRow key={product.id} className={!product.is_active ? 'opacity-60' : ''}>
+                        <TableCell className="font-medium text-sm">{product.name}</TableCell>
+                        <TableCell className="text-sm">{CATEGORY_TABS.find(c => c.value === product.category)?.label || product.category}</TableCell>
+                        <TableCell className="text-sm">{product.options?.length || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">{product.is_active ? 'مفعّل' : 'معطّل'}</span>
+                            <Switch checked={product.is_active} onCheckedChange={() => toggleActive(product)} className="scale-75" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="h-7 px-2 text-xs gap-1"><Pencil className="h-3 w-3" />تعديل</Button>
+                            <Button variant="ghost" size="sm" onClick={() => duplicateProduct(product)} className="h-7 px-2 text-xs gap-1"><Copy className="h-3 w-3" />تكرار</Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)} className="h-7 px-2 text-xs gap-1 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" />حذف</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
             ) : (
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map(product => (
