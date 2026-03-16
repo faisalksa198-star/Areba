@@ -545,7 +545,15 @@ export default function SallaProductsContent() {
                 <Card key={index} className="border-border/50 bg-muted/20">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground">خاصية {index + 1}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-bold text-muted-foreground">خاصية {index + 1}</span>
+                        <Button variant="ghost" size="icon" onClick={() => moveOption(index, 'up')} disabled={index === 0} className="h-6 w-6">
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => moveOption(index, 'down')} disabled={index === formOptions.length - 1} className="h-6 w-6">
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                       <Button variant="ghost" size="icon" onClick={() => removeOption(index)} className="h-7 w-7 text-destructive hover:text-destructive">
                         <X className="h-4 w-4" />
                       </Button>
