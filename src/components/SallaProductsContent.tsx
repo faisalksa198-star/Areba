@@ -13,8 +13,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Plus, Pencil, Trash2, Loader2, ImagePlus, X, Search, Copy,
-  Package, Shirt, GraduationCap,
+  Package, Shirt, GraduationCap, ChevronUp, ChevronDown, LayoutGrid, List,
 } from 'lucide-react';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 // ===== Types =====
 type ProductCategory = 'kit' | 'scarf' | 'hat';
@@ -117,6 +119,7 @@ export default function SallaProductsContent() {
   const [search, setSearch] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<ProductCategory>('kit');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [masterData, setMasterData] = useState<Record<string, MasterDataItem[]>>({});
 
   // Form state
@@ -237,6 +240,15 @@ export default function SallaProductsContent() {
     setFormOptions(prev => prev.map((opt, i) => i === index ? { ...opt, ...updates } : opt));
   };
   const removeOption = (index: number) => { setFormOptions(prev => prev.filter((_, i) => i !== index)); };
+  const moveOption = (index: number, direction: 'up' | 'down') => {
+    setFormOptions(prev => {
+      const arr = [...prev];
+      const target = direction === 'up' ? index - 1 : index + 1;
+      if (target < 0 || target >= arr.length) return prev;
+      [arr[index], arr[target]] = [arr[target], arr[index]];
+      return arr.map((o, i) => ({ ...o, sort_order: i }));
+    });
+  };
   const addValueToOption = (index: number, value: string) => {
     if (!value.trim()) return;
     setFormOptions(prev => prev.map((opt, i) => {
@@ -353,6 +365,10 @@ export default function SallaProductsContent() {
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input value={search} onChange={e => setSearch(e.target.value)} placeholder={`بحث في ${tab.label}...`} className="pr-9" />
               </div>
+              <ToggleGroup type="single" value={viewMode} onValueChange={v => v && setViewMode(v as 'grid' | 'list')} size="sm">
+                <ToggleGroupItem value="grid" aria-label="عرض مربعات"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="عرض جدول"><List className="h-4 w-4" /></ToggleGroupItem>
+              </ToggleGroup>
               <Button variant={showArchived ? 'secondary' : 'outline'} size="sm" onClick={() => setShowArchived(!showArchived)} className="gap-1">
                 {showArchived ? 'عرض النشطة' : 'عرض غير النشطة'}
               </Button>
@@ -362,11 +378,47 @@ export default function SallaProductsContent() {
               </Button>
             </div>
 
-            {/* Grid */}
+            {/* Products */}
             {loading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
             ) : filtered.length === 0 ? (
               <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground text-sm">{showArchived ? 'لا توجد منتجات غير نشطة' : `لا توجد منتجات في ${tab.label} بعد`}</p></CardContent></Card>
+            ) : viewMode === 'list' ? (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-right">اسم المنتج</TableHead>
+                      <TableHead className="text-right">القسم</TableHead>
+                      <TableHead className="text-right">عدد الخصائص</TableHead>
+                      <TableHead className="text-right">الحالة</TableHead>
+                      <TableHead className="text-right">إجراءات</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.map(product => (
+                      <TableRow key={product.id} className={!product.is_active ? 'opacity-60' : ''}>
+                        <TableCell className="font-medium text-sm">{product.name}</TableCell>
+                        <TableCell className="text-sm">{CATEGORY_TABS.find(c => c.value === product.category)?.label || product.category}</TableCell>
+                        <TableCell className="text-sm">{product.options?.length || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">{product.is_active ? 'مفعّل' : 'معطّل'}</span>
+                            <Switch checked={product.is_active} onCheckedChange={() => toggleActive(product)} className="scale-75" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => openEdit(product)} className="h-7 px-2 text-xs gap-1"><Pencil className="h-3 w-3" />تعديل</Button>
+                            <Button variant="ghost" size="sm" onClick={() => duplicateProduct(product)} className="h-7 px-2 text-xs gap-1"><Copy className="h-3 w-3" />تكرار</Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete(product.id)} className="h-7 px-2 text-xs gap-1 text-destructive hover:text-destructive"><Trash2 className="h-3 w-3" />حذف</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
             ) : (
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filtered.map(product => (
@@ -493,7 +545,15 @@ export default function SallaProductsContent() {
                 <Card key={index} className="border-border/50 bg-muted/20">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-muted-foreground">خاصية {index + 1}</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs font-bold text-muted-foreground">خاصية {index + 1}</span>
+                        <Button variant="ghost" size="icon" onClick={() => moveOption(index, 'up')} disabled={index === 0} className="h-6 w-6">
+                          <ChevronUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => moveOption(index, 'down')} disabled={index === formOptions.length - 1} className="h-6 w-6">
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                       <Button variant="ghost" size="icon" onClick={() => removeOption(index)} className="h-7 w-7 text-destructive hover:text-destructive">
                         <X className="h-4 w-4" />
                       </Button>
