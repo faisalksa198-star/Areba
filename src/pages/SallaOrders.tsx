@@ -579,12 +579,34 @@ export default function SallaOrders() {
                         <div className="space-y-2">
                           <p className="text-xs font-medium text-muted-foreground">خصائص المنتج:</p>
                           <div className="grid grid-cols-2 gap-2">
-                            {selectedProduct.options.map((opt, oi) => (
-                              <div key={oi}>
+                            {selectedProduct.options.map((opt, oi) => {
+                              const isSizeButtons = opt.label === 'المقاس' && item.category === 'kit' && opt.field_type === 'dropdown';
+                              return (
+                              <div key={oi} className={isSizeButtons ? 'col-span-2' : ''}>
                                 <label className="text-[11px] text-muted-foreground mb-0.5 block">
                                   {opt.label} {opt.is_required && <span className="text-destructive">*</span>}
                                 </label>
-                                {opt.field_type === 'dropdown' ? (
+                                {isSizeButtons ? (
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {opt.values.map(v => {
+                                      const isSelected = item.option_values[opt.label] === v;
+                                      return (
+                                        <button
+                                          key={v}
+                                          type="button"
+                                          onClick={() => updateItem(idx, { option_values: { ...item.option_values, [opt.label]: v } })}
+                                          className={`px-3 py-1 rounded-md text-xs font-medium border transition-colors ${
+                                            isSelected
+                                              ? 'bg-primary text-primary-foreground border-primary'
+                                              : 'bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground'
+                                          }`}
+                                        >
+                                          {v}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                ) : opt.field_type === 'dropdown' ? (
                                   <Select
                                     value={item.option_values[opt.label] || ''}
                                     onValueChange={v => updateItem(idx, { option_values: { ...item.option_values, [opt.label]: v } })}
@@ -611,7 +633,8 @@ export default function SallaOrders() {
                                   />
                                 )}
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
