@@ -21,6 +21,7 @@ import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 import Invoices from "./pages/Invoices";
 
 import SallaOrders from "./pages/SallaOrders";
+import PrintCustomerReport from "./pages/PrintCustomerReport";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/invoices" element={<Invoices />} />
             
             <Route path="/salla-orders" element={<SallaOrders />} />
+            <Route path="/print/customer-report/:orderId" element={<PrintCustomerReport />} />
             
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
