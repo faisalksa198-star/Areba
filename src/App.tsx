@@ -50,6 +50,7 @@ const App = () => (
             <Route path="/invoices" element={<Invoices />} />
             
             <Route path="/salla-orders" element={<SallaOrders />} />
+            <Route path="/print/customer-report/:orderId" element={<PrintCustomerReport />} />
             
             <Route path="/r/:code" element={<ShortRedirect />} />
             <Route path="*" element={<NotFound />} />
