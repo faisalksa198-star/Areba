@@ -1,0 +1,363 @@
+/* Customer Print Report — Browser-native HTML/CSS with Arabic RTL print support */
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;700&display=swap');
+
+.pcr-root,
+.pcr-root * {
+  box-sizing: border-box;
+}
+
+.pcr-root {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  font-family: 'Tajawal', 'Cairo', sans-serif;
+  color: #2d1b4e;
+  background: #f5f0fa;
+  min-height: 100vh;
+  padding: 20px 0;
+}
+
+.pcr-loading,
+.pcr-error {
+  direction: rtl;
+  font-family: 'Tajawal', 'Cairo', sans-serif;
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+}
+
+/* --- Brand tokens --- */
+:root {
+  --pcr-brand: #440376;
+  --pcr-brand-2: #6B21A8;
+  --pcr-bg: #faf7ff;
+  --pcr-border: #ede9f5;
+  --pcr-ink: #2d1b4e;
+  --pcr-muted: #8b7fa8;
+}
+
+/* --- Page container (mimics A4 on screen) --- */
+.pcr-page {
+  background: #fff;
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto 16px;
+  padding: 16mm 14mm;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.pcr-page-break {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* --- Header --- */
+.pcr-brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--pcr-brand);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+.pcr-logo { height: 36px; }
+.pcr-order-tag { text-align: left; }
+.pcr-order-tag span { display: block; font-size: 11px; color: var(--pcr-muted); }
+.pcr-order-tag strong { display: block; font-size: 14px; color: var(--pcr-brand); font-weight: 700; }
+
+/* --- Cover --- */
+.pcr-cover {
+  text-align: center;
+  margin: 30px 0 24px;
+}
+.pcr-cover h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--pcr-brand);
+  margin: 0 0 4px;
+}
+.pcr-cover p {
+  font-size: 13px;
+  color: var(--pcr-muted);
+  margin: 0 0 12px;
+}
+.pcr-divider {
+  width: 70px;
+  height: 3px;
+  background: var(--pcr-brand);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+/* --- Section title --- */
+.pcr-section-title {
+  margin: 16px 0 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+.pcr-section-title h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--pcr-brand);
+  border-bottom: 2.5px solid var(--pcr-brand);
+  padding-bottom: 5px;
+}
+
+/* --- Info card --- */
+.pcr-card {
+  background: #fff;
+  border: 1px solid var(--pcr-border);
+  border-radius: 10px;
+  padding: 4px 14px;
+  margin-bottom: 14px;
+}
+.pcr-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--pcr-border);
+}
+.pcr-info-row:last-child { border-bottom: none; }
+.pcr-info-label {
+  font-size: 11px;
+  color: var(--pcr-muted);
+  text-align: right;
+}
+.pcr-info-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--pcr-ink);
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+/* --- Subtle line --- */
+.pcr-subtle {
+  text-align: center;
+  font-size: 11px;
+  color: var(--pcr-muted);
+  margin: 4px 0 10px;
+}
+.pcr-subtle strong { color: var(--pcr-ink); }
+
+/* --- Product grid --- */
+.pcr-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.pcr-product {
+  background: #fff;
+  border: 1px solid var(--pcr-border);
+  border-radius: 10px;
+  overflow: hidden;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.pcr-product-head {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--pcr-border);
+}
+.pcr-product-head.pcr-no-border { border-bottom: none; padding: 0 0 4px; }
+.pcr-product-head strong { font-size: 12px; color: var(--pcr-brand); }
+.pcr-badge {
+  display: inline-block;
+  min-width: 22px;
+  height: 22px;
+  line-height: 22px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--pcr-brand);
+  color: #fff;
+  font-weight: 700;
+  font-size: 11px;
+  text-align: center;
+}
+.pcr-product-imgs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  justify-content: center;
+}
+.pcr-img-box {
+  flex: 1;
+  height: 100px;
+  background: var(--pcr-bg);
+  border-radius: 6px;
+  border: 1px solid var(--pcr-border);
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px;
+}
+.pcr-img-box-sm { flex: 0.6; }
+.pcr-img-box-side { width: 90px; height: auto; }
+.pcr-img-box img { max-width: 100%; max-height: 90px; object-fit: contain; }
+.pcr-product-body { padding: 8px 10px; }
+.pcr-product-body p { margin: 2px 0; font-size: 10px; color: var(--pcr-muted); text-align: right; }
+.pcr-product-body p strong { color: var(--pcr-ink); }
+
+.pcr-hat {
+  display: flex;
+  flex-direction: row-reverse;
+}
+.pcr-hat .pcr-product-body { flex: 1; }
+
+/* --- Students table --- */
+.pcr-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+  table-layout: fixed;
+  border: 1px solid var(--pcr-border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 10.5px;
+}
+.pcr-table thead {
+  display: table-header-group; /* repeat header on every printed page */
+  background: var(--pcr-brand);
+}
+.pcr-table thead th {
+  color: #fff;
+  font-weight: 700;
+  font-size: 10.5px;
+  padding: 8px 4px;
+  text-align: center;
+  border-left: 1px solid rgba(255,255,255,0.2);
+}
+.pcr-table thead th:last-child { border-left: none; }
+
+.pcr-table tbody tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  border-bottom: 1px solid var(--pcr-border);
+}
+.pcr-table tbody tr:nth-child(even) { background: #faf8ff; }
+
+.pcr-table tbody td {
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+  color: var(--pcr-ink);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.pcr-cell-name { text-align: right !important; padding-right: 10px !important; }
+.pcr-cell-back { font-size: 9.5px; text-align: right !important; padding-right: 6px !important; }
+.pcr-serial { color: var(--pcr-brand); font-weight: 700; }
+.pcr-circle {
+  display: inline-block;
+  width: 22px; height: 22px;
+  line-height: 19px;
+  border: 1.5px solid var(--pcr-brand);
+  border-radius: 50%;
+  color: var(--pcr-brand);
+  font-weight: 700;
+  font-size: 10px;
+  text-align: center;
+}
+.pcr-hat-cell {
+  display: inline-flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+}
+.pcr-hat-txt { font-size: 9px; color: var(--pcr-muted); }
+.pcr-check { color: #16a34a; font-weight: 700; font-size: 14px; }
+
+/* --- Thanks --- */
+.pcr-thanks {
+  text-align: center;
+  margin-top: 50px;
+}
+.pcr-thanks h2 {
+  font-size: 22px;
+  color: var(--pcr-brand);
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+.pcr-thanks p {
+  font-size: 12px;
+  color: var(--pcr-muted);
+  margin: 0 auto 18px;
+  max-width: 360px;
+}
+
+/* --- Screen-only print button --- */
+.pcr-print-bar {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+}
+.pcr-print-bar button {
+  background: var(--pcr-brand);
+  color: #fff;
+  border: none;
+  padding: 12px 26px;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(68, 3, 118, 0.35);
+}
+.pcr-print-bar button:hover { background: var(--pcr-brand-2); }
+
+/* ─────────────────────────────────────────────
+   PRINT RULES
+   ───────────────────────────────────────────── */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  html, body {
+    direction: rtl;
+    unicode-bidi: plaintext;
+    background: #fff !important;
+    margin: 0;
+    padding: 0;
+    font-family: 'Tajawal', 'Cairo', sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide everything outside of the report */
+  body > *:not(#root) { display: none !important; }
+
+  .pcr-root {
+    background: #fff !important;
+    padding: 0;
+  }
+
+  .pcr-page {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+  .pcr-page:last-of-type { page-break-after: auto; }
+
+  .pcr-print-bar { display: none !important; }
+
+  /* Force header repetition for tables */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr, .pcr-product, .pcr-card, .pcr-info-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
