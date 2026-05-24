@@ -21,6 +21,7 @@ import PublicCalculatorPage from "./pages/PublicCalculatorPage";
 import Invoices from "./pages/Invoices";
 
 import SallaOrders from "./pages/SallaOrders";
+import PrintCustomerReport from "./pages/PrintCustomerReport";
 
 const queryClient = new QueryClient();
 
