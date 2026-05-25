@@ -51,41 +51,41 @@
 
 .pcr-page-content {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   height: 100%;
-  padding: 26mm 18mm 24mm;
+  padding: 18mm 18mm 34mm;
 }
 
 .pcr-page-one-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 7mm;
+  padding-top: 2mm;
 }
 
 .pcr-page-two-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 3mm;
+  padding-top: 0;
 }
 
 .pcr-logo-large {
   display: block;
-  width: 88mm;
-  height: 31mm;
+  width: 72mm;
+  height: 20mm;
   object-fit: contain;
-  margin-bottom: 18mm;
+  margin-bottom: 9mm;
 }
 
 .pcr-logo-small {
   display: block;
   width: 43mm;
-  height: 19mm;
+  height: 16mm;
   object-fit: contain;
   align-self: flex-start;
   margin-right: 18mm;
-  margin-bottom: 18mm;
+  margin-bottom: 12mm;
 }
 
 .pcr-title-block {
@@ -95,29 +95,30 @@
 
 .pcr-title-block h1 {
   margin: 0;
-  font-size: 13.4mm;
+  font-size: 12mm;
   line-height: 1.08;
   font-weight: 800;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .pcr-page-two-header .pcr-title-block h1 {
-  font-size: 13.1mm;
+  font-size: 12mm;
 }
 
 .pcr-title-divider {
   position: relative;
-  width: 90mm;
-  height: 10mm;
-  margin: 4mm auto 0;
+  width: 86mm;
+  height: 7mm;
+  margin: 3mm auto 0;
 }
 
 .pcr-title-divider::before,
 .pcr-title-divider::after {
   content: "";
   position: absolute;
-  top: 4.5mm;
-  width: 37mm;
+  top: 3.3mm;
+  width: 35mm;
   height: 0.35mm;
   background: var(--pcr-line);
 }
@@ -132,7 +133,7 @@
 
 .pcr-title-divider span {
   position: absolute;
-  top: 2.9mm;
+  top: 1.8mm;
   left: 50%;
   width: 4mm;
   height: 4mm;
@@ -148,39 +149,40 @@
 }
 
 .pcr-order-panel {
-  margin-top: 8mm;
-  padding: 19mm 9mm 5mm;
-  height: 66mm;
+  margin-top: 6mm;
+  padding: 15mm 8mm 4mm;
+  height: 51mm;
 }
 
 .pcr-delivery-panel {
-  margin-top: 8mm;
-  padding: 18mm 9mm 5mm;
-  height: 60mm;
+  margin-top: 6mm;
+  padding: 14mm 8mm 4mm;
+  height: 49mm;
 }
 
 .pcr-ribbon-title {
   position: absolute;
-  top: -6.3mm;
+  top: -5.4mm;
   left: 50%;
-  width: 74mm;
-  height: 12mm;
+  width: 70mm;
+  height: 10mm;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--pcr-purple);
-  font-size: 6.1mm;
+  font-size: 5.4mm;
   font-weight: 800;
   z-index: 2;
+  white-space: nowrap;
 }
 
 .pcr-ribbon-title::before,
 .pcr-ribbon-title::after {
   content: "";
   position: absolute;
-  top: 5.7mm;
-  width: 31mm;
+  top: 4.7mm;
+  width: 28mm;
   height: 0.3mm;
   background: var(--pcr-line);
   z-index: -2;
@@ -196,14 +198,15 @@
 
 .pcr-ribbon-title span {
   position: relative;
-  min-width: 67mm;
-  height: 10.5mm;
+  min-width: 62mm;
+  height: 9.2mm;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(233, 219, 238, 0.72), #eadcf1, rgba(233, 219, 238, 0.72));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  white-space: nowrap;
 }
 
 .pcr-ribbon-title span::before,
@@ -211,7 +214,7 @@
   content: "";
   width: 2.5mm;
   height: 2.5mm;
-  margin: 0 8mm;
+  margin: 0 6mm;
   background: var(--pcr-purple);
   transform: rotate(45deg);
 }
@@ -225,12 +228,12 @@
 .pcr-info-line {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 15.4mm;
+  height: 10.6mm;
   border-bottom: 0.25mm dashed var(--pcr-line);
 }
 
 .pcr-delivery-panel .pcr-info-line {
-  min-height: 13.3mm;
+  height: 8.9mm;
 }
 
 .pcr-info-line:last-child {
@@ -245,17 +248,18 @@
 
 .pcr-info-label {
   justify-content: flex-start;
-  gap: 4mm;
-  padding: 0 7mm 0 4mm;
+  gap: 3mm;
+  padding: 0 6mm 0 4mm;
   border-left: 0.25mm dashed var(--pcr-line);
   color: var(--pcr-ink);
-  font-size: 5.8mm;
+  font-size: 5.1mm;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .pcr-info-label svg {
-  width: 7.3mm;
-  height: 7.3mm;
+  width: 6.4mm;
+  height: 6.4mm;
   color: var(--pcr-purple);
   stroke-width: 1.9;
 }
@@ -263,16 +267,17 @@
 .pcr-info-line strong {
   justify-content: center;
   padding: 0 5mm;
-  font-size: 5.5mm;
+  font-size: 5mm;
   line-height: 1.2;
   font-weight: 500;
   color: var(--pcr-ink);
   unicode-bidi: plaintext;
+  white-space: nowrap;
 }
 
 .pcr-quantities {
   position: relative;
-  margin-top: 16mm;
+  margin-top: 10mm;
 }
 
 .pcr-quantities .pcr-ribbon-title {
@@ -280,8 +285,8 @@
   top: auto;
   left: auto;
   transform: none;
-  width: 74mm;
-  margin: 0 auto 4mm;
+  width: 70mm;
+  margin: 0 auto 3mm;
 }
 
 .pcr-quantity-grid {
@@ -291,7 +296,7 @@
 }
 
 .pcr-quantity-card {
-  height: 45mm;
+  height: 33mm;
   border: 0.35mm solid var(--pcr-line);
   border-radius: 3mm;
   display: flex;
@@ -302,8 +307,8 @@
 }
 
 .pcr-icon-bubble {
-  width: 15mm;
-  height: 15mm;
+  width: 13mm;
+  height: 13mm;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -313,30 +318,30 @@
 }
 
 .pcr-icon-bubble svg {
-  width: 8.3mm;
-  height: 8.3mm;
+  width: 7.2mm;
+  height: 7.2mm;
   stroke-width: 1.75;
 }
 
 .pcr-quantity-card strong {
-  margin-top: 3mm;
-  font-size: 13.2mm;
+  margin-top: 2.2mm;
+  font-size: 11mm;
   line-height: 1;
   color: var(--pcr-purple);
   font-weight: 800;
 }
 
 .pcr-quantity-card span:last-child {
-  margin-top: 2mm;
-  font-size: 5.1mm;
+  margin-top: 1.2mm;
+  font-size: 4.7mm;
   font-weight: 500;
   color: var(--pcr-ink);
 }
 
 .pcr-status-pill {
-  height: 12mm;
-  width: 85mm;
-  margin: 5mm auto 0;
+  height: 9.8mm;
+  width: 82mm;
+  margin: 3.5mm auto 0;
   border-radius: 999px;
   background: linear-gradient(90deg, rgba(231, 216, 237, 0.78), #eadcf1, rgba(231, 216, 237, 0.78));
   color: var(--pcr-purple);
@@ -344,25 +349,26 @@
   align-items: center;
   justify-content: center;
   gap: 3mm;
-  font-size: 5.7mm;
+  font-size: 5.1mm;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .pcr-status-pill svg {
-  width: 6mm;
-  height: 6mm;
+  width: 5.4mm;
+  height: 5.4mm;
   fill: var(--pcr-purple);
   color: var(--pcr-purple);
   stroke: #ffffff;
 }
 
 .pcr-abaya-list {
-  margin-top: 10mm;
+  margin-top: 8mm;
 }
 
 .pcr-detail-row {
-  min-height: 26.2mm;
-  margin-bottom: 8.2mm;
+  height: 20mm;
+  margin-bottom: 6mm;
   border: 0.35mm solid var(--pcr-line);
   border-radius: 3mm;
   display: grid;
@@ -372,33 +378,35 @@
 }
 
 .pcr-detail-row-tall {
-  min-height: 49.5mm;
+  height: 44mm;
 }
 
 .pcr-detail-label {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 5mm;
+  gap: 4mm;
   height: 100%;
-  padding-right: 7mm;
+  padding-right: 6mm;
   color: var(--pcr-purple);
-  font-size: 6mm;
+  font-size: 5.5mm;
   font-weight: 800;
   border-left: 0.3mm dashed var(--pcr-line);
+  white-space: nowrap;
 }
 
 .pcr-detail-row strong {
   justify-self: center;
   color: var(--pcr-ink);
-  font-size: 5.7mm;
+  font-size: 5.2mm;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .pcr-preview-frame {
   justify-self: center;
   width: 39mm;
-  height: 44mm;
+  height: 40mm;
   border-radius: 3mm;
   background: rgba(255, 255, 255, 0.88);
   display: flex;
@@ -408,14 +416,18 @@
 
 .pcr-product-preview {
   position: relative;
-  width: 28mm;
-  height: 37mm;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .pcr-product-preview-abaya::before {
   content: "";
   position: absolute;
-  inset: 1mm 8mm 0;
+  inset: 3mm 10mm 2mm;
   background:
     linear-gradient(90deg, transparent 47%, #3c2360 48% 52%, transparent 53%),
     linear-gradient(135deg, #27272f, #0f1118 55%, #35353d);
@@ -427,19 +439,23 @@
 .pcr-product-preview-abaya::after {
   content: "";
   position: absolute;
-  top: 6mm;
+  top: 8mm;
   left: 0;
   right: 0;
-  height: 18mm;
+  height: 17mm;
   background:
     linear-gradient(90deg, #1f2027, #101116);
   clip-path: polygon(0 15%, 22% 0, 31% 76%, 22% 83%, 14% 36%, 9% 76%, 0 70%);
-  box-shadow: 28mm 0 0 #15161c;
+  box-shadow: 30mm 0 0 #15161c;
 }
 
 .pcr-product-preview-sleeve {
-  width: 34mm;
-  height: 38mm;
+  width: 36mm;
+  height: 36mm;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
   transform: rotate(-17deg);
 }
 
@@ -570,7 +586,7 @@
 .pcr-leaf-bottom {
   right: auto;
   left: 8mm;
-  bottom: 24mm;
+  bottom: 22mm;
   transform: scaleX(-1) rotate(2deg);
 }
 
@@ -582,9 +598,9 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 20mm;
+  bottom: 17mm;
   z-index: 1;
-  height: 16mm;
+  height: 12mm;
   border-top: 0.35mm solid rgba(149, 83, 181, 0.72);
   border-radius: 50% 50% 0 0 / 75% 75% 0 0;
 }
@@ -593,9 +609,9 @@
   position: absolute;
   left: -8mm;
   right: -8mm;
-  bottom: -13mm;
+  bottom: -15mm;
   z-index: 1;
-  height: 43mm;
+  height: 34mm;
   pointer-events: none;
 }
 
@@ -605,8 +621,8 @@
 }
 
 .pcr-footer-wave-soft {
-  bottom: 0;
-  height: 29mm;
+  bottom: -2mm;
+  height: 23mm;
   background: linear-gradient(90deg, rgba(131, 78, 166, 0.18), rgba(131, 78, 166, 0.08), rgba(131, 78, 166, 0.32));
   clip-path: polygon(0 58%, 13% 42%, 26% 70%, 42% 52%, 57% 61%, 72% 68%, 87% 65%, 100% 34%, 100% 100%, 0 100%);
 }
@@ -616,7 +632,7 @@
   z-index: 3;
   left: 8mm;
   right: 8mm;
-  bottom: 4.5mm;
+  bottom: 4mm;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -628,8 +644,9 @@
   display: flex;
   align-items: center;
   gap: 4mm;
-  font-size: 4.5mm;
+  font-size: 4.2mm;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .pcr-footer-date {

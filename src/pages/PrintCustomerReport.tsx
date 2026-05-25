@@ -148,7 +148,7 @@ function ReportPage({
   footerLabel?: string;
 }) {
   return (
-    <section className="pcr-page">
+    <section className={`pcr-page pcr-page-${pageNumber}`}>
       <Decorations />
       <main className="pcr-page-content">{children}</main>
       <Footer pageNumber={pageNumber} label={footerLabel} />
