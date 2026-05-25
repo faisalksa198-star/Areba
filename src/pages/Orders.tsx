@@ -91,6 +91,11 @@ const statusLabels: Record<string, { label: string; className: string }> = {
   cancelled: { label: 'ملغي', className: 'bg-destructive/10 text-destructive border-destructive/20' },
 };
 
+const statusOptions = Object.entries(statusLabels).map(([value, status]) => ({
+  value,
+  label: status.label,
+}));
+
 export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolean }) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -357,7 +362,6 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
       toast({ title: 'خطأ في تغيير الحالة', variant: 'destructive' });
     } else {
       toast({ title: 'تم تحديث الحالة ✓' });
-      loadOrders();
     }
   };
 
@@ -618,7 +622,6 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
               )}
             </div>
             {filteredOrders.map(order => {
-              const status = statusLabels[order.status] || statusLabels.pending_data;
               const links = generateLinks(order.id, order.leader_phone);
               return (
                 <Card key={order.id} className="border-border/50 hover:shadow-sm transition-shadow">
@@ -643,29 +646,10 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                         {order.student_count ? (
                           <span className="text-xs text-muted-foreground">{order.student_count} طالبة</span>
                         ) : null}
-                        {isAdmin && (
-                          <Select
-                            value={order.status}
-                            onValueChange={v => handleStatusChange(order.id, v)}
-                          >
-                            <SelectTrigger className={`h-7 w-[130px] shrink-0 justify-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${status.className} [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70 [&>span]:line-clamp-none`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending_data">بانتظار البيانات</SelectItem>
-                              <SelectItem value="under_review">بانتظار المراجعة</SelectItem>
-                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                              <SelectItem value="shipped">تم الشحن</SelectItem>
-                              <SelectItem value="completed">منتهي</SelectItem>
-                              <SelectItem value="cancelled">ملغي</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                        {!isAdmin && (
-                          <Badge className={`${status.className} border text-[11px] px-2 py-0.5`}>
-                            {status.label}
-                          </Badge>
-                        )}
+                        <OrderStatusDropdown
+                          status={order.status}
+                          onChange={v => handleStatusChange(order.id, v)}
+                        />
                       </div>
                       {/* Action Buttons - icon only with tooltips */}
                       <div className="flex items-center gap-1 shrink-0">
@@ -1111,6 +1095,34 @@ function LinkCard({
         </div>
       </div>
     </div>
+  );
+}
+
+function OrderStatusDropdown({
+  status,
+  onChange,
+}: {
+  status: string;
+  onChange: (value: string) => void;
+}) {
+  const currentStatus = statusLabels[status] || statusLabels.pending_data;
+
+  return (
+    <Select value={status} onValueChange={onChange} dir="rtl">
+      <SelectTrigger
+        aria-label="تغيير حالة الطلب"
+        className={`h-7 w-[130px] shrink-0 justify-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${currentStatus.className} [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70 [&>span]:line-clamp-none`}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {statusOptions.map(option => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
