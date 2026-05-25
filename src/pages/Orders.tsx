@@ -339,11 +339,21 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const previousStatus = orders.find(order => order.id === orderId)?.status;
+    setOrders(prev => prev.map(order =>
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+
     const { error } = await supabase
       .from('orders')
       .update({ status: newStatus } as any)
       .eq('id', orderId);
     if (error) {
+      if (previousStatus) {
+        setOrders(prev => prev.map(order =>
+          order.id === orderId ? { ...order, status: previousStatus } : order
+        ));
+      }
       toast({ title: 'خطأ في تغيير الحالة', variant: 'destructive' });
     } else {
       toast({ title: 'تم تحديث الحالة ✓' });
@@ -633,15 +643,12 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                         {order.student_count ? (
                           <span className="text-xs text-muted-foreground">{order.student_count} طالبة</span>
                         ) : null}
-                        <Badge className={`${status.className} border text-[11px] px-2 py-0.5`}>
-                          {status.label}
-                        </Badge>
                         {isAdmin && (
                           <Select
                             value={order.status}
                             onValueChange={v => handleStatusChange(order.id, v)}
                           >
-                            <SelectTrigger className="h-7 w-[130px] text-xs shrink-0">
+                            <SelectTrigger className={`h-7 w-[130px] shrink-0 justify-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${status.className} [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70 [&>span]:line-clamp-none`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -653,6 +660,11 @@ export default function Orders({ myOrdersOnly = false }: { myOrdersOnly?: boolea
                               <SelectItem value="cancelled">ملغي</SelectItem>
                             </SelectContent>
                           </Select>
+                        )}
+                        {!isAdmin && (
+                          <Badge className={`${status.className} border text-[11px] px-2 py-0.5`}>
+                            {status.label}
+                          </Badge>
                         )}
                       </div>
                       {/* Action Buttons - icon only with tooltips */}
