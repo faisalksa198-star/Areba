@@ -1,242 +1,263 @@
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { loadOrderReportData, ReportData } from '@/lib/orderReportData';
+import { useEffect, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  CalendarDays,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  Home,
+  MapPin,
+  Palette,
+  Phone,
+  Ruler,
+  Shirt,
+  Sparkles,
+  type LucideIcon,
+  UserRound,
+} from 'lucide-react';
 import './PrintCustomerReport.css';
 
+type InfoItem = {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+};
+
+type DetailItem = InfoItem & {
+  preview?: 'abaya' | 'sleeve';
+};
+
+const orderInfoRows: InfoItem[] = [
+  { label: 'رقم الطلب', value: '#12345', icon: FileText },
+  { label: 'تاريخ الطلب', value: '24 / 05 / 2026', icon: CalendarDays },
+  { label: 'اسم القائدة', value: 'أمل محمد', icon: UserRound },
+];
+
+const quantityCards: InfoItem[] = [
+  { label: 'عدد الأطقم', value: '12', icon: Shirt },
+  { label: 'عدد الأوشحة', value: '18', icon: Sparkles },
+  { label: 'عدد القبعات', value: '12', icon: GraduationCap },
+];
+
+const deliveryRows: InfoItem[] = [
+  { label: 'اسم المستلم', value: 'سارة أحمد', icon: UserRound },
+  { label: 'رقم الجوال', value: '0501234567', icon: Phone },
+  { label: 'المدينة', value: 'الرياض', icon: MapPin },
+  { label: 'الحي', value: 'الياسمين', icon: Home },
+];
+
+const abayaRows: DetailItem[] = [
+  { label: 'لون العباية', value: 'اسود', icon: Palette },
+  { label: 'طول العباية', value: 'ثابت', icon: Ruler },
+  { label: 'تصميم العباية', value: 'اريبة كلوش', icon: Shirt, preview: 'abaya' },
+  { label: 'طرف الكم', value: 'عريض مع قيطان', icon: Sparkles, preview: 'sleeve' },
+  { label: 'لون طرف الكم', value: 'مخمل اسود', icon: Palette },
+];
+
 export default function PrintCustomerReport() {
-  const { orderId } = useParams<{ orderId: string }>();
   const [params] = useSearchParams();
   const autoPrint = params.get('autoprint') === '1';
-  const [data, setData] = useState<ReportData | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!orderId) return;
-    loadOrderReportData(orderId)
-      .then(setData)
-      .catch((e) => setError(e?.message || 'حدث خطأ'));
-  }, [orderId]);
+    if (!autoPrint) return;
 
-  useEffect(() => {
-    if (!data || !autoPrint) return;
-    // Wait for fonts + images
     const imgs = Array.from(document.images);
     Promise.all(
       imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => {
         img.onload = img.onerror = () => res(null);
       }))
-    ).then(() => (document as any).fonts?.ready)
-     .then(() => setTimeout(() => window.print(), 300));
-  }, [data, autoPrint]);
-
-  if (error) return <div className="pcr-error">خطأ: {error}</div>;
-  if (!data) return <div className="pcr-loading">جارٍ تحميل التقرير...</div>;
-
-  const d = data;
-  const cols = buildColumns(d);
-  const hasShipping = !!(d.recipientName || d.recipientPhone || d.shippingCity);
-  const hasProducts = d.scarves.length > 0 || d.hats.length > 0;
+    )
+      .then(() => (document as any).fonts?.ready)
+      .then(() => setTimeout(() => window.print(), 300));
+  }, [autoPrint]);
 
   return (
     <div className="pcr-root">
-      {/* Cover / Summary */}
-      <section className="pcr-page">
-        <header className="pcr-brand-header">
-          <img src="/logo.svg" alt="آريبا" className="pcr-logo" />
-          <div className="pcr-order-tag">
-            <span>طلب رقم</span>
-            <strong>{d.orderNumber}</strong>
-          </div>
+      <ReportPage pageNumber={1} footerLabel="تاريخ إنشاء التقرير">
+        <header className="pcr-page-one-header">
+          <img src="/logo.svg" alt="AREBA" className="pcr-logo-large" />
+          <DecoratedTitle>تقرير تفاصيل الطلب</DecoratedTitle>
         </header>
 
-        <div className="pcr-cover">
-          <h1>تقرير الطلب</h1>
-          <p>متجر آريبا</p>
-          <div className="pcr-divider" />
-        </div>
-
-        <SectionTitle>بيانات الطلب</SectionTitle>
-        <div className="pcr-card">
-          <InfoRow label="رقم الطلب" value={d.orderNumber} />
-          {d.createdAt && <InfoRow label="تاريخ الطلب" value={d.createdAt} />}
-          {d.executionDuration && <InfoRow label="مدة التنفيذ (أيام)" value={String(d.executionDuration)} />}
-          {d.leaderName && <InfoRow label="اسم القائدة" value={d.leaderName} />}
-          {d.schoolName && <InfoRow label="اسم المدرسة" value={d.schoolName} />}
-          <InfoRow label="نوع الطلب" value={d.orderTypeLabel} />
-          {d.kitName && <InfoRow label="اسم الطقم" value={d.kitName} />}
-          {!!d.studentCount && <InfoRow label="عدد الأطقم" value={String(d.studentCount)} />}
-          {!!d.extraScarfCount && <InfoRow label="الأوشحة الإضافية" value={String(d.extraScarfCount)} />}
-          {!!d.extraHatCount && <InfoRow label="القبعات الإضافية" value={String(d.extraHatCount)} />}
-        </div>
-
-        {(d.abayaColor || d.sleeveStyleName || d.sleeveColor || d.abayaLength) && (
-          <>
-            <SectionTitle>تفاصيل العباية</SectionTitle>
-            <div className="pcr-card">
-              {d.abayaColor && <InfoRow label="لون العباية" value={d.abayaColor} />}
-              {d.abayaLength && <InfoRow label="طول العباية" value={d.abayaLength} />}
-              {d.sleeveStyleName && <InfoRow label="طرف الكم" value={d.sleeveStyleName} />}
-              {d.sleeveColor && <InfoRow label="لون طرف الكم" value={d.sleeveColor} />}
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Products */}
-      {hasProducts && (
-        <section className="pcr-page pcr-page-break">
-          {d.scarves.length > 0 && (
-            <>
-              <SectionTitle>تصاميم الأوشحة</SectionTitle>
-              {d.scarfColor && <p className="pcr-subtle">لون الوشاح: <strong>{d.scarfColor}</strong></p>}
-              <div className="pcr-grid">
-                {d.scarves.map(sd => (
-                  <div className="pcr-product" key={sd.index}>
-                    <div className="pcr-product-head">
-                      <span className="pcr-badge">{sd.index}</span>
-                      <strong>وشاح {sd.index}</strong>
-                    </div>
-                    {(sd.styleImage || sd.dateImage) && (
-                      <div className="pcr-product-imgs">
-                        {sd.styleImage && <div className="pcr-img-box"><img src={sd.styleImage} alt="" crossOrigin="anonymous" /></div>}
-                        {sd.dateImage && <div className="pcr-img-box pcr-img-box-sm"><img src={sd.dateImage} alt="" crossOrigin="anonymous" /></div>}
-                      </div>
-                    )}
-                    <div className="pcr-product-body">
-                      {sd.styleName && <p>التصميم: <strong>{sd.styleName}</strong></p>}
-                      {sd.methodName && <p>الطرف: <strong>{sd.methodName}</strong></p>}
-                      {sd.embroideryDirection && <p>اتجاه التطريز: <strong>{sd.embroideryDirection}</strong></p>}
-                      {sd.dateName && <p>التاريخ: <strong>{sd.dateName}</strong></p>}
-                      {sd.fontName && <p>الخط: <strong>{sd.fontName}</strong></p>}
-                      {sd.embroideryColor && <p>لون التطريز: <strong>{sd.embroideryColor}</strong></p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {d.hats.length > 0 && (
-            <>
-              <SectionTitle>تصاميم القبعات</SectionTitle>
-              {d.hatColor && <p className="pcr-subtle">لون القبعة: <strong>{d.hatColor}</strong></p>}
-              <div className="pcr-grid">
-                {d.hats.map(g => (
-                  <div className="pcr-product pcr-hat" key={g.index}>
-                    {g.image && <div className="pcr-img-box pcr-img-box-side"><img src={g.image} alt="" crossOrigin="anonymous" /></div>}
-                    <div className="pcr-product-body">
-                      <div className="pcr-product-head pcr-no-border">
-                        <span className="pcr-badge">{g.index}</span>
-                        <strong>قبعة {g.index}</strong>
-                      </div>
-                      <p>الاسم: <strong>{g.name}</strong></p>
-                      <p>الكمية: <strong>{g.count}</strong></p>
-                      {g.fringes.length > 0 && <p>الهدب: <strong>{g.fringes.join('، ')}</strong></p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+        <section className="pcr-outline-panel pcr-order-panel" aria-label="معلومات الطلب">
+          <RibbonTitle>معلومات الطلب</RibbonTitle>
+          <div className="pcr-info-table">
+            {orderInfoRows.map(row => (
+              <InfoLine key={row.label} {...row} />
+            ))}
+          </div>
         </section>
-      )}
 
-      {/* Students table */}
-      {d.students.length > 0 && (
-        <section className="pcr-page pcr-page-break">
-          <SectionTitle>قائمة الأسماء</SectionTitle>
-          <table className="pcr-table">
-            <thead>
-              <tr>
-                {cols.map(c => <th key={c.key} style={{ width: c.width }}>{c.label}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {d.students.map((r, i) => (
-                <tr key={`${r.serial}-${i}`}>
-                  {cols.map(c => (
-                    <td key={c.key} className={`pcr-cell-${c.key}`}>
-                      {renderCell(c.key, r)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <section className="pcr-quantities" aria-label="الكميات المطلوبة">
+          <RibbonTitle>الكميات المطلوبة</RibbonTitle>
+          <div className="pcr-quantity-grid">
+            {quantityCards.map(item => (
+              <div className="pcr-quantity-card" key={item.label}>
+                <IconBubble>
+                  <item.icon />
+                </IconBubble>
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </section>
-      )}
 
-      {/* Shipping + Thanks */}
-      <section className="pcr-page pcr-page-break">
-        {hasShipping && (
-          <>
-            <SectionTitle>بيانات الشحن</SectionTitle>
-            <div className="pcr-card">
-              {d.recipientName && <InfoRow label="اسم المستلم" value={d.recipientName} />}
-              {d.recipientPhone && <InfoRow label="رقم الجوال" value={d.recipientPhone} />}
-              {d.shippingCity && <InfoRow label="المدينة" value={d.shippingCity} />}
-              {d.district && <InfoRow label="الحي" value={d.district} />}
-              {d.addressDetails && <InfoRow label="تفاصيل العنوان" value={d.addressDetails} />}
-              {d.nationalAddress && <InfoRow label="العنوان الوطني" value={d.nationalAddress} />}
-            </div>
-          </>
-        )}
-        <div className="pcr-thanks">
-          <h2>شكراً لكم</h2>
-          <p>نشكركم على ثقتكم بمتجر آريبا ونسعد بخدمتكم دائماً</p>
-          <div className="pcr-divider" />
+        <section className="pcr-outline-panel pcr-delivery-panel" aria-label="معلومات الاستلام">
+          <RibbonTitle>معلومات الاستلام</RibbonTitle>
+          <div className="pcr-info-table">
+            {deliveryRows.map(row => (
+              <InfoLine key={row.label} {...row} />
+            ))}
+          </div>
+        </section>
+
+        <div className="pcr-status-pill">
+          <CheckCircle2 />
+          <span>حالة الطلب : قيد التنفيذ</span>
         </div>
-      </section>
+      </ReportPage>
 
-      {/* Screen-only print button */}
+      <ReportPage pageNumber={2}>
+        <header className="pcr-page-two-header">
+          <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+          <DecoratedTitle>تفاصيل العباية</DecoratedTitle>
+        </header>
+
+        <section className="pcr-abaya-list" aria-label="تفاصيل العباية">
+          {abayaRows.map(row => (
+            <DetailRow key={row.label} {...row} />
+          ))}
+        </section>
+      </ReportPage>
+
       <div className="pcr-print-bar">
-        <button onClick={() => window.print()}>🖨️ طباعة / حفظ PDF</button>
+        <button onClick={() => window.print()}>طباعة / حفظ PDF</button>
       </div>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <div className="pcr-section-title"><h3>{children}</h3></div>;
+function ReportPage({
+  children,
+  pageNumber,
+  footerLabel,
+}: {
+  children: ReactNode;
+  pageNumber: number;
+  footerLabel?: string;
+}) {
+  return (
+    <section className="pcr-page">
+      <Decorations />
+      <main className="pcr-page-content">{children}</main>
+      <Footer pageNumber={pageNumber} label={footerLabel} />
+    </section>
+  );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function Decorations() {
   return (
-    <div className="pcr-info-row">
-      <span className="pcr-info-label">{label}</span>
-      <span className="pcr-info-value">{value}</span>
+    <>
+      <div className="pcr-corner-ribbon" />
+      <div className="pcr-leaf pcr-leaf-top">
+        <span /><span /><span /><span />
+      </div>
+      <div className="pcr-leaf pcr-leaf-bottom">
+        <span /><span /><span />
+      </div>
+      <div className="pcr-dot-grid" />
+      <div className="pcr-curve pcr-curve-top" />
+      <div className="pcr-curve pcr-curve-side" />
+      <div className="pcr-footer-line" />
+      <div className="pcr-footer-wave pcr-footer-wave-soft" />
+      <div className="pcr-footer-wave pcr-footer-wave-main" />
+    </>
+  );
+}
+
+function DecoratedTitle({ children }: { children: ReactNode }) {
+  return (
+    <div className="pcr-title-block">
+      <h1>{children}</h1>
+      <div className="pcr-title-divider">
+        <span />
+      </div>
     </div>
   );
 }
 
-function buildColumns(d: ReportData) {
-  const cols: { key: string; label: string; width: string }[] = [];
-  cols.push({ key: 'serial', label: '#', width: '7%' });
-  cols.push({ key: 'name', label: 'الاسم', width: '32%' });
-  cols.push({ key: 'size', label: 'المقاس', width: '10%' });
-  cols.push({ key: 'scarf', label: 'الوشاح', width: '10%' });
-  if (d.hasHatTextCol) cols.push({ key: 'hat', label: 'القبعة', width: '18%' });
-  if (d.hasBackCol) cols.push({ key: 'back', label: 'تطريز خلفي', width: '16%' });
-  if (d.hasLogoCol) cols.push({ key: 'logo', label: 'شعار', width: '7%' });
-  const total = cols.reduce((a, c) => a + parseFloat(c.width), 0);
-  cols.forEach(c => { c.width = `${(parseFloat(c.width) / total) * 100}%`; });
-  return cols;
+function RibbonTitle({ children }: { children: ReactNode }) {
+  return (
+    <div className="pcr-ribbon-title">
+      <span>{children}</span>
+    </div>
+  );
 }
 
-function renderCell(key: string, r: any) {
-  switch (key) {
-    case 'serial': return <strong className="pcr-serial">{r.serial}</strong>;
-    case 'name': return r.name;
-    case 'size': return r.size;
-    case 'scarf': return r.scarfNum ? <span className="pcr-circle">{r.scarfNum}</span> : '';
-    case 'hat': return (
-      <span className="pcr-hat-cell">
-        {r.hatDesignNum && <span className="pcr-circle">{r.hatDesignNum}</span>}
-        {r.hatExtraText && <span className="pcr-hat-txt">{r.hatExtraText}</span>}
-      </span>
-    );
-    case 'back': return r.backText;
-    case 'logo': return r.hasLogo ? <span className="pcr-check">✓</span> : '';
-    default: return null;
-  }
+function InfoLine({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className="pcr-info-line">
+      <div className="pcr-info-label">
+        <Icon />
+        <span>{label} :</span>
+      </div>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  icon: Icon,
+  preview,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  preview?: 'abaya' | 'sleeve';
+}) {
+  return (
+    <div className={`pcr-detail-row ${preview ? 'pcr-detail-row-tall' : ''}`}>
+      <div className="pcr-detail-label">
+        <IconBubble>
+          <Icon />
+        </IconBubble>
+        <span>{label}</span>
+      </div>
+      <strong>{value}</strong>
+      {preview && (
+        <div className="pcr-preview-frame" aria-hidden="true">
+          <div className={`pcr-product-preview pcr-product-preview-${preview}`} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function IconBubble({ children }: { children: ReactNode }) {
+  return <span className="pcr-icon-bubble">{children}</span>;
+}
+
+function Footer({ pageNumber, label }: { pageNumber: number; label?: string }) {
+  return (
+    <footer className="pcr-footer">
+      <div className="pcr-footer-date">
+        <CalendarDays />
+        <span>24 / 05 / 2026</span>
+        {label && <em>{label}</em>}
+      </div>
+      <Sparkles className="pcr-footer-mark" />
+      <div className="pcr-page-number">Page {pageNumber}</div>
+    </footer>
+  );
 }
