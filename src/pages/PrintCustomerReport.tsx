@@ -530,7 +530,7 @@ function NameListPage({
                 <td>
                   {row.hasLogo && (
                     <span className="pcr-logo-check">
-                      <CheckCircle2 />
+                      ✓
                     </span>
                   )}
                 </td>

@@ -1151,11 +1151,13 @@
 }
 
 .pcr-names-table-wrap {
-  margin-top: 7mm;
+  margin-top: 8mm;
+  margin-right: -3mm;
+  margin-left: -3mm;
   overflow: hidden;
-  border: 0.35mm solid var(--pcr-line);
+  border: 0.28mm solid rgba(217, 183, 230, 0.72);
   border-radius: 4mm;
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .pcr-names-table {
@@ -1167,23 +1169,23 @@
   color: var(--pcr-ink);
 }
 
-.pcr-col-index { width: 8%; }
-.pcr-col-name { width: 24%; }
-.pcr-col-size { width: 12%; }
-.pcr-col-scarf { width: 12%; }
-.pcr-col-hat { width: 12%; }
-.pcr-col-back { width: 20%; }
-.pcr-col-logo { width: 12%; }
+.pcr-col-index { width: 7.5%; }
+.pcr-col-name { width: 25%; }
+.pcr-col-size { width: 11%; }
+.pcr-col-scarf { width: 11.5%; }
+.pcr-col-hat { width: 11.5%; }
+.pcr-col-back { width: 22%; }
+.pcr-col-logo { width: 11.5%; }
 
 .pcr-names-table thead th {
-  height: 18mm;
-  padding: 0 2mm;
+  height: 16.5mm;
+  padding: 0 2.4mm;
   background: linear-gradient(90deg, #4b087c, #5e168e);
   color: #ffffff;
-  border-left: 0.25mm solid rgba(255, 255, 255, 0.68);
-  font-size: 4.4mm;
+  border-left: 0.2mm solid rgba(255, 255, 255, 0.58);
+  font-size: 4mm;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.22;
   text-align: center;
   vertical-align: middle;
 }
@@ -1193,21 +1195,21 @@
 }
 
 .pcr-names-table tbody tr:nth-child(odd) {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .pcr-names-table tbody tr:nth-child(even) {
-  background: rgba(235, 224, 240, 0.54);
+  background: rgba(241, 234, 245, 0.48);
 }
 
 .pcr-names-table tbody td {
-  height: 12.4mm;
-  padding: 0 2mm;
-  border-left: 0.25mm solid rgba(255, 255, 255, 0.9);
-  border-top: 0.25mm solid rgba(255, 255, 255, 0.86);
-  font-size: 4.1mm;
-  font-weight: 600;
-  line-height: 1.25;
+  height: 12.2mm;
+  padding: 0 2.8mm;
+  border-left: 0.18mm solid rgba(255, 255, 255, 0.82);
+  border-top: 0.18mm solid rgba(255, 255, 255, 0.82);
+  font-size: 3.85mm;
+  font-weight: 500;
+  line-height: 1.3;
   text-align: center;
   vertical-align: middle;
 }
@@ -1218,55 +1220,54 @@
 
 .pcr-name-index {
   color: var(--pcr-purple);
-  font-size: 4.8mm !important;
+  font-size: 4.5mm !important;
   font-weight: 800 !important;
 }
 
 .pcr-name-cell {
   text-align: right !important;
-  padding-right: 4mm !important;
+  padding-right: 4.6mm !important;
   white-space: nowrap;
+  font-weight: 500 !important;
 }
 
 .pcr-size-cell {
-  font-size: 4.5mm !important;
-  font-weight: 800 !important;
+  font-size: 4.15mm !important;
+  font-weight: 700 !important;
 }
 
 .pcr-table-badge {
-  width: 9.5mm;
-  height: 9.5mm;
+  width: 8.6mm;
+  height: 8.6mm;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 35% 30%, #efe6f3, #d8bfe4);
+  background: radial-gradient(circle at 35% 30%, rgba(247, 242, 249, 0.95), rgba(214, 190, 226, 0.78));
   color: #111827;
-  font-size: 4.2mm;
-  font-weight: 800;
+  font-size: 3.75mm;
+  font-weight: 700;
 }
 
 .pcr-back-text {
   white-space: normal;
-  font-size: 3.8mm !important;
-  font-weight: 700 !important;
+  font-size: 3.45mm !important;
+  font-weight: 500 !important;
+  line-height: 1.38 !important;
 }
 
 .pcr-logo-check {
-  width: 9mm;
-  height: 9mm;
+  width: 7.3mm;
+  height: 7.3mm;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--pcr-purple);
+  background: rgba(75, 8, 124, 0.92);
   color: #ffffff;
-}
-
-.pcr-logo-check svg {
-  width: 8mm;
-  height: 8mm;
-  stroke-width: 2.4;
+  font-size: 4.2mm;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .pcr-thanks-page .pcr-footer {
