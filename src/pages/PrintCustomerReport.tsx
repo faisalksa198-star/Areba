@@ -15,7 +15,7 @@ import {
   type LucideIcon,
   UserRound,
 } from 'lucide-react';
-import { loadOrderReportData, type ReportData, type ReportScarfDesign } from '@/lib/orderReportData';
+import { loadOrderReportData, type ReportData, type ReportHatGroup, type ReportScarfDesign } from '@/lib/orderReportData';
 import './PrintCustomerReport.css';
 
 type InfoItem = {
@@ -28,15 +28,6 @@ type DetailItem = InfoItem & {
   preview?: 'abaya' | 'sleeve';
   imageUrl?: string;
   showFallbackPreview?: boolean;
-};
-
-type MockHatDesign = {
-  index: number;
-  hasEmbroidery: boolean;
-  preview: 'none' | 'wings' | 'stars';
-  count: string;
-  fringeColor: string;
-  embroideryName?: string;
 };
 
 type MockNameRow = {
@@ -94,46 +85,19 @@ function getScarfPages(scarves: ReportScarfDesign[]) {
   return pages.length > 0 ? pages : [[]];
 }
 
-const mockHatDesigns: MockHatDesign[] = [
-  {
-    index: 1,
-    hasEmbroidery: false,
-    preview: 'none',
-    count: '10 قبعات',
-    fringeColor: 'فضي',
-  },
-  {
-    index: 2,
-    hasEmbroidery: true,
-    preview: 'wings',
-    count: '7 قبعات',
-    fringeColor: 'فضي',
-  },
-  {
-    index: 3,
-    hasEmbroidery: true,
-    preview: 'stars',
-    count: '10 قبعات',
-    fringeColor: 'فضي',
-    embroideryName: 'Yara',
-  },
-  {
-    index: 4,
-    hasEmbroidery: true,
-    preview: 'wings',
-    count: '7 قبعات',
-    fringeColor: 'فضي',
-  },
-];
-
-function chunkHatDesigns(hats: MockHatDesign[]) {
-  const pages: MockHatDesign[][] = [];
+function chunkHatDesigns(hats: ReportHatGroup[]) {
+  const pages: ReportHatGroup[][] = [];
 
   for (let index = 0; index < hats.length; index += HATS_PER_PAGE) {
     pages.push(hats.slice(index, index + HATS_PER_PAGE));
   }
 
   return pages;
+}
+
+function getHatPages(hats: ReportHatGroup[]) {
+  const pages = chunkHatDesigns(hats);
+  return pages.length > 0 ? pages : [[]];
 }
 
 const mockNameRows: MockNameRow[] = [
@@ -219,7 +183,8 @@ export default function PrintCustomerReport() {
   const [reportError, setReportError] = useState<string | null>(null);
   const showScarfPages = reportData ? reportData.setQuantity > 0 || reportData.scarfQuantity > 0 : false;
   const scarfPages = showScarfPages ? getScarfPages(reportData?.scarves || []) : [];
-  const hatPages = chunkHatDesigns(mockHatDesigns);
+  const showHatPages = reportData ? reportData.setQuantity > 0 || reportData.hatQuantity > 0 : false;
+  const hatPages = showHatPages ? getHatPages(reportData?.hats || []) : [];
   const showAbayaPage = !reportData || reportData.setQuantity > 0;
   const abayaPageOffset = showAbayaPage ? 1 : 0;
   const firstDesignPageNumber = 2 + abayaPageOffset;
@@ -343,6 +308,8 @@ export default function PrintCustomerReport() {
           key={pageIndex}
           pageNumber={firstDesignPageNumber + scarfPages.length + pageIndex}
           hats={hats}
+          hatColor={reportData?.mainHatFringeColor}
+          embroideryCount={reportData?.hatEmbroideryCount || 0}
         />
       ))}
 
@@ -475,9 +442,13 @@ function ScarfDesignCard({ scarf }: { scarf: ReportScarfDesign }) {
 function HatDesignPage({
   pageNumber,
   hats,
+  hatColor,
+  embroideryCount,
 }: {
   pageNumber: number;
-  hats: MockHatDesign[];
+  hats: ReportHatGroup[];
+  hatColor?: string | null;
+  embroideryCount: number;
 }) {
   return (
     <ReportPage pageNumber={pageNumber}>
@@ -492,11 +463,11 @@ function HatDesignPage({
             <Palette />
           </IconBubble>
           <strong>لون القبعة :</strong>
-          <span>أسود فخمة</span>
+          <span>{displayValue(hatColor)}</span>
         </div>
         <div className="pcr-hat-summary-item pcr-hat-summary-count">
           <strong>عدد تطريز القبعات :</strong>
-          <span>3</span>
+          <span>{embroideryCount}</span>
         </div>
       </section>
 
@@ -509,14 +480,15 @@ function HatDesignPage({
   );
 }
 
-function HatDesignCard({ hat }: { hat: MockHatDesign }) {
+function HatDesignCard({ hat }: { hat: ReportHatGroup }) {
+  const fringeColor = hat.fringes.length > 0 ? hat.fringes.join(' / ') : '-';
   const rows: InfoItem[] = [
-    { label: 'العدد', value: hat.count, icon: Shirt },
-    { label: 'لون الهدب', value: hat.fringeColor, icon: Palette },
+    { label: 'العدد', value: `${hat.count} قبعات`, icon: Shirt },
+    { label: 'لون الهدب', value: fringeColor, icon: Palette },
   ];
 
-  if (hat.embroideryName) {
-    rows.push({ label: 'الاسم على التطريز', value: hat.embroideryName, icon: FileText });
+  if (hat.hasExtraText && hat.customText) {
+    rows.push({ label: 'الاسم على التطريز', value: hat.customText, icon: FileText });
   }
 
   return (
@@ -524,23 +496,12 @@ function HatDesignCard({ hat }: { hat: MockHatDesign }) {
       <div className="pcr-hat-card-pill">قبعة {hat.index}</div>
 
       <div className="pcr-hat-preview" aria-hidden="true">
-        {hat.hasEmbroidery ? (
-          <div className={`pcr-hat-preview-diamond pcr-hat-preview-${hat.preview}`}>
-            {hat.preview === 'stars' ? (
-              <>
-                <span className="pcr-hat-stars">✦ ✦ ✦</span>
-                <b>I did it</b>
-                <span className="pcr-hat-star-large">★</span>
-              </>
-            ) : (
-              <>
-                <b>2024</b>
-                <span className="pcr-hat-wings" />
-              </>
-            )}
-          </div>
-        ) : (
+        {!hat.hasEmbroidery ? (
           <div className="pcr-hat-empty-preview">بدون تطريز</div>
+        ) : hat.image ? (
+          <img src={hat.image} alt="" />
+        ) : (
+          <div className="pcr-hat-preview-empty" />
         )}
       </div>
 

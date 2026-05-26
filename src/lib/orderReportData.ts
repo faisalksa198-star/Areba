@@ -27,6 +27,9 @@ export interface ReportHatGroup {
   image?: string;
   count: number;
   fringes: string[];
+  hasEmbroidery: boolean;
+  hasExtraText: boolean;
+  customText?: string;
 }
 export interface ReportData {
   orderNumber: string;
@@ -57,6 +60,7 @@ export interface ReportData {
   sleeveColor?: string;
   scarfColor?: string;
   hatColor?: string;
+  mainHatFringeColor?: string;
   logoEmbroideryCount?: number;
   backEmbroideryCount?: number;
   hatEmbroideryCount?: number;
@@ -167,26 +171,87 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
   const setQuantity = includesSets ? studentCount : 0;
   const scarfQuantity = order.order_type === 'scarf_only' ? studentCount : extraScarfCount;
   const hatQuantity = order.order_type === 'hat_only' ? studentCount : extraHatCount;
-  const includesScarves = scarfQuantity > 0;
-  const includesHats = hatQuantity > 0;
+  const includesScarves = includesSets || scarfQuantity > 0;
+  const includesHats = includesSets || hatQuantity > 0;
 
   const hatDesignMap = new Map<string, number>();
   const hatGroups: ReportHatGroup[] = [];
   const groupMap = new Map<string, number>();
-  const addToGroup = (id: string | null, name: string, image: string, fringe?: string) => {
-    if (!id || !name || name === 'بدون تطريز') return;
-    if (!hatDesignMap.has(name)) hatDesignMap.set(name, hatDesignMap.size + 1);
-    const idx = groupMap.get(name);
+  let actualHatEmbroideryCount = 0;
+
+  const formatCustomText = (texts: string[]) => {
+    const uniqueTexts = [...new Set(texts.map(text => text.trim()).filter(Boolean))];
+    if (uniqueTexts.length === 0) return '';
+    if (uniqueTexts.length === 1) return uniqueTexts[0];
+    return `${uniqueTexts[0]} + ${uniqueTexts.length - 1} أسماء`;
+  };
+
+  const addToGroup = ({
+    id,
+    name,
+    image,
+    fringe,
+    hasExtraText,
+    customText,
+  }: {
+    id?: string | null;
+    name?: string | null;
+    image?: string | null;
+    fringe?: string | null;
+    hasExtraText?: boolean | null;
+    customText?: string | null;
+  }) => {
+    const isNoEmbroidery = !id || !name || name === 'بدون تطريز';
+    const groupKey = isNoEmbroidery ? 'none' : id || '';
+    const displayName = isNoEmbroidery ? 'بدون تطريز' : name;
+    const idx = groupMap.get(groupKey);
+
+    if (!isNoEmbroidery) {
+      const designId = id || '';
+      actualHatEmbroideryCount++;
+      if (!hatDesignMap.has(designId)) hatDesignMap.set(designId, hatDesignMap.size + 1);
+    }
+
     if (idx !== undefined) {
       hatGroups[idx].count++;
       if (fringe && !hatGroups[idx].fringes.includes(fringe)) hatGroups[idx].fringes.push(fringe);
+      if (hasExtraText && customText?.trim()) {
+        const group = hatGroups[idx] as ReportHatGroup & { customTexts?: string[] };
+        group.customTexts = [...(group.customTexts || []), customText];
+        group.customText = formatCustomText(group.customTexts);
+      }
     } else {
-      groupMap.set(name, hatGroups.length);
-      hatGroups.push({ index: hatGroups.length + 1, name, image, count: 1, fringes: fringe ? [fringe] : [] });
+      const customTexts = hasExtraText && customText?.trim() ? [customText.trim()] : [];
+      groupMap.set(groupKey, hatGroups.length);
+      hatGroups.push({
+        index: hatGroups.length + 1,
+        name: displayName,
+        image: isNoEmbroidery ? '' : image || '',
+        count: 1,
+        fringes: fringe ? [fringe] : [],
+        hasEmbroidery: !isNoEmbroidery,
+        hasExtraText: Boolean(hasExtraText),
+        customText: formatCustomText(customTexts),
+        customTexts,
+      } as ReportHatGroup & { customTexts: string[] });
     }
   };
-  students.forEach((s: any) => addToGroup(s.hat_embroidery_id, s.hat_embroideries?.name || '', s.hat_embroideries?.image_url || ''));
-  extraHats.forEach((eh: any) => addToGroup(eh.hat_embroidery_id, eh.hat_embroideries?.name || '', eh.hat_embroideries?.image_url || '', eh.fringe_color));
+  students.forEach((s: any) => addToGroup({
+    id: s.hat_embroidery_id,
+    name: s.hat_embroideries?.name,
+    image: s.hat_embroideries?.image_url,
+    fringe: order.main_hat_fringe_color,
+    hasExtraText: s.hat_embroideries?.has_extra_text,
+    customText: s.hat_extra_text,
+  }));
+  extraHats.forEach((eh: any) => addToGroup({
+    id: eh.hat_embroidery_id,
+    name: eh.hat_embroideries?.name,
+    image: eh.hat_embroideries?.image_url,
+    fringe: eh.fringe_color,
+    hasExtraText: eh.hat_embroideries?.has_extra_text,
+    customText: eh.hat_extra_text,
+  }));
 
   const hasBackCol = students.some((s: any) => s.back_embroidery_text?.trim()) || extraScarves.some((s: any) => s.back_embroidery_text?.trim());
   const hasLogoCol = students.some((s: any) => s.has_logo_embroidery) || extraScarves.some((s: any) => s.has_logo_embroidery);
@@ -205,7 +270,7 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
       name: s.name || '',
       size: s.size || '',
       scarfNum: sn,
-      hatDesignNum: isNone ? '' : String(hatDesignMap.get(hn) || ''),
+      hatDesignNum: isNone ? '' : String(hatDesignMap.get(s.hat_embroidery_id) || ''),
       hatExtraText: s.hat_extra_text || '',
       backText: s.back_embroidery_text || '',
       hasLogo: s.has_logo_embroidery || false,
@@ -223,10 +288,9 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
   for (const eh of extraHats) {
     if (eh.hat_extra_text?.trim()) {
       hatIdx++;
-      const hn = eh.hat_embroideries?.name || '';
       rows.push({
         serial: `ق${hatIdx}`, name: '', size: '', scarfNum: '',
-        hatDesignNum: String(hatDesignMap.get(hn) || ''), hatExtraText: eh.hat_extra_text || '',
+        hatDesignNum: String(hatDesignMap.get(eh.hat_embroidery_id) || ''), hatExtraText: eh.hat_extra_text || '',
         backText: '', hasLogo: false,
       });
     }
@@ -261,9 +325,10 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     sleeveColor,
     scarfColor,
     hatColor,
+    mainHatFringeColor: order.main_hat_fringe_color,
     logoEmbroideryCount: order.logo_embroidery_enabled ? order.logo_embroidery_count : 0,
     backEmbroideryCount: order.back_embroidery_enabled ? order.back_embroidery_count : 0,
-    hatEmbroideryCount: order.hat_embroidery_enabled ? order.hat_embroidery_count : 0,
+    hatEmbroideryCount: actualHatEmbroideryCount,
     scarves,
     hats: hatGroups,
     students: rows,

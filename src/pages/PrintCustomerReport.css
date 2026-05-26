@@ -1036,6 +1036,21 @@
   overflow: hidden;
 }
 
+.pcr-hat-preview img {
+  display: block;
+  max-width: 70%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pcr-hat-preview-empty {
+  width: 56mm;
+  height: 28mm;
+  max-width: 70%;
+  max-height: 100%;
+}
+
 .pcr-hat-empty-preview {
   width: 56mm;
   height: 28mm;
