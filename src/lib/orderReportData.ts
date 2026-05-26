@@ -31,6 +31,9 @@ export interface ReportHatGroup {
 export interface ReportData {
   orderNumber: string;
   createdAt: string;
+  orderDateFormatted: string;
+  status?: string;
+  statusLabel: string;
   leaderName?: string;
   schoolName?: string;
   orderTypeLabel: string;
@@ -38,10 +41,16 @@ export interface ReportData {
   studentCount?: number;
   extraScarfCount?: number;
   extraHatCount?: number;
+  setQuantity: number;
+  scarfQuantity: number;
+  hatQuantity: number;
   executionDuration?: number;
   abayaColor?: string;
   abayaLength?: string;
+  abayaDesignName?: string;
+  abayaDesignImage?: string;
   sleeveStyleName?: string;
+  sleeveStyleImage?: string;
   sleeveColor?: string;
   scarfColor?: string;
   hatColor?: string;
@@ -57,9 +66,32 @@ export interface ReportData {
   recipientName?: string;
   recipientPhone?: string;
   shippingCity?: string;
+  cityName?: string;
   district?: string;
   addressDetails?: string;
   nationalAddress?: string;
+}
+
+const statusLabels: Record<string, string> = {
+  pending_data: 'بانتظار البيانات',
+  under_review: 'قيد المراجعة',
+  in_progress: 'قيد التنفيذ',
+  shipped: 'تم الشحن',
+  completed: 'مكتمل',
+  cancelled: 'ملغي',
+};
+
+function formatReportDate(value?: string | null) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year} / ${month} / ${day}`;
 }
 
 export async function loadOrderReportData(orderId: string): Promise<ReportData> {
@@ -99,7 +131,11 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
   const scarfColor = isKit ? kit?.scarf_color : order.custom_scarf_color;
   const hatColor = isKit ? kit?.hat_color : order.custom_hat_color;
   const sleeveColor = isKit ? (kit?.sleeve_color || '') : (order.sleeve_color || '');
+  const abayaDesign = isKit ? kit?.abaya_designs : order.abaya_designs;
   const sleeveStyle = isKit ? kit?.sleeve_styles : order.sleeve_styles;
+  const setQuantity = order.student_count || 0;
+  const scarfQuantity = (order.student_count || 0) + (order.extra_scarf_count || 0);
+  const hatQuantity = (order.student_count || 0) + (order.extra_hat_count || 0);
 
   let shippingCityName = '';
   if (order.shipping_city_id) {
@@ -188,7 +224,10 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
 
   return {
     orderNumber: order.order_number || '',
-    createdAt: order.created_at ? new Date(order.created_at).toLocaleDateString('ar-SA') : '',
+    createdAt: order.created_at || '',
+    orderDateFormatted: formatReportDate(order.created_at),
+    status: order.status,
+    statusLabel: statusLabels[order.status] || order.status || '',
     leaderName: order.leader_name,
     schoolName: order.school_name,
     orderTypeLabel: isKit ? 'طقم جاهز' : 'تفصيل',
@@ -196,10 +235,16 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     studentCount: order.student_count || 0,
     extraScarfCount: order.extra_scarf_count || 0,
     extraHatCount: order.extra_hat_count || 0,
+    setQuantity,
+    scarfQuantity,
+    hatQuantity,
     executionDuration: order.execution_duration,
     abayaColor,
     abayaLength: order.abaya_length,
+    abayaDesignName: abayaDesign?.name,
+    abayaDesignImage: abayaDesign?.image_url,
     sleeveStyleName: sleeveStyle?.name,
+    sleeveStyleImage: sleeveStyle?.image_url,
     sleeveColor,
     scarfColor,
     hatColor,
@@ -215,6 +260,7 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     recipientName: order.recipient_name,
     recipientPhone: order.recipient_phone,
     shippingCity: shippingCityName,
+    cityName: shippingCityName,
     district: order.district,
     addressDetails: order.address_details,
     nationalAddress: order.national_address,

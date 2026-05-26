@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -15,6 +15,7 @@ import {
   type LucideIcon,
   UserRound,
 } from 'lucide-react';
+import { loadOrderReportData, type ReportData } from '@/lib/orderReportData';
 import './PrintCustomerReport.css';
 
 type InfoItem = {
@@ -25,6 +26,7 @@ type InfoItem = {
 
 type DetailItem = InfoItem & {
   preview?: 'abaya' | 'sleeve';
+  imageUrl?: string;
 };
 
 type MockScarfDesign = {
@@ -57,26 +59,26 @@ type MockNameRow = {
   hasLogo?: boolean;
 };
 
-const orderInfoRows: InfoItem[] = [
+const mockOrderInfoRows: InfoItem[] = [
   { label: 'رقم الطلب', value: '#12345', icon: FileText },
   { label: 'تاريخ الطلب', value: '24 / 05 / 2026', icon: CalendarDays },
   { label: 'اسم القائدة', value: 'أمل محمد', icon: UserRound },
 ];
 
-const quantityCards: InfoItem[] = [
+const mockQuantityCards: InfoItem[] = [
   { label: 'عدد الأطقم', value: '12', icon: Shirt },
   { label: 'عدد الأوشحة', value: '18', icon: Sparkles },
   { label: 'عدد القبعات', value: '12', icon: GraduationCap },
 ];
 
-const deliveryRows: InfoItem[] = [
+const mockDeliveryRows: InfoItem[] = [
   { label: 'اسم المستلم', value: 'سارة أحمد', icon: UserRound },
   { label: 'رقم الجوال', value: '0501234567', icon: Phone },
   { label: 'المدينة', value: 'الرياض', icon: MapPin },
   { label: 'الحي', value: 'الياسمين', icon: Home },
 ];
 
-const abayaRows: DetailItem[] = [
+const mockAbayaRows: DetailItem[] = [
   { label: 'لون العباية', value: 'اسود', icon: Palette },
   { label: 'طول العباية', value: 'ثابت', icon: Ruler },
   { label: 'تصميم العباية', value: 'اريبة كلوش', icon: Shirt, preview: 'abaya' },
@@ -169,16 +171,100 @@ function displayValue(value?: string | null) {
   return trimmed || '-';
 }
 
+function buildOrderInfoRows(reportData: ReportData | null): InfoItem[] {
+  if (!reportData) return mockOrderInfoRows;
+
+  return [
+    { label: 'رقم الطلب', value: displayValue(reportData.orderNumber), icon: FileText },
+    { label: 'تاريخ الطلب', value: displayValue(reportData.orderDateFormatted), icon: CalendarDays },
+    { label: 'اسم القائدة', value: displayValue(reportData.leaderName), icon: UserRound },
+  ];
+}
+
+function buildDeliveryRows(reportData: ReportData | null): InfoItem[] {
+  if (!reportData) return mockDeliveryRows;
+
+  return [
+    { label: 'اسم المستلم', value: displayValue(reportData.recipientName), icon: UserRound },
+    { label: 'رقم الجوال', value: displayValue(reportData.recipientPhone), icon: Phone },
+    { label: 'المدينة', value: displayValue(reportData.cityName || reportData.shippingCity), icon: MapPin },
+    { label: 'الحي', value: displayValue(reportData.district), icon: Home },
+  ];
+}
+
+function buildQuantityCards(reportData: ReportData | null): InfoItem[] {
+  if (!reportData) return mockQuantityCards;
+
+  return [
+    { label: 'عدد الأطقم', value: String(reportData.setQuantity), icon: Shirt },
+    { label: 'عدد الأوشحة', value: String(reportData.scarfQuantity), icon: Sparkles },
+    { label: 'عدد القبعات', value: String(reportData.hatQuantity), icon: GraduationCap },
+  ].filter(card => Number(card.value) > 0);
+}
+
+function buildAbayaRows(reportData: ReportData | null): DetailItem[] {
+  if (!reportData) return mockAbayaRows;
+
+  return [
+    { label: 'لون العباية', value: displayValue(reportData.abayaColor), icon: Palette },
+    { label: 'طول العباية', value: displayValue(reportData.abayaLength), icon: Ruler },
+    {
+      label: 'تصميم العباية',
+      value: displayValue(reportData.abayaDesignName),
+      icon: Shirt,
+      preview: 'abaya',
+      imageUrl: reportData.abayaDesignImage,
+    },
+    {
+      label: 'طرف الكم',
+      value: displayValue(reportData.sleeveStyleName),
+      icon: Sparkles,
+      preview: 'sleeve',
+      imageUrl: reportData.sleeveStyleImage,
+    },
+    { label: 'لون طرف الكم', value: displayValue(reportData.sleeveColor), icon: Palette },
+  ];
+}
+
 export default function PrintCustomerReport() {
+  const { orderId } = useParams();
   const [params] = useSearchParams();
   const autoPrint = params.get('autoprint') === '1';
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
   const scarfPages = chunkScarfDesigns(mockScarfDesigns);
   const hatPages = chunkHatDesigns(mockHatDesigns);
   const namesPageNumber = scarfPages.length + hatPages.length + 3;
   const thankYouPageNumber = namesPageNumber + 1;
+  const orderInfoRows = useMemo(() => buildOrderInfoRows(reportData), [reportData]);
+  const quantityCards = useMemo(() => buildQuantityCards(reportData), [reportData]);
+  const deliveryRows = useMemo(() => buildDeliveryRows(reportData), [reportData]);
+  const abayaRows = useMemo(() => buildAbayaRows(reportData), [reportData]);
+  const statusLabel = reportData ? displayValue(reportData.statusLabel) : 'قيد التنفيذ';
+
+  useEffect(() => {
+    if (!orderId) return;
+
+    let cancelled = false;
+    setReportError(null);
+
+    loadOrderReportData(orderId)
+      .then(data => {
+        if (!cancelled) setReportData(data);
+      })
+      .catch(error => {
+        console.error('Failed to load customer report data', error);
+        if (!cancelled) setReportError('تعذر تحميل بيانات التقرير');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
 
   useEffect(() => {
     if (!autoPrint) return;
+    if (orderId && !reportData && !reportError) return;
 
     const imgs = Array.from(document.images);
     Promise.all(
@@ -188,7 +274,7 @@ export default function PrintCustomerReport() {
     )
       .then(() => (document as any).fonts?.ready)
       .then(() => setTimeout(() => window.print(), 300));
-  }, [autoPrint]);
+  }, [autoPrint, orderId, reportData, reportError]);
 
   return (
     <div className="pcr-root">
@@ -209,7 +295,7 @@ export default function PrintCustomerReport() {
 
         <section className="pcr-quantities" aria-label="الكميات المطلوبة">
           <RibbonTitle>الكميات المطلوبة</RibbonTitle>
-          <div className="pcr-quantity-grid">
+          <div className={`pcr-quantity-grid pcr-quantity-grid-${quantityCards.length}`}>
             {quantityCards.map(item => (
               <div className="pcr-quantity-card" key={item.label}>
                 <IconBubble>
@@ -233,7 +319,7 @@ export default function PrintCustomerReport() {
 
         <div className="pcr-status-pill">
           <CheckCircle2 />
-          <span>حالة الطلب : قيد التنفيذ</span>
+          <span>حالة الطلب : {statusLabel}</span>
         </div>
       </ReportPage>
 
@@ -646,11 +732,13 @@ function DetailRow({
   value,
   icon: Icon,
   preview,
+  imageUrl,
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
   preview?: 'abaya' | 'sleeve';
+  imageUrl?: string;
 }) {
   return (
     <div className={`pcr-detail-row ${preview ? 'pcr-detail-row-tall' : ''}`}>
@@ -663,7 +751,11 @@ function DetailRow({
       <strong>{value}</strong>
       {preview && (
         <div className="pcr-preview-frame" aria-hidden="true">
-          <div className={`pcr-product-preview pcr-product-preview-${preview}`} />
+          {imageUrl ? (
+            <img className="pcr-product-preview-image" src={imageUrl} alt="" />
+          ) : (
+            <div className={`pcr-product-preview pcr-product-preview-${preview}`} />
+          )}
         </div>
       )}
     </div>
