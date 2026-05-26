@@ -309,7 +309,6 @@ export default function PrintCustomerReport() {
           pageNumber={firstDesignPageNumber + scarfPages.length + pageIndex}
           hats={hats}
           hatColor={reportData?.mainHatFringeColor}
-          embroideryCount={reportData?.hatEmbroideryCount || 0}
         />
       ))}
 
@@ -443,12 +442,10 @@ function HatDesignPage({
   pageNumber,
   hats,
   hatColor,
-  embroideryCount,
 }: {
   pageNumber: number;
   hats: ReportHatGroup[];
   hatColor?: string | null;
-  embroideryCount: number;
 }) {
   return (
     <ReportPage pageNumber={pageNumber}>
@@ -465,10 +462,6 @@ function HatDesignPage({
           <strong>لون القبعة :</strong>
           <span>{displayValue(hatColor)}</span>
         </div>
-        <div className="pcr-hat-summary-item pcr-hat-summary-count">
-          <strong>عدد تطريز القبعات :</strong>
-          <span>{embroideryCount}</span>
-        </div>
       </section>
 
       <section className="pcr-hat-grid" aria-label="تصاميم القبعات">
@@ -481,7 +474,7 @@ function HatDesignPage({
 }
 
 function HatDesignCard({ hat }: { hat: ReportHatGroup }) {
-  const fringeColor = hat.fringes.length > 0 ? hat.fringes.join(' / ') : '-';
+  const fringeColor = hat.fringes[0] || '-';
   const rows: InfoItem[] = [
     { label: 'العدد', value: `${hat.count} قبعات`, icon: Shirt },
     { label: 'لون الهدب', value: fringeColor, icon: Palette },

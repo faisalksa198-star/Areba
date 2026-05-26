@@ -186,6 +186,12 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     return `${uniqueTexts[0]} + ${uniqueTexts.length - 1} أسماء`;
   };
 
+  const formatFringeColor = (value?: string | null) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return '';
+    return trimmed.startsWith('هدب') ? trimmed : `هدب ${trimmed}`;
+  };
+
   const addToGroup = ({
     id,
     name,
@@ -202,7 +208,9 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     customText?: string | null;
   }) => {
     const isNoEmbroidery = !id || !name || name === 'بدون تطريز';
-    const groupKey = isNoEmbroidery ? 'none' : id || '';
+    const formattedFringe = formatFringeColor(fringe);
+    const textKey = hasExtraText ? customText?.trim() || '' : '';
+    const groupKey = `${isNoEmbroidery ? 'none' : id || ''}|${formattedFringe}|${textKey}`;
     const displayName = isNoEmbroidery ? 'بدون تطريز' : name;
     const idx = groupMap.get(groupKey);
 
@@ -214,7 +222,7 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
 
     if (idx !== undefined) {
       hatGroups[idx].count++;
-      if (fringe && !hatGroups[idx].fringes.includes(fringe)) hatGroups[idx].fringes.push(fringe);
+      if (formattedFringe && !hatGroups[idx].fringes.includes(formattedFringe)) hatGroups[idx].fringes.push(formattedFringe);
       if (hasExtraText && customText?.trim()) {
         const group = hatGroups[idx] as ReportHatGroup & { customTexts?: string[] };
         group.customTexts = [...(group.customTexts || []), customText];
@@ -228,7 +236,7 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
         name: displayName,
         image: isNoEmbroidery ? '' : image || '',
         count: 1,
-        fringes: fringe ? [fringe] : [],
+        fringes: formattedFringe ? [formattedFringe] : [],
         hasEmbroidery: !isNoEmbroidery,
         hasExtraText: Boolean(hasExtraText),
         customText: formatCustomText(customTexts),
@@ -325,7 +333,7 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     sleeveColor,
     scarfColor,
     hatColor,
-    mainHatFringeColor: order.main_hat_fringe_color,
+    mainHatFringeColor: formatFringeColor(order.main_hat_fringe_color),
     logoEmbroideryCount: order.logo_embroidery_enabled ? order.logo_embroidery_count : 0,
     backEmbroideryCount: order.back_embroidery_enabled ? order.back_embroidery_count : 0,
     hatEmbroideryCount: actualHatEmbroideryCount,

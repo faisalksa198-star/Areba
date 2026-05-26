@@ -940,9 +940,8 @@
   border: 0.35mm solid var(--pcr-line);
   border-radius: 3mm;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   align-items: center;
-  gap: 6mm;
   padding: 3mm 7mm;
   background: rgba(255, 255, 255, 0.84);
   direction: rtl;
@@ -952,6 +951,7 @@
   min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2.2mm;
   color: var(--pcr-ink);
   font-size: 4.8mm;
@@ -974,18 +974,6 @@
   color: var(--pcr-purple);
   font-size: 5.1mm;
   font-weight: 800;
-}
-
-.pcr-hat-summary-count {
-  padding-right: 7mm;
-}
-
-.pcr-hat-summary-count::before {
-  content: "";
-  width: 1.6mm;
-  height: 1.6mm;
-  border-radius: 50%;
-  background: var(--pcr-purple);
 }
 
 .pcr-hat-grid {
