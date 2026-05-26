@@ -41,6 +41,9 @@ export interface ReportData {
   studentCount?: number;
   extraScarfCount?: number;
   extraHatCount?: number;
+  includesSets: boolean;
+  includesScarves: boolean;
+  includesHats: boolean;
   setQuantity: number;
   scarfQuantity: number;
   hatQuantity: number;
@@ -133,9 +136,9 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
   const sleeveColor = isKit ? (kit?.sleeve_color || '') : (order.sleeve_color || '');
   const abayaDesign = isKit ? kit?.abaya_designs : order.abaya_designs;
   const sleeveStyle = isKit ? kit?.sleeve_styles : order.sleeve_styles;
-  const setQuantity = order.student_count || 0;
-  const scarfQuantity = (order.student_count || 0) + (order.extra_scarf_count || 0);
-  const hatQuantity = (order.student_count || 0) + (order.extra_hat_count || 0);
+  const studentCount = order.student_count || 0;
+  const extraScarfCount = order.extra_scarf_count || 0;
+  const extraHatCount = order.extra_hat_count || 0;
 
   let shippingCityName = '';
   if (order.shipping_city_id) {
@@ -159,6 +162,36 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
       dateImage: sd.date_types?.image_url || '',
     });
   });
+
+  const validScarfDesignCount = scarfDesigns.filter(sd =>
+    sd.scarf_style_id ||
+    sd.scarf_method_id ||
+    sd.date_type_id ||
+    sd.embroidery_direction_id ||
+    sd.font_id ||
+    sd.embroidery_color
+  ).length;
+  const studentScarfCount = students.filter((s: any) => s.scarf_design_id).length;
+  const studentHatCount = students.filter((s: any) => s.hat_embroidery_id).length;
+  const includesSets = studentCount > 0 && order.order_type !== 'scarf_only' && order.order_type !== 'hat_only';
+  const includesScarves =
+    order.order_type === 'scarf_only' ||
+    extraScarfCount > 0 ||
+    studentScarfCount > 0 ||
+    extraScarves.length > 0 ||
+    validScarfDesignCount > 0;
+  const includesHats =
+    order.order_type === 'hat_only' ||
+    extraHatCount > 0 ||
+    studentHatCount > 0 ||
+    extraHats.length > 0;
+  const setQuantity = includesSets ? studentCount : 0;
+  const scarfQuantity = includesScarves
+    ? (studentScarfCount > 0 ? studentScarfCount : (validScarfDesignCount > 0 ? studentCount : 0)) + extraScarfCount
+    : 0;
+  const hatQuantity = includesHats
+    ? (studentHatCount > 0 ? studentHatCount : (order.order_type === 'hat_only' ? studentCount : 0)) + extraHatCount
+    : 0;
 
   const hatDesignMap = new Map<string, number>();
   const hatGroups: ReportHatGroup[] = [];
@@ -232,9 +265,12 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     schoolName: order.school_name,
     orderTypeLabel: isKit ? 'طقم جاهز' : 'تفصيل',
     kitName: isKit ? kit?.name : undefined,
-    studentCount: order.student_count || 0,
-    extraScarfCount: order.extra_scarf_count || 0,
-    extraHatCount: order.extra_hat_count || 0,
+    studentCount,
+    extraScarfCount,
+    extraHatCount,
+    includesSets,
+    includesScarves,
+    includesHats,
     setQuantity,
     scarfQuantity,
     hatQuantity,

@@ -27,6 +27,7 @@ type InfoItem = {
 type DetailItem = InfoItem & {
   preview?: 'abaya' | 'sleeve';
   imageUrl?: string;
+  showFallbackPreview?: boolean;
 };
 
 type MockScarfDesign = {
@@ -81,8 +82,8 @@ const mockDeliveryRows: InfoItem[] = [
 const mockAbayaRows: DetailItem[] = [
   { label: 'لون العباية', value: 'اسود', icon: Palette },
   { label: 'طول العباية', value: 'ثابت', icon: Ruler },
-  { label: 'تصميم العباية', value: 'اريبة كلوش', icon: Shirt, preview: 'abaya' },
-  { label: 'طرف الكم', value: 'عريض مع قيطان', icon: Sparkles, preview: 'sleeve' },
+  { label: 'تصميم العباية', value: 'اريبة كلوش', icon: Shirt, preview: 'abaya', showFallbackPreview: true },
+  { label: 'طرف الكم', value: 'عريض مع قيطان', icon: Sparkles, preview: 'sleeve', showFallbackPreview: true },
   { label: 'لون طرف الكم', value: 'مخمل اسود', icon: Palette },
 ];
 
@@ -733,12 +734,14 @@ function DetailRow({
   icon: Icon,
   preview,
   imageUrl,
+  showFallbackPreview = false,
 }: {
   label: string;
   value: string;
   icon: LucideIcon;
   preview?: 'abaya' | 'sleeve';
   imageUrl?: string;
+  showFallbackPreview?: boolean;
 }) {
   return (
     <div className={`pcr-detail-row ${preview ? 'pcr-detail-row-tall' : ''}`}>
@@ -753,8 +756,10 @@ function DetailRow({
         <div className="pcr-preview-frame" aria-hidden="true">
           {imageUrl ? (
             <img className="pcr-product-preview-image" src={imageUrl} alt="" />
-          ) : (
+          ) : showFallbackPreview ? (
             <div className={`pcr-product-preview pcr-product-preview-${preview}`} />
+          ) : (
+            <div className="pcr-product-preview-empty" />
           )}
         </div>
       )}
