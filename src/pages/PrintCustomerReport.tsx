@@ -47,6 +47,16 @@ type MockHatDesign = {
   embroideryName?: string;
 };
 
+type MockNameRow = {
+  index: number;
+  name: string;
+  size: string;
+  scarf: string;
+  hat: string;
+  backText?: string;
+  hasLogo?: boolean;
+};
+
 const orderInfoRows: InfoItem[] = [
   { label: 'رقم الطلب', value: '#12345', icon: FileText },
   { label: 'تاريخ الطلب', value: '24 / 05 / 2026', icon: CalendarDays },
@@ -139,6 +149,21 @@ function chunkHatDesigns(hats: MockHatDesign[]) {
   return pages;
 }
 
+const mockNameRows: MockNameRow[] = [
+  { index: 1, name: 'يارا فيصل المطيري', size: '48', scarf: '1', hat: '1' },
+  { index: 2, name: 'دانه المطيري', size: '50', scarf: '2', hat: '1', backText: 'حققت حلمي لأجل زهر' },
+  { index: 3, name: 'دالين نواف', size: '52', scarf: '4', hat: '3', hasLogo: true },
+  { index: 4, name: 'تالا ساير', size: '54', scarf: '1', hat: '2' },
+  { index: 5, name: 'ملك عبدالله الشلاحي', size: '56', scarf: '1', hat: '4' },
+  { index: 6, name: 'يارا فيصل المطيري', size: '48', scarf: '1', hat: '1' },
+  { index: 7, name: 'دانه المطيري', size: '50', scarf: '2', hat: '1', backText: 'حققت حلمي لأجل زهر' },
+  { index: 8, name: 'دالين نواف', size: '52', scarf: '4', hat: '3', hasLogo: true },
+  { index: 9, name: 'تالا ساير', size: '54', scarf: '1', hat: '2' },
+  { index: 10, name: 'ملك عبدالله الشلاحي', size: '56', scarf: '1', hat: '4' },
+  { index: 11, name: 'يارا فيصل المطيري', size: '48', scarf: '1', hat: '1' },
+  { index: 12, name: 'دانه المطيري', size: '50', scarf: '2', hat: '1', backText: 'حققت حلمي لأجل زهر' },
+];
+
 function displayValue(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed || '-';
@@ -149,6 +174,8 @@ export default function PrintCustomerReport() {
   const autoPrint = params.get('autoprint') === '1';
   const scarfPages = chunkScarfDesigns(mockScarfDesigns);
   const hatPages = chunkHatDesigns(mockHatDesigns);
+  const namesPageNumber = scarfPages.length + hatPages.length + 3;
+  const thankYouPageNumber = namesPageNumber + 1;
 
   useEffect(() => {
     if (!autoPrint) return;
@@ -241,6 +268,9 @@ export default function PrintCustomerReport() {
           hats={hats}
         />
       ))}
+
+      <NameListPage pageNumber={namesPageNumber} rows={mockNameRows} />
+      <ThankYouPage pageNumber={thankYouPageNumber} />
 
       <div className="pcr-print-bar">
         <button onClick={() => window.print()}>طباعة / حفظ PDF</button>
@@ -452,17 +482,99 @@ function HatDesignCard({ hat }: { hat: MockHatDesign }) {
   );
 }
 
+function NameListPage({
+  pageNumber,
+  rows,
+}: {
+  pageNumber: number;
+  rows: MockNameRow[];
+}) {
+  return (
+    <ReportPage pageNumber={pageNumber}>
+      <header className="pcr-page-two-header pcr-names-page-header">
+        <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+        <DecoratedTitle>قائمة الأسماء</DecoratedTitle>
+      </header>
+
+      <section className="pcr-names-table-wrap" aria-label="قائمة الأسماء">
+        <table className="pcr-names-table">
+          <colgroup>
+            <col className="pcr-col-index" />
+            <col className="pcr-col-name" />
+            <col className="pcr-col-size" />
+            <col className="pcr-col-scarf" />
+            <col className="pcr-col-hat" />
+            <col className="pcr-col-back" />
+            <col className="pcr-col-logo" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الاسم</th>
+              <th>المقاس</th>
+              <th>الوشاح</th>
+              <th>القبعة</th>
+              <th>عبارة التطريز في الخلف</th>
+              <th>يوجد شعار ؟</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => (
+              <tr key={row.index}>
+                <td className="pcr-name-index">{row.index}</td>
+                <td className="pcr-name-cell">{row.name}</td>
+                <td className="pcr-size-cell">{row.size}</td>
+                <td><span className="pcr-table-badge">{row.scarf}</span></td>
+                <td><span className="pcr-table-badge">{row.hat}</span></td>
+                <td className="pcr-back-text">{row.backText || ''}</td>
+                <td>
+                  {row.hasLogo && (
+                    <span className="pcr-logo-check">
+                      <CheckCircle2 />
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    </ReportPage>
+  );
+}
+
+function ThankYouPage({ pageNumber }: { pageNumber: number }) {
+  return (
+    <ReportPage pageNumber={pageNumber} className="pcr-thanks-page">
+      <header className="pcr-thanks-header">
+        <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+      </header>
+
+      <section className="pcr-thanks-content" aria-label="شكراً لكم">
+        <DecoratedTitle>شكراً لكم</DecoratedTitle>
+        <p>
+          نشكركم على ثقتكم بمتجر Areba
+          <br />
+          ونسعد بخدمتكم دائماً
+        </p>
+      </section>
+    </ReportPage>
+  );
+}
+
 function ReportPage({
   children,
   pageNumber,
   footerLabel,
+  className,
 }: {
   children: ReactNode;
   pageNumber: number;
   footerLabel?: string;
+  className?: string;
 }) {
   return (
-    <section className={`pcr-page pcr-page-${pageNumber}`}>
+    <section className={`pcr-page pcr-page-${pageNumber}${className ? ` ${className}` : ''}`}>
       <Decorations />
       <main className="pcr-page-content">{children}</main>
       <Footer pageNumber={pageNumber} label={footerLabel} />
