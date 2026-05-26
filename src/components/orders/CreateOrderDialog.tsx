@@ -101,6 +101,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   const [hatEmbroideryEnabled, setHatEmbroideryEnabled] = useState(false);
   const [hatEmbroideryCount, setHatEmbroideryCount] = useState('');
   const [mainHatFringeColor, setMainHatFringeColor] = useState('');
+  const [mainHatFringeError, setMainHatFringeError] = useState('');
   const [purplePackageEnabled, setPurplePackageEnabled] = useState(false);
   const [purplePackageCount, setPurplePackageCount] = useState('');
 
@@ -131,6 +132,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
   useEffect(() => {
     if ((parseInt(studentCount) || 0) === 0) {
       setMainHatFringeColor('');
+      setMainHatFringeError('');
     }
   }, [studentCount]);
 
@@ -200,6 +202,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
       setHatEmbroideryEnabled(o.hat_embroidery_enabled || false);
       setHatEmbroideryCount(o.hat_embroidery_count ? String(o.hat_embroidery_count) : '');
       setMainHatFringeColor(o.main_hat_fringe_color || '');
+      setMainHatFringeError('');
       setPurplePackageEnabled(o.purple_package_enabled || false);
       setPurplePackageCount(o.purple_package_count ? String(o.purple_package_count) : '');
     }
@@ -255,6 +258,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setHatEmbroideryEnabled(false);
     setHatEmbroideryCount('');
     setMainHatFringeColor('');
+    setMainHatFringeError('');
     setPurplePackageEnabled(false);
     setPurplePackageCount('');
   };
@@ -324,9 +328,12 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setPhoneError('');
 
     if (includesMainHats && !mainHatFringeColor) {
-      toast({ title: 'يجب اختيار لون هدب القبعات', variant: 'destructive' });
+      const message = 'الرجاء اختيار لون هدب القبعات';
+      setMainHatFringeError(message);
+      toast({ title: message, variant: 'destructive' });
       return;
     }
+    setMainHatFringeError('');
 
     setSaving(true);
     try {
@@ -774,34 +781,41 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
             </div>
 
             {/* Hat Designs Section */}
-            {hasMainHats && (
-              <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
-                <p className="text-sm font-semibold text-foreground">تصاميم القبعات</p>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1.5 block">لون هدب القبعات</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { value: 'فضي', label: 'هدب فضي' },
-                      { value: 'ذهبي', label: 'هدب ذهبي' },
-                    ].map(option => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setMainHatFringeColor(option.value)}
-                        className={`h-10 rounded-lg border text-sm font-medium transition-colors ${
-                          mainHatFringeColor === option.value
-                            ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                            : 'bg-background text-foreground border-border hover:bg-accent/10'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">هذا اللون يطبق على القبعات الأساسية داخل الأطقم.</p>
+            <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+              <p className="text-sm font-semibold text-foreground">تصاميم القبعات</p>
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">لون هدب القبعات</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'فضي', label: 'هدب فضي' },
+                    { value: 'ذهبي', label: 'هدب ذهبي' },
+                  ].map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      disabled={!hasMainHats}
+                      onClick={() => {
+                        setMainHatFringeColor(option.value);
+                        setMainHatFringeError('');
+                      }}
+                      className={`h-10 rounded-lg border text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        mainHatFringeColor === option.value
+                          ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                          : 'bg-background text-foreground border-border hover:bg-accent/10'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
                 </div>
+                {mainHatFringeError && (
+                  <p className="text-xs text-destructive mt-1">{mainHatFringeError}</p>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {hasMainHats ? 'هذا اللون يطبق على القبعات الأساسية داخل الأطقم.' : 'فعّل عدد الأطقم لاختيار لون هدب القبعات الأساسية.'}
+                </p>
               </div>
-            )}
+            </div>
 
             {/* Extra Services */}
             <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
