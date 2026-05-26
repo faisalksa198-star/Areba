@@ -129,13 +129,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     loadEditData();
   }, [open, editOrderId]);
 
-  useEffect(() => {
-    if ((parseInt(studentCount) || 0) === 0) {
-      setMainHatFringeColor('');
-      setMainHatFringeError('');
-    }
-  }, [studentCount]);
-
   const loadMasterData = async () => {
     const [kitsR, abayaR, sleeveR, scarfSR, scarfMR, dateR, embR, fontR, hatEmbR] = await Promise.all([
       supabase.from('ready_kits').select('*').eq('is_active', true),
@@ -305,8 +298,6 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
     setScarfDesigns(prev => prev.map(s => s.localId === localId ? { ...s, [field]: value } : s));
   };
 
-  const hasMainHats = (parseInt(studentCount) || 0) > 0;
-
   const handleSubmit = async () => {
     const sc = parseInt(studentCount) || 0;
     const esc = parseInt(extraScarfCount) || 0;
@@ -404,7 +395,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
         back_embroidery_image_urls: backEmbroideryEnabled ? backImageUrls : [],
         hat_embroidery_enabled: hatEmbroideryEnabled,
         hat_embroidery_count: hatEmbroideryEnabled ? (parseInt(hatEmbroideryCount) || 0) : 0,
-        main_hat_fringe_color: includesMainHats ? mainHatFringeColor : null,
+        main_hat_fringe_color: mainHatFringeColor || null,
         purple_package_enabled: purplePackageEnabled,
         purple_package_count: purplePackageEnabled ? Math.min(parseInt(purplePackageCount) || 0, sc) : 0,
       };
@@ -793,12 +784,11 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                     <button
                       key={option.value}
                       type="button"
-                      disabled={!hasMainHats}
                       onClick={() => {
                         setMainHatFringeColor(option.value);
                         setMainHatFringeError('');
                       }}
-                      className={`h-10 rounded-lg border text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`h-10 rounded-lg border text-sm font-medium transition-colors ${
                         mainHatFringeColor === option.value
                           ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                           : 'bg-background text-foreground border-border hover:bg-accent/10'
@@ -811,9 +801,7 @@ export default function CreateOrderDialog({ open, onOpenChange, userId, onCreate
                 {mainHatFringeError && (
                   <p className="text-xs text-destructive mt-1">{mainHatFringeError}</p>
                 )}
-                <p className="text-[10px] text-muted-foreground mt-1">
-                  {hasMainHats ? 'هذا اللون يطبق على القبعات الأساسية داخل الأطقم.' : 'فعّل عدد الأطقم لاختيار لون هدب القبعات الأساسية.'}
-                </p>
+                <p className="text-[10px] text-muted-foreground mt-1">سيتم استخدام هذا اللون للقبعات الأساسية في الطلب</p>
               </div>
             </div>
 
