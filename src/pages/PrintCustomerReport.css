@@ -990,16 +990,20 @@
 }
 
 .pcr-hat-preview {
-  height: 36mm;
+  height: 31mm;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3.4mm;
+  margin-top: 3.2mm;
+  margin-bottom: 3mm;
+  overflow: hidden;
 }
 
 .pcr-hat-empty-preview {
-  width: 58mm;
-  height: 34mm;
+  width: 56mm;
+  height: 28mm;
+  max-width: 70%;
+  max-height: 100%;
   border: 0.35mm dashed rgba(88, 26, 128, 0.32);
   border-radius: 3mm;
   display: flex;
@@ -1014,8 +1018,10 @@
 
 .pcr-hat-preview-diamond {
   position: relative;
-  width: 33mm;
-  height: 33mm;
+  width: 23mm;
+  height: 23mm;
+  max-width: 70%;
+  max-height: 100%;
   transform: rotate(45deg);
   display: flex;
   align-items: center;
@@ -1031,7 +1037,7 @@
 .pcr-hat-preview-diamond b {
   color: #111827;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 5mm;
+  font-size: 4mm;
   font-style: italic;
   font-weight: 500;
   line-height: 1;
@@ -1039,10 +1045,10 @@
 
 .pcr-hat-wings {
   position: absolute;
-  bottom: 7.4mm;
+  bottom: 4.8mm;
   left: 50%;
-  width: 26mm;
-  height: 8mm;
+  width: 18mm;
+  height: 6mm;
   transform: translateX(-50%) rotate(-45deg);
 }
 
@@ -1050,11 +1056,11 @@
 .pcr-hat-wings::after {
   content: "";
   position: absolute;
-  top: 1mm;
-  width: 12mm;
-  height: 6mm;
-  border-top: 1.1mm solid #111827;
-  border-bottom: 1.1mm solid #111827;
+  top: 0.8mm;
+  width: 8.4mm;
+  height: 4.2mm;
+  border-top: 0.8mm solid #111827;
+  border-bottom: 0.8mm solid #111827;
   transform: skewY(-22deg);
 }
 
@@ -1070,29 +1076,29 @@
 }
 
 .pcr-hat-preview-stars {
-  width: 32mm;
-  height: 32mm;
+  width: 23mm;
+  height: 23mm;
 }
 
 .pcr-hat-preview-stars b {
-  font-size: 4.6mm;
+  font-size: 3.8mm;
 }
 
 .pcr-hat-stars {
   position: absolute;
-  top: 5.5mm;
-  left: 5mm;
+  top: 3.8mm;
+  left: 3.2mm;
   color: #111827;
-  font-size: 3.1mm;
-  letter-spacing: 2mm;
+  font-size: 2.5mm;
+  letter-spacing: 1.2mm;
 }
 
 .pcr-hat-star-large {
   position: absolute;
-  bottom: 5.5mm;
-  right: 9mm;
+  bottom: 3.5mm;
+  right: 6.5mm;
   color: #111827;
-  font-size: 5.4mm;
+  font-size: 4.2mm;
 }
 
 .pcr-hat-table {
