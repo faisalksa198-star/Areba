@@ -29,6 +29,20 @@
   font-family: 'Tajawal', 'Cairo', Arial, sans-serif;
 }
 
+.pcr-loading,
+.pcr-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  direction: rtl;
+  background: #f4eef8;
+  color: var(--pcr-purple);
+  font-family: 'Tajawal', 'Cairo', Arial, sans-serif;
+  font-size: 6mm;
+  font-weight: 800;
+}
+
 .pcr-page {
   position: relative;
   width: 210mm;
@@ -673,6 +687,210 @@
 .pcr-page-number {
   justify-content: flex-start;
   color: var(--pcr-purple);
+}
+
+.pcr-scarf-page-header .pcr-title-block h1 {
+  font-size: 11.4mm;
+}
+
+.pcr-scarf-summary {
+  height: 24mm;
+  margin-top: 7mm;
+  border: 0.35mm solid var(--pcr-line);
+  border-radius: 3mm;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 6mm;
+  padding: 3mm 7mm;
+  background: rgba(255, 255, 255, 0.84);
+  direction: rtl;
+}
+
+.pcr-scarf-summary-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 2.2mm;
+  color: var(--pcr-ink);
+  font-size: 4.7mm;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.pcr-scarf-summary-item .pcr-icon-bubble {
+  flex: 0 0 auto;
+  width: 11.2mm;
+  height: 11.2mm;
+}
+
+.pcr-scarf-summary-item .pcr-icon-bubble svg {
+  width: 6mm;
+  height: 6mm;
+}
+
+.pcr-scarf-summary-item strong {
+  color: var(--pcr-purple);
+  font-size: 5.1mm;
+  font-weight: 800;
+}
+
+.pcr-scarf-summary-color {
+  justify-content: flex-start;
+}
+
+.pcr-scarf-summary-services {
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 3mm;
+}
+
+.pcr-scarf-summary-services ul {
+  margin: 0;
+  padding: 0 4mm 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1mm;
+  list-style: disc;
+  white-space: nowrap;
+}
+
+.pcr-scarf-summary-services li::marker {
+  color: var(--pcr-purple);
+}
+
+.pcr-scarf-summary-services li {
+  padding-right: 0.5mm;
+  font-size: 4.3mm;
+}
+
+.pcr-scarf-summary-services b {
+  margin-right: 2mm;
+  color: var(--pcr-purple);
+  font-weight: 800;
+}
+
+.pcr-scarf-grid {
+  margin-top: 6mm;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 74mm;
+  gap: 5mm;
+  direction: rtl;
+}
+
+.pcr-scarf-card {
+  position: relative;
+  overflow: hidden;
+  height: 74mm;
+  border: 0.35mm solid var(--pcr-line);
+  border-radius: 3mm;
+  padding: 10mm 3mm 3.2mm;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.pcr-scarf-card-pill {
+  position: absolute;
+  top: 2.2mm;
+  left: 50%;
+  width: 37mm;
+  height: 8mm;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, rgba(231, 216, 237, 0.75), #eadcf1);
+  color: var(--pcr-purple);
+  font-size: 5.1mm;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.pcr-scarf-preview {
+  height: 25mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2.6mm;
+}
+
+.pcr-scarf-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.pcr-scarf-preview-placeholder {
+  position: relative;
+  width: 48mm;
+  height: 24mm;
+}
+
+.pcr-scarf-preview-placeholder span {
+  position: absolute;
+  top: 1mm;
+  width: 15mm;
+  height: 23mm;
+  background: linear-gradient(135deg, #b994ca, #7c4aa0);
+  border: 0.35mm solid #3d1b54;
+  clip-path: polygon(0 0, 50% 16%, 100% 0, 100% 100%, 52% 82%, 0 100%);
+}
+
+.pcr-scarf-preview-placeholder span:first-child {
+  right: 7mm;
+}
+
+.pcr-scarf-preview-placeholder span:last-child {
+  left: 7mm;
+}
+
+.pcr-scarf-table {
+  overflow: hidden;
+  border: 0.25mm solid var(--pcr-line-soft);
+  border-radius: 2.4mm;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.pcr-scarf-table-row {
+  min-height: 5.65mm;
+  display: grid;
+  grid-template-columns: 7mm 23mm minmax(0, 1fr);
+  align-items: center;
+  border-bottom: 0.25mm solid var(--pcr-line-soft);
+  color: var(--pcr-ink);
+  font-size: 3.45mm;
+  line-height: 1.15;
+}
+
+.pcr-scarf-table-row:last-child {
+  border-bottom: 0;
+}
+
+.pcr-scarf-table-row svg {
+  justify-self: center;
+  width: 4.6mm;
+  height: 4.6mm;
+  color: var(--pcr-purple);
+  stroke-width: 1.7;
+}
+
+.pcr-scarf-table-row strong {
+  color: var(--pcr-purple);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pcr-scarf-table-row span {
+  min-width: 0;
+  padding: 0 2mm 0 1mm;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pcr-print-bar {

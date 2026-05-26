@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -15,6 +15,11 @@ import {
   type LucideIcon,
   UserRound,
 } from 'lucide-react';
+import {
+  loadOrderReportData,
+  type ReportData,
+  type ReportScarfDesign,
+} from '@/lib/orderReportData';
 import './PrintCustomerReport.css';
 
 type InfoItem = {
@@ -54,12 +59,59 @@ const abayaRows: DetailItem[] = [
   { label: 'لون طرف الكم', value: 'مخمل اسود', icon: Palette },
 ];
 
+const SCARFS_PER_PAGE = 4;
+
+function chunkScarfDesigns(scarves: ReportScarfDesign[]) {
+  const pages: ReportScarfDesign[][] = [];
+
+  for (let index = 0; index < scarves.length; index += SCARFS_PER_PAGE) {
+    pages.push(scarves.slice(index, index + SCARFS_PER_PAGE));
+  }
+
+  return pages;
+}
+
+function displayValue(value?: string | null) {
+  const trimmed = value?.trim();
+  return trimmed || '-';
+}
+
 export default function PrintCustomerReport() {
+  const { orderId } = useParams<{ orderId: string }>();
   const [params] = useSearchParams();
   const autoPrint = params.get('autoprint') === '1';
+  const [reportData, setReportData] = useState<ReportData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!autoPrint) return;
+    if (!orderId) {
+      setLoadError('تعذر العثور على رقم الطلب.');
+      return;
+    }
+
+    let isMounted = true;
+
+    loadOrderReportData(orderId)
+      .then(data => {
+        if (isMounted) {
+          setReportData(data);
+          setLoadError(null);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to load customer report data', error);
+        if (isMounted) {
+          setLoadError('تعذر تحميل بيانات التقرير.');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!autoPrint || !reportData) return;
 
     const imgs = Array.from(document.images);
     Promise.all(
@@ -69,7 +121,17 @@ export default function PrintCustomerReport() {
     )
       .then(() => (document as any).fonts?.ready)
       .then(() => setTimeout(() => window.print(), 300));
-  }, [autoPrint]);
+  }, [autoPrint, reportData]);
+
+  if (loadError) {
+    return <div className="pcr-error">{loadError}</div>;
+  }
+
+  if (!reportData) {
+    return <div className="pcr-loading">جاري تحميل التقرير...</div>;
+  }
+
+  const scarfPages = chunkScarfDesigns(reportData.scarves);
 
   return (
     <div className="pcr-root">
@@ -131,10 +193,139 @@ export default function PrintCustomerReport() {
         </section>
       </ReportPage>
 
+      {scarfPages.map((scarves, pageIndex) => (
+        <ScarfDesignPage
+          key={pageIndex}
+          pageNumber={pageIndex + 3}
+          scarves={scarves}
+          scarfColor={reportData.scarfColor}
+          backEmbroideryCount={reportData.backEmbroideryCount}
+          logoEmbroideryCount={reportData.logoEmbroideryCount}
+        />
+      ))}
+
       <div className="pcr-print-bar">
         <button onClick={() => window.print()}>طباعة / حفظ PDF</button>
       </div>
     </div>
+  );
+}
+
+function ScarfDesignPage({
+  pageNumber,
+  scarves,
+  scarfColor,
+  backEmbroideryCount,
+  logoEmbroideryCount,
+}: {
+  pageNumber: number;
+  scarves: ReportScarfDesign[];
+  scarfColor?: string | null;
+  backEmbroideryCount?: number;
+  logoEmbroideryCount?: number;
+}) {
+  return (
+    <ReportPage pageNumber={pageNumber}>
+      <header className="pcr-page-two-header pcr-scarf-page-header">
+        <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+        <DecoratedTitle>تصاميم الأوشحة</DecoratedTitle>
+      </header>
+
+      <ScarfSummaryCard
+        scarfColor={scarfColor}
+        backEmbroideryCount={backEmbroideryCount}
+        logoEmbroideryCount={logoEmbroideryCount}
+      />
+
+      <section className="pcr-scarf-grid" aria-label="تصاميم الأوشحة">
+        {scarves.map(scarf => (
+          <ScarfDesignCard key={scarf.index} scarf={scarf} />
+        ))}
+      </section>
+    </ReportPage>
+  );
+}
+
+function ScarfSummaryCard({
+  scarfColor,
+  backEmbroideryCount = 0,
+  logoEmbroideryCount = 0,
+}: {
+  scarfColor?: string | null;
+  backEmbroideryCount?: number;
+  logoEmbroideryCount?: number;
+}) {
+  const services = [
+    backEmbroideryCount > 0
+      ? { label: 'تطريز في الخلف', quantity: backEmbroideryCount }
+      : null,
+    logoEmbroideryCount > 0
+      ? { label: 'شعار', quantity: logoEmbroideryCount }
+      : null,
+  ].filter(Boolean) as { label: string; quantity: number }[];
+
+  return (
+    <section className="pcr-scarf-summary" aria-label="ملخص الأوشحة">
+      <div className="pcr-scarf-summary-item pcr-scarf-summary-color">
+        <IconBubble>
+          <Palette />
+        </IconBubble>
+        <strong>لون الوشاح :</strong>
+        <span>{displayValue(scarfColor)}</span>
+      </div>
+
+      {services.length > 0 && (
+        <div className="pcr-scarf-summary-item pcr-scarf-summary-services">
+          <strong>خدمات التطريز :</strong>
+          <ul>
+            {services.map(service => (
+              <li key={service.label}>
+                <span>{service.label}</span>
+                <b>{service.quantity}</b>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ScarfDesignCard({ scarf }: { scarf: ReportScarfDesign }) {
+  const rows: InfoItem[] = [
+    { label: 'التصميم', value: displayValue(scarf.methodName), icon: FileText },
+    { label: 'التاريخ', value: displayValue(scarf.dateName), icon: CalendarDays },
+    { label: 'طرف الوشاح', value: displayValue(scarf.styleName), icon: Sparkles },
+    { label: 'اتجاه التطريز', value: displayValue(scarf.embroideryDirection), icon: Ruler },
+    { label: 'الخط', value: displayValue(scarf.fontName), icon: Shirt },
+    { label: 'لون التطريز', value: displayValue(scarf.embroideryColor), icon: Palette },
+  ];
+
+  return (
+    <article className="pcr-scarf-card">
+      <div className="pcr-scarf-card-pill">وشاح {scarf.index}</div>
+
+      <div className="pcr-scarf-preview" aria-hidden="true">
+        {scarf.styleImage ? (
+          <img src={scarf.styleImage} alt="" />
+        ) : (
+          <div className="pcr-scarf-preview-placeholder">
+            <span />
+            <span />
+          </div>
+        )}
+      </div>
+
+      <div className="pcr-scarf-table">
+        {rows.map(row => (
+          <div className="pcr-scarf-table-row" key={row.label}>
+            <row.icon />
+            <strong>{row.label} :</strong>
+            <span>{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }
 
