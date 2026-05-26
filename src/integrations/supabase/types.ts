@@ -557,7 +557,6 @@ export type Database = {
           logo_embroidery_count: number | null
           logo_embroidery_enabled: boolean | null
           logo_embroidery_image_url: string | null
-          main_hat_fringe_color: string | null
           national_address: string | null
           notes: string | null
           order_number: string
@@ -610,7 +609,6 @@ export type Database = {
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
           logo_embroidery_image_url?: string | null
-          main_hat_fringe_color?: string | null
           national_address?: string | null
           notes?: string | null
           order_number: string
@@ -663,7 +661,6 @@ export type Database = {
           logo_embroidery_count?: number | null
           logo_embroidery_enabled?: boolean | null
           logo_embroidery_image_url?: string | null
-          main_hat_fringe_color?: string | null
           national_address?: string | null
           notes?: string | null
           order_number?: string
