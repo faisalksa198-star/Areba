@@ -438,9 +438,9 @@ function ScarfSummaryCard({
 
 function ScarfDesignCard({ scarf }: { scarf: ReportScarfDesign }) {
   const rows: InfoItem[] = [
-    { label: 'التصميم', value: displayValue(scarf.methodName), icon: FileText },
+    { label: 'التصميم', value: displayValue(scarf.styleName), icon: FileText },
     { label: 'التاريخ', value: displayValue(scarf.dateName), icon: CalendarDays },
-    { label: 'طرف الوشاح', value: displayValue(scarf.styleName), icon: Sparkles },
+    { label: 'طرف الوشاح', value: displayValue(scarf.methodName), icon: Sparkles },
     { label: 'اتجاه التطريز', value: displayValue(scarf.embroideryDirection), icon: Ruler },
     { label: 'الخط', value: displayValue(scarf.fontName), icon: Shirt },
     { label: 'لون التطريز', value: displayValue(scarf.embroideryColor), icon: Palette },
@@ -451,11 +451,12 @@ function ScarfDesignCard({ scarf }: { scarf: ReportScarfDesign }) {
       <div className="pcr-scarf-card-pill">وشاح {scarf.index}</div>
 
       <div className="pcr-scarf-preview" aria-hidden="true">
-        {scarf.styleImage ? (
-          <img src={scarf.styleImage} alt="" />
-        ) : (
-          <div className="pcr-scarf-preview-empty" />
-        )}
+        <div className="pcr-scarf-preview-slot pcr-scarf-date-preview">
+          {scarf.dateImage && <img src={scarf.dateImage} alt="" />}
+        </div>
+        <div className="pcr-scarf-preview-slot pcr-scarf-style-preview">
+          {scarf.styleImage && <img src={scarf.styleImage} alt="" />}
+        </div>
       </div>
 
       <div className="pcr-scarf-table">
