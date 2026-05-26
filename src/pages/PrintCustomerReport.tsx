@@ -38,6 +38,15 @@ type MockScarfDesign = {
   styleImage?: string;
 };
 
+type MockHatDesign = {
+  index: number;
+  hasEmbroidery: boolean;
+  preview: 'none' | 'wings' | 'stars';
+  count: string;
+  fringeColor: string;
+  embroideryName?: string;
+};
+
 const orderInfoRows: InfoItem[] = [
   { label: 'رقم الطلب', value: '#12345', icon: FileText },
   { label: 'تاريخ الطلب', value: '24 / 05 / 2026', icon: CalendarDays },
@@ -66,6 +75,7 @@ const abayaRows: DetailItem[] = [
 ];
 
 const SCARFS_PER_PAGE = 4;
+const HATS_PER_PAGE = 4;
 
 const mockScarfDesigns: MockScarfDesign[] = Array.from({ length: 4 }, (_, index) => ({
   index: index + 1,
@@ -87,6 +97,48 @@ function chunkScarfDesigns(scarves: MockScarfDesign[]) {
   return pages;
 }
 
+const mockHatDesigns: MockHatDesign[] = [
+  {
+    index: 1,
+    hasEmbroidery: false,
+    preview: 'none',
+    count: '10 قبعات',
+    fringeColor: 'فضي',
+  },
+  {
+    index: 2,
+    hasEmbroidery: true,
+    preview: 'wings',
+    count: '7 قبعات',
+    fringeColor: 'فضي',
+  },
+  {
+    index: 3,
+    hasEmbroidery: true,
+    preview: 'stars',
+    count: '10 قبعات',
+    fringeColor: 'فضي',
+    embroideryName: 'Yara',
+  },
+  {
+    index: 4,
+    hasEmbroidery: true,
+    preview: 'wings',
+    count: '7 قبعات',
+    fringeColor: 'فضي',
+  },
+];
+
+function chunkHatDesigns(hats: MockHatDesign[]) {
+  const pages: MockHatDesign[][] = [];
+
+  for (let index = 0; index < hats.length; index += HATS_PER_PAGE) {
+    pages.push(hats.slice(index, index + HATS_PER_PAGE));
+  }
+
+  return pages;
+}
+
 function displayValue(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed || '-';
@@ -96,6 +148,7 @@ export default function PrintCustomerReport() {
   const [params] = useSearchParams();
   const autoPrint = params.get('autoprint') === '1';
   const scarfPages = chunkScarfDesigns(mockScarfDesigns);
+  const hatPages = chunkHatDesigns(mockHatDesigns);
 
   useEffect(() => {
     if (!autoPrint) return;
@@ -178,6 +231,14 @@ export default function PrintCustomerReport() {
           scarfColor="مخمل أسود"
           backEmbroideryCount={12}
           logoEmbroideryCount={8}
+        />
+      ))}
+
+      {hatPages.map((hats, pageIndex) => (
+        <HatDesignPage
+          key={pageIndex}
+          pageNumber={scarfPages.length + pageIndex + 3}
+          hats={hats}
         />
       ))}
 
@@ -296,6 +357,91 @@ function ScarfDesignCard({ scarf }: { scarf: MockScarfDesign }) {
       <div className="pcr-scarf-table">
         {rows.map(row => (
           <div className="pcr-scarf-table-row" key={row.label}>
+            <row.icon />
+            <strong>{row.label} :</strong>
+            <span>{row.value}</span>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function HatDesignPage({
+  pageNumber,
+  hats,
+}: {
+  pageNumber: number;
+  hats: MockHatDesign[];
+}) {
+  return (
+    <ReportPage pageNumber={pageNumber}>
+      <header className="pcr-page-two-header pcr-hat-page-header">
+        <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+        <DecoratedTitle>تصاميم القبعات</DecoratedTitle>
+      </header>
+
+      <section className="pcr-hat-summary" aria-label="ملخص القبعات">
+        <div className="pcr-hat-summary-item pcr-hat-summary-color">
+          <IconBubble>
+            <Palette />
+          </IconBubble>
+          <strong>لون القبعة :</strong>
+          <span>أسود فخمة</span>
+        </div>
+        <div className="pcr-hat-summary-item pcr-hat-summary-count">
+          <strong>عدد تطريز القبعات :</strong>
+          <span>3</span>
+        </div>
+      </section>
+
+      <section className="pcr-hat-grid" aria-label="تصاميم القبعات">
+        {hats.map(hat => (
+          <HatDesignCard key={hat.index} hat={hat} />
+        ))}
+      </section>
+    </ReportPage>
+  );
+}
+
+function HatDesignCard({ hat }: { hat: MockHatDesign }) {
+  const rows: InfoItem[] = [
+    { label: 'العدد', value: hat.count, icon: Shirt },
+    { label: 'لون الهدب', value: hat.fringeColor, icon: Palette },
+  ];
+
+  if (hat.embroideryName) {
+    rows.push({ label: 'الاسم على التطريز', value: hat.embroideryName, icon: FileText });
+  }
+
+  return (
+    <article className="pcr-hat-card">
+      <div className="pcr-hat-card-pill">قبعة {hat.index}</div>
+
+      <div className="pcr-hat-preview" aria-hidden="true">
+        {hat.hasEmbroidery ? (
+          <div className={`pcr-hat-preview-diamond pcr-hat-preview-${hat.preview}`}>
+            {hat.preview === 'stars' ? (
+              <>
+                <span className="pcr-hat-stars">✦ ✦ ✦</span>
+                <b>I did it</b>
+                <span className="pcr-hat-star-large">★</span>
+              </>
+            ) : (
+              <>
+                <b>2024</b>
+                <span className="pcr-hat-wings" />
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="pcr-hat-empty-preview">بدون تطريز</div>
+        )}
+      </div>
+
+      <div className="pcr-hat-table">
+        {rows.map(row => (
+          <div className="pcr-hat-table-row" key={row.label}>
             <row.icon />
             <strong>{row.label} :</strong>
             <span>{row.value}</span>
