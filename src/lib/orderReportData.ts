@@ -163,35 +163,12 @@ export async function loadOrderReportData(orderId: string): Promise<ReportData> 
     });
   });
 
-  const validScarfDesignCount = scarfDesigns.filter(sd =>
-    sd.scarf_style_id ||
-    sd.scarf_method_id ||
-    sd.date_type_id ||
-    sd.embroidery_direction_id ||
-    sd.font_id ||
-    sd.embroidery_color
-  ).length;
-  const studentScarfCount = students.filter((s: any) => s.scarf_design_id).length;
-  const studentHatCount = students.filter((s: any) => s.hat_embroidery_id).length;
   const includesSets = studentCount > 0 && order.order_type !== 'scarf_only' && order.order_type !== 'hat_only';
-  const includesScarves =
-    order.order_type === 'scarf_only' ||
-    extraScarfCount > 0 ||
-    studentScarfCount > 0 ||
-    extraScarves.length > 0 ||
-    validScarfDesignCount > 0;
-  const includesHats =
-    order.order_type === 'hat_only' ||
-    extraHatCount > 0 ||
-    studentHatCount > 0 ||
-    extraHats.length > 0;
   const setQuantity = includesSets ? studentCount : 0;
-  const scarfQuantity = includesScarves
-    ? (studentScarfCount > 0 ? studentScarfCount : (validScarfDesignCount > 0 ? studentCount : 0)) + extraScarfCount
-    : 0;
-  const hatQuantity = includesHats
-    ? (studentHatCount > 0 ? studentHatCount : (order.order_type === 'hat_only' ? studentCount : 0)) + extraHatCount
-    : 0;
+  const scarfQuantity = order.order_type === 'scarf_only' ? studentCount : extraScarfCount;
+  const hatQuantity = order.order_type === 'hat_only' ? studentCount : extraHatCount;
+  const includesScarves = scarfQuantity > 0;
+  const includesHats = hatQuantity > 0;
 
   const hatDesignMap = new Map<string, number>();
   const hatGroups: ReportHatGroup[] = [];
