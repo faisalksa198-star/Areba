@@ -1,5 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -15,11 +15,6 @@ import {
   type LucideIcon,
   UserRound,
 } from 'lucide-react';
-import {
-  loadOrderReportData,
-  type ReportData,
-  type ReportScarfDesign,
-} from '@/lib/orderReportData';
 import './PrintCustomerReport.css';
 
 type InfoItem = {
@@ -30,6 +25,17 @@ type InfoItem = {
 
 type DetailItem = InfoItem & {
   preview?: 'abaya' | 'sleeve';
+};
+
+type MockScarfDesign = {
+  index: number;
+  styleName: string;
+  methodName: string;
+  embroideryDirection: string;
+  dateName: string;
+  fontName: string;
+  embroideryColor: string;
+  styleImage?: string;
 };
 
 const orderInfoRows: InfoItem[] = [
@@ -61,8 +67,18 @@ const abayaRows: DetailItem[] = [
 
 const SCARFS_PER_PAGE = 4;
 
-function chunkScarfDesigns(scarves: ReportScarfDesign[]) {
-  const pages: ReportScarfDesign[][] = [];
+const mockScarfDesigns: MockScarfDesign[] = Array.from({ length: 4 }, (_, index) => ({
+  index: index + 1,
+  methodName: 'وشاح مقوس من الخلف',
+  dateName: 'ميلادي عمودي بالإنجليزي',
+  styleName: 'قيطان ذهبي',
+  embroideryDirection: 'بالطول',
+  fontName: 'خط الثلث عادي',
+  embroideryColor: 'ذهبي',
+}));
+
+function chunkScarfDesigns(scarves: MockScarfDesign[]) {
+  const pages: MockScarfDesign[][] = [];
 
   for (let index = 0; index < scarves.length; index += SCARFS_PER_PAGE) {
     pages.push(scarves.slice(index, index + SCARFS_PER_PAGE));
@@ -77,41 +93,12 @@ function displayValue(value?: string | null) {
 }
 
 export default function PrintCustomerReport() {
-  const { orderId } = useParams<{ orderId: string }>();
   const [params] = useSearchParams();
   const autoPrint = params.get('autoprint') === '1';
-  const [reportData, setReportData] = useState<ReportData | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const scarfPages = chunkScarfDesigns(mockScarfDesigns);
 
   useEffect(() => {
-    if (!orderId) {
-      setLoadError('تعذر العثور على رقم الطلب.');
-      return;
-    }
-
-    let isMounted = true;
-
-    loadOrderReportData(orderId)
-      .then(data => {
-        if (isMounted) {
-          setReportData(data);
-          setLoadError(null);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load customer report data', error);
-        if (isMounted) {
-          setLoadError('تعذر تحميل بيانات التقرير.');
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [orderId]);
-
-  useEffect(() => {
-    if (!autoPrint || !reportData) return;
+    if (!autoPrint) return;
 
     const imgs = Array.from(document.images);
     Promise.all(
@@ -121,17 +108,7 @@ export default function PrintCustomerReport() {
     )
       .then(() => (document as any).fonts?.ready)
       .then(() => setTimeout(() => window.print(), 300));
-  }, [autoPrint, reportData]);
-
-  if (loadError) {
-    return <div className="pcr-error">{loadError}</div>;
-  }
-
-  if (!reportData) {
-    return <div className="pcr-loading">جاري تحميل التقرير...</div>;
-  }
-
-  const scarfPages = chunkScarfDesigns(reportData.scarves);
+  }, [autoPrint]);
 
   return (
     <div className="pcr-root">
@@ -198,9 +175,9 @@ export default function PrintCustomerReport() {
           key={pageIndex}
           pageNumber={pageIndex + 3}
           scarves={scarves}
-          scarfColor={reportData.scarfColor}
-          backEmbroideryCount={reportData.backEmbroideryCount}
-          logoEmbroideryCount={reportData.logoEmbroideryCount}
+          scarfColor="مخمل أسود"
+          backEmbroideryCount={12}
+          logoEmbroideryCount={8}
         />
       ))}
 
@@ -219,7 +196,7 @@ function ScarfDesignPage({
   logoEmbroideryCount,
 }: {
   pageNumber: number;
-  scarves: ReportScarfDesign[];
+  scarves: MockScarfDesign[];
   scarfColor?: string | null;
   backEmbroideryCount?: number;
   logoEmbroideryCount?: number;
@@ -291,7 +268,7 @@ function ScarfSummaryCard({
   );
 }
 
-function ScarfDesignCard({ scarf }: { scarf: ReportScarfDesign }) {
+function ScarfDesignCard({ scarf }: { scarf: MockScarfDesign }) {
   const rows: InfoItem[] = [
     { label: 'التصميم', value: displayValue(scarf.methodName), icon: FileText },
     { label: 'التاريخ', value: displayValue(scarf.dateName), icon: CalendarDays },
