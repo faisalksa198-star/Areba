@@ -235,7 +235,10 @@ export default function PrintCustomerReport() {
   const [reportError, setReportError] = useState<string | null>(null);
   const scarfPages = chunkScarfDesigns(mockScarfDesigns);
   const hatPages = chunkHatDesigns(mockHatDesigns);
-  const namesPageNumber = scarfPages.length + hatPages.length + 3;
+  const showAbayaPage = !reportData || reportData.setQuantity > 0;
+  const abayaPageOffset = showAbayaPage ? 1 : 0;
+  const firstDesignPageNumber = 2 + abayaPageOffset;
+  const namesPageNumber = scarfPages.length + hatPages.length + firstDesignPageNumber;
   const thankYouPageNumber = namesPageNumber + 1;
   const orderInfoRows = useMemo(() => buildOrderInfoRows(reportData), [reportData]);
   const quantityCards = useMemo(() => buildQuantityCards(reportData), [reportData]);
@@ -324,23 +327,25 @@ export default function PrintCustomerReport() {
         </div>
       </ReportPage>
 
-      <ReportPage pageNumber={2}>
-        <header className="pcr-page-two-header">
-          <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
-          <DecoratedTitle>تفاصيل العباية</DecoratedTitle>
-        </header>
+      {showAbayaPage && (
+        <ReportPage pageNumber={2}>
+          <header className="pcr-page-two-header">
+            <img src="/logo.svg" alt="AREBA" className="pcr-logo-small" />
+            <DecoratedTitle>تفاصيل العباية</DecoratedTitle>
+          </header>
 
-        <section className="pcr-abaya-list" aria-label="تفاصيل العباية">
-          {abayaRows.map(row => (
-            <DetailRow key={row.label} {...row} />
-          ))}
-        </section>
-      </ReportPage>
+          <section className="pcr-abaya-list" aria-label="تفاصيل العباية">
+            {abayaRows.map(row => (
+              <DetailRow key={row.label} {...row} />
+            ))}
+          </section>
+        </ReportPage>
+      )}
 
       {scarfPages.map((scarves, pageIndex) => (
         <ScarfDesignPage
           key={pageIndex}
-          pageNumber={pageIndex + 3}
+          pageNumber={firstDesignPageNumber + pageIndex}
           scarves={scarves}
           scarfColor="مخمل أسود"
           backEmbroideryCount={12}
@@ -351,7 +356,7 @@ export default function PrintCustomerReport() {
       {hatPages.map((hats, pageIndex) => (
         <HatDesignPage
           key={pageIndex}
-          pageNumber={scarfPages.length + pageIndex + 3}
+          pageNumber={firstDesignPageNumber + scarfPages.length + pageIndex}
           hats={hats}
         />
       ))}
